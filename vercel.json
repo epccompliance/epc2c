@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "epc2e.co.uk" }],
+      "destination": "/epc2e.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "www.epc2e.co.uk" }],
+      "destination": "/epc2e.html"
+    },
+    {
+      "source": "/",
+      "destination": "/epc2c_v3.html"
+    },
+    {
+      "source": "/epc2e",
+      "destination": "/epc2e.html"
+    }
+  ]
+}

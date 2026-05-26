@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EPC2C — MEES Compliance for UK Landlords</title>
+<meta name="description" content="Free instant MEES compliance check. Interactive compliance planning tool. Professional DEA survey service. Powered by GoGreen Alliance."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1e33;--navy2:#162843;--navy3:#1c3450;
+  --teal:#4ecba8;--teald:#2fa882;--tealp:rgba(78,203,168,.1);--tealbdr:rgba(78,203,168,.22);
+  --warm:#f5f2ec;--warm2:#ece8e0;--warm3:#d4d0c8;
+  --char:#1a2332;--body:#374151;--muted:#6b7280;--hint:#9ca3af;
+  --rule:#e8e4dc;--white:#ffffff;
+  --amber:#d97706;--amberp:#fffbeb;--amberbdr:rgba(217,119,6,.25);
+  --red:#dc2626;--redp:#fef2f2;--redbdr:rgba(220,38,38,.25);
+  --green:#059669;--greenp:#ecfdf5;--greenbdr:rgba(5,150,105,.25);
+  --blue:#1d4ed8;--bluep:#eff6ff;
+  --purple:#7c3aed;--purplep:#f5f3ff;
+  --epc-g:#991b1b;--epc-f:#dc2626;--epc-e:#ea580c;
+  --epc-d:#d97706;--epc-c:#16a34a;--epc-b:#15803d;--epc-a:#166534;
+  --serif:'Fraunces',Georgia,serif;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--body);font-size:15px;line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--white);text-decoration:none;letter-spacing:-.02em;display:flex;align-items:baseline;gap:0}
+.logo-num{color:var(--teal)}
+.logo-c{font-style:italic;font-weight:300;color:var(--white)}
+.nav-links{display:flex;align-items:center;gap:22px}
+.nav-link{font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--white)}
+.nav-cta{font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);padding:7px 16px;border-radius:6px;text-decoration:none;cursor:pointer;border:none;font-family:var(--sans);transition:background .2s}
+.nav-cta:hover{background:var(--teald)}
+
+/* HERO */
+.hero{min-height:100vh;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:90px 2rem 60px;position:relative;overflow:hidden;text-align:center}
+.hero-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(78,203,168,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(78,203,168,.035) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.hero-glow{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(78,203,168,.065) 0%,transparent 60%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:660px;width:100%}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);background:rgba(78,203,168,.1);border:0.5px solid var(--tealbdr);padding:5px 14px;border-radius:20px;margin-bottom:24px;animation:fadeUp .5s ease both}
+.hero-h{font-family:var(--serif);font-size:52px;font-weight:300;line-height:1.07;letter-spacing:-.03em;color:var(--white);margin-bottom:18px;animation:fadeUp .5s .08s ease both}
+.hero-h em{font-style:italic;color:var(--teal)}
+.hero-h strong{font-weight:500}
+.hero-sub{font-size:16px;color:rgba(255,255,255,.48);line-height:1.72;margin-bottom:38px;animation:fadeUp .5s .15s ease both}
+
+/* SEARCH */
+.search-wrap{width:100%;max-width:620px;margin:0 auto;animation:fadeUp .5s .22s ease both}
+.search-card{background:rgba(20,38,65,.92);border:0.5px solid var(--tealbdr);border-radius:14px;padding:22px}
+.sc-eyebrow{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);opacity:.8;margin-bottom:10px}
+.sc-row{display:flex;gap:9px}
+.pc-input{flex:1;font-family:var(--sans);font-size:16px;font-weight:500;background:rgba(10,20,40,.7);border:0.5px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 16px;color:var(--white);outline:none;transition:border-color .2s;letter-spacing:.04em}
+.pc-input::placeholder{color:rgba(255,255,255,.2);font-weight:400;letter-spacing:0}
+.pc-input:focus{border-color:var(--teal)}
+.find-btn{font-family:var(--sans);font-size:14px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:12px 22px;cursor:pointer;transition:background .2s;white-space:nowrap}
+.find-btn:hover{background:var(--teald)}.find-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* PROP LIST */
+.prop-list{display:none;margin-top:12px;border-top:0.5px solid rgba(255,255,255,.07);padding-top:12px}
+.prop-list-hdr{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:8px}
+.prop-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;border:0.5px solid transparent;transition:all .14s}
+.prop-item:hover{background:rgba(78,203,168,.07);border-color:rgba(78,203,168,.18)}
+.prop-item.sel{background:rgba(78,203,168,.1);border-color:rgba(78,203,168,.3)}
+.prop-addr{flex:1;font-size:13px;font-weight:500;color:var(--white)}
+.epc-badge{font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;color:var(--white)}
+
+/* FREE RESULT */
+.free-result{display:none;margin-top:14px;background:rgba(18,34,58,.95);border:0.5px solid rgba(78,203,168,.18);border-radius:12px;overflow:hidden;text-align:left}
+.fr-head{background:rgba(10,20,38,.8);padding:13px 16px;border-bottom:0.5px solid rgba(255,255,255,.07)}
+.fr-addr{font-size:13px;font-weight:500;color:var(--white);margin-bottom:4px}
+.fr-tags{display:flex;gap:5px;flex-wrap:wrap}
+.fr-tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.fr-body{padding:15px 16px}
+
+/* band bar */
+.bb-label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:8px}
+.bb{display:flex;height:20px;border-radius:5px;overflow:hidden;position:relative}
+.bb-seg{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:white}
+.bb-needle{position:absolute;top:-4px;bottom:-4px;width:2px;background:white;border-radius:1px;transition:left .5s cubic-bezier(.4,0,.2,1)}
+.bb-needle::after{content:'▼';position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:8px;color:white}
+.bb-target{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--teal);opacity:.65}
+.bb-target::after{content:'C';position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--teal);font-family:var(--mono);font-weight:600}
+.bb-labs{display:flex;justify-content:space-between;margin-top:14px}
+.bb-labs span{font-size:10px;font-family:var(--mono);color:rgba(255,255,255,.22)}
+
+/* confidence bar */
+.conf-bar-wrap{margin-top:10px}
+.conf-bar-label{font-size:11px;color:rgba(255,255,255,.3);margin-bottom:4px;display:flex;justify-content:space-between}
+.conf-track{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.conf-fill{height:100%;border-radius:2px;transition:width .5s}
+
+/* verdict */
+.hero-verdict{border-radius:9px;padding:12px 14px;margin:12px 0 14px;border-left:3px solid}
+.hv-works{background:rgba(78,203,168,.07);border-color:var(--teal)}
+.hv-exemption{background:rgba(217,119,6,.07);border-color:var(--amber)}
+.hv-ok{background:rgba(5,150,105,.07);border-color:var(--green)}
+.hv-breach{background:rgba(220,38,38,.07);border-color:var(--red)}
+.hv-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.hv-title{font-size:13px;font-weight:500;color:var(--white);margin-bottom:4px}
+.hv-body{font-size:12px;color:rgba(255,255,255,.48);line-height:1.6}
+.hv-conf{font-size:11px;font-family:var(--mono);margin-top:6px}
+
+/* unlock strip */
+.unlock-strip{margin-top:14px}
+.unlock-label{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:9px}
+.tier-btns{display:flex;flex-direction:column;gap:6px}
+.tier-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;border:0.5px solid rgba(255,255,255,.1);background:rgba(10,20,40,.5);cursor:pointer;transition:all .14s;width:100%;text-align:left;font-family:var(--sans)}
+.tier-btn:hover{border-color:rgba(78,203,168,.28);background:rgba(78,203,168,.05)}
+.tier-btn.t-featured{border-color:rgba(78,203,168,.38);background:rgba(78,203,168,.07);position:relative}
+.tier-btn.t-featured::before{content:'Most popular';position:absolute;top:-9px;right:12px;font-size:10px;font-weight:600;letter-spacing:.04em;background:var(--teal);color:var(--navy);padding:2px 10px;border-radius:10px}
+.tbtn-price{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--white);flex-shrink:0;min-width:50px}
+.tbtn-body{flex:1;min-width:0}
+.tbtn-name{font-size:12px;font-weight:500;color:var(--white);margin-bottom:2px}
+.tbtn-desc{font-size:11px;color:rgba(255,255,255,.38);line-height:1.45}
+.tbtn-arrow{color:rgba(255,255,255,.25);font-size:14px;flex-shrink:0}
+.tier-btn.t-featured .tbtn-arrow{color:var(--teal)}
+.tier3-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;border:0.5px solid rgba(255,255,255,.08);background:rgba(10,20,40,.3);cursor:pointer;transition:all .14s;width:100%;text-align:left;font-family:var(--sans);margin-top:4px}
+.tier3-btn:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04)}
+.t3-price{font-family:var(--mono);font-size:15px;font-weight:500;color:rgba(255,255,255,.6);flex-shrink:0;min-width:50px}
+.t3-body{flex:1;min-width:0}
+.t3-name{font-size:12px;font-weight:500;color:rgba(255,255,255,.6);margin-bottom:2px}
+.t3-desc{font-size:11px;color:rgba(255,255,255,.28);line-height:1.45}
+
+/* hero stats */
+.hero-stats{display:flex;border:0.5px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-top:20px;width:100%;max-width:620px;animation:fadeUp .5s .35s ease both}
+.hstat{flex:1;padding:12px 0;text-align:center;border-right:0.5px solid rgba(255,255,255,.07)}
+.hstat:last-child{border-right:none}
+.hstat-val{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--white)}
+.hstat-val span{color:var(--teal)}
+.hstat-label{font-size:11px;color:rgba(255,255,255,.28);margin-top:2px}
+
+/* TOOL SECTION */
+#tool-section{display:none;background:var(--warm);scroll-margin-top:58px}
+.tool-bar{background:var(--navy2);padding:14px 2rem;border-bottom:0.5px solid rgba(78,203,168,.12)}
+.tool-bar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tool-prop{display:flex;flex-direction:column;gap:2px}
+.tool-prop-addr{font-size:13px;font-weight:500;color:var(--white)}
+.tool-prop-meta{font-size:12px;color:rgba(255,255,255,.38)}
+.tool-tier-pill{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;background:rgba(78,203,168,.12);color:var(--teal);border:0.5px solid var(--tealbdr);letter-spacing:.04em}
+.tool-back{font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);border:0.5px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 12px;cursor:pointer}
+.tool-back:hover{background:rgba(255,255,255,.1)}
+
+.tool-body{max-width:1100px;margin:0 auto;padding:24px 2rem;display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+
+/* scoreboard */
+.scores{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px}
+.stile{background:var(--white);border:0.5px solid var(--rule);border-radius:11px;padding:13px 14px;transition:all .3s}
+.stile.ok{background:var(--greenp);border-color:rgba(5,150,105,.3)}
+.stile.warn{background:var(--amberp);border-color:rgba(217,119,6,.3)}
+.stl{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.stv{font-family:var(--mono);font-size:19px;font-weight:500;color:var(--char);line-height:1}
+.sts{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* band bar in tool */
+.tool-band-wrap{background:var(--white);border:0.5px solid var(--rule);border-radius:11px;padding:14px 15px;margin-bottom:18px}
+.tbl{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.tool-bb{display:flex;height:22px;border-radius:5px;overflow:hidden;position:relative}
+.tbb-seg{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:white}
+.tool-needle{position:absolute;top:-5px;bottom:-5px;width:2.5px;background:var(--char);border-radius:2px;transition:left .45s cubic-bezier(.4,0,.2,1)}
+.tool-needle::after{content:'▼';position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--char)}
+.tool-target{position:absolute;top:-5px;bottom:-5px;width:1.5px;background:var(--green);opacity:.65}
+.tool-target::after{content:'C';position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--green);font-family:var(--mono);font-weight:600}
+.tbb-labs{display:flex;justify-content:space-between;margin-top:16px}
+.tbb-labs span{font-size:10px;font-family:var(--mono);color:var(--hint)}
+.c-achieved{display:none;margin-top:9px;background:var(--greenp);border:1.5px solid rgba(5,150,105,.3);color:var(--green);border-radius:7px;padding:8px 12px;font-size:12px;font-weight:500;text-align:center}
+.band-disclaimer{font-size:11px;color:var(--hint);margin-top:7px;line-height:1.5}
+
+/* filters */
+.frow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.flbl{font-size:12px;color:var(--muted);font-weight:500;margin-right:3px}
+.pill{font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--rule);background:var(--white);color:var(--muted);cursor:pointer;font-weight:500;transition:all .12s}
+.pill.on{background:var(--char);color:var(--white);border-color:var(--char)}
+
+/* measure cards */
+.mc{background:var(--white);border:0.5px solid var(--rule);border-radius:11px;padding:12px 14px;margin-bottom:7px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .14s}
+.mc:hover:not(.blocked){border-color:var(--warm3)}
+.mc.sel{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.mc.sel::before,.mc.blocked::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.mc.sel::before{background:var(--green)}
+.mc.blocked{opacity:.48;cursor:default}
+.mc.blocked::before{background:var(--red)}
+.mc-row{display:flex;align-items:flex-start;gap:10px}
+.mc-cb{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--rule);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;background:var(--white);font-size:10px;transition:all .12s}
+.mc.sel .mc-cb{background:var(--green);border-color:var(--green);color:white}
+.mc.blocked .mc-cb{background:var(--redp);border-color:var(--red);color:var(--red);font-size:9px}
+.mc-body{flex:1;min-width:0}
+.mc-name{font-size:13px;font-weight:500;color:var(--char);margin-bottom:4px}
+.mc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.tag{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:500}
+.t-cost{background:var(--warm);color:var(--muted);font-family:var(--mono)}
+.t-uplift{background:var(--greenp);color:var(--green)}
+.t-grant{background:var(--purplep);color:var(--purple)}
+.t-block{background:var(--redp);color:var(--red)}
+.t-ch{background:var(--greenp);color:var(--green)}
+.t-cm{background:var(--amberp);color:var(--amber)}
+.t-cl{background:var(--redp);color:var(--red)}
+.mc-desc{font-size:12px;color:var(--muted);line-height:1.55}
+.mc-block-note{font-size:11px;color:var(--red);margin-top:4px;line-height:1.5}
+.xbtn{font-size:11px;color:var(--hint);cursor:pointer;margin-top:5px;display:inline-block;user-select:none}
+.xbtn:hover{color:var(--muted)}
+.mc-detail{display:none;margin-top:9px;padding-top:9px;border-top:0.5px solid var(--rule)}
+.mc.open .mc-detail{display:block}
+.fb{margin-top:7px}
+.fb-title{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.fb-row{display:flex;gap:8px;padding:7px 9px;border-radius:7px;background:var(--warm);margin-bottom:4px;align-items:flex-start}
+.fb-name{font-size:12px;font-weight:500;color:var(--char)}
+.fb-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-top:1px}
+.fb-amt{font-family:var(--mono);font-size:11px;color:var(--green);margin-top:2px;font-weight:500}
+
+/* RIGHT PANEL */
+.rp{display:flex;flex-direction:column;gap:12px}
+.rp-card{background:var(--white);border:0.5px solid var(--rule);border-radius:12px;padding:15px}
+.rp-label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:11px;display:flex;align-items:center;gap:6px}
+
+/* compliance verdict card */
+.cv{border-radius:9px;padding:12px 14px;border:0.5px solid;transition:all .25s}
+.cv-ok{background:var(--greenp);border-color:rgba(5,150,105,.3)}
+.cv-partial{background:var(--amberp);border-color:rgba(217,119,6,.3)}
+.cv-breach{background:var(--redp);border-color:rgba(220,38,38,.3)}
+.cv-none{background:var(--warm);border-color:var(--rule)}
+.cv-icon{font-size:17px;margin-bottom:4px}
+.cv-title{font-size:13px;font-weight:500;color:var(--char);margin-bottom:3px}
+.cv-body{font-size:12px;color:var(--muted);line-height:1.6}
+.cv-link{display:inline-flex;align-items:center;gap:4px;margin-top:7px;font-size:11px;font-weight:500;padding:5px 10px;border-radius:6px;cursor:pointer;text-decoration:none}
+.cv-link-amber{color:var(--amber);background:var(--amberp);border:0.5px solid rgba(217,119,6,.25)}
+
+/* exemption panels */
+.ex-count-badge{background:var(--amber);color:white;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600}
+.ex-panel{border-radius:9px;border:0.5px solid var(--rule);overflow:hidden;margin-bottom:6px}
+.ex-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:var(--white);transition:background .13s}
+.ex-hd:hover{background:var(--warm)}
+.ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .25s}
+.dot-avail{background:var(--amber);box-shadow:0 0 5px rgba(217,119,6,.35)}
+.dot-sel{background:var(--green);box-shadow:0 0 5px rgba(5,150,105,.35)}
+.dot-locked{background:var(--rule)}
+.ex-nm{font-size:12px;font-weight:500;color:var(--char);flex:1}
+.ex-bdg{font-size:10px;padding:2px 7px;border-radius:9px;font-weight:500;flex-shrink:0}
+.bdg-avail{background:var(--amberp);color:var(--amber)}
+.bdg-sel{background:var(--greenp);color:var(--green)}
+.bdg-locked{background:var(--warm);color:var(--hint)}
+.ex-chev{font-size:11px;color:var(--hint);flex-shrink:0;transition:transform .18s}
+.ex-panel.open .ex-chev{transform:rotate(180deg)}
+.ex-bd{display:none;padding:0 12px 11px;border-top:0.5px solid var(--rule);background:var(--white)}
+.ex-panel.open .ex-bd{display:block}
+.ex-desc{font-size:12px;color:var(--muted);line-height:1.6;margin:9px 0 7px}
+.ex-why{font-size:11px;padding:7px 9px;border-radius:6px;line-height:1.5;margin-bottom:7px}
+.why-avail{background:var(--amberp);color:var(--amber)}
+.why-locked{background:var(--warm);color:var(--muted)}
+.why-sel{background:var(--greenp);color:var(--green)}
+.ex-rqs-lbl{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.ex-rq{font-size:11px;color:var(--muted);padding:2px 0 2px 12px;position:relative;line-height:1.4}
+.ex-rq::before{content:'·';position:absolute;left:3px}
+.ex-dur{font-size:11px;color:var(--muted);margin-top:5px}
+.ex-sel-btn{width:100%;margin-top:9px;padding:7px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;border-radius:7px;border:0.5px solid rgba(217,119,6,.35);background:var(--amberp);color:var(--amber);transition:all .14s}
+.ex-sel-btn:hover{background:var(--amber);color:white}
+.ex-desel-btn{width:100%;margin-top:9px;padding:7px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;border-radius:7px;border:0.5px solid rgba(5,150,105,.3);background:var(--greenp);color:var(--green);transition:all .14s}
+.ex-desel-btn:hover{background:var(--redp);color:var(--red);border-color:rgba(220,38,38,.3)}
+.prs-a{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--blue);text-decoration:none;margin-top:5px}
+.prs-a:hover{text-decoration:underline}
+
+/* report CTA */
+.get-report-btn{width:100%;padding:12px;font-family:var(--sans);font-size:13px;font-weight:500;background:var(--char);color:var(--white);border:none;border-radius:8px;cursor:pointer;transition:all .2s;margin-top:10px}
+.get-report-btn:hover{background:var(--navy)}
+.get-report-btn.ready{background:var(--teald);color:var(--navy)}
+.upgrade-box{background:var(--navy);border-radius:10px;padding:16px;text-align:center}
+.ub-price{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--teal);margin-bottom:3px}
+.ub-title{font-size:13px;font-weight:500;color:var(--white);margin-bottom:5px}
+.ub-body{font-size:12px;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:13px}
+.ub-btn{width:100%;padding:10px;font-family:var(--sans);font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:7px;cursor:pointer;transition:background .2s}
+.ub-btn:hover{background:var(--teald)}
+
+/* LOWER PAGE SECTIONS */
+.section{padding:70px 2rem}
+.inner{max-width:1100px;margin:0 auto}
+.sec-ey{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--teald);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-ey::before{content:'';width:16px;height:1px;background:var(--teald)}
+.sec-h{font-family:var(--serif);font-size:34px;font-weight:300;line-height:1.15;letter-spacing:-.025em;color:var(--char);margin-bottom:12px}
+.sec-h em{font-style:italic;color:var(--teald)}
+.sec-sub{font-size:15px;color:var(--muted);line-height:1.7;max-width:520px}
+
+/* how it works */
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border-radius:12px;overflow:hidden;margin-top:36px}
+.step{background:var(--warm);padding:22px 18px}
+.step-n{font-family:var(--mono);font-size:11px;color:var(--teald);opacity:.7;margin-bottom:10px}
+.step-title{font-size:14px;font-weight:500;color:var(--char);margin-bottom:5px}
+.step-body{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* PRICING SECTION */
+.price-section{background:var(--navy2);padding:70px 2rem}
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:40px;max-width:960px}
+/* Tier card */
+.pc{border-radius:14px;padding:24px;border:0.5px solid rgba(255,255,255,.1);background:rgba(12,24,42,.6);display:flex;flex-direction:column}
+.pc.pc-mid{border:1.5px solid var(--teal);background:rgba(12,24,42,.9)}
+.pc.pc-pro{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
+.pc-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.pc-t1 .pc-eyebrow{color:rgba(255,255,255,.35)}
+.pc-mid .pc-eyebrow{color:var(--teal)}
+.pc-pro .pc-eyebrow{color:rgba(255,255,255,.5)}
+.pc-name{font-family:var(--serif);font-size:22px;font-weight:300;color:var(--white);margin-bottom:6px;letter-spacing:-.01em}
+.pc-name em{font-style:italic;color:var(--teal)}
+.pc-desc{font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:18px;padding-bottom:16px;border-bottom:0.5px solid rgba(255,255,255,.08)}
+.pc-price-row{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
+.pc-price{font-family:var(--mono);font-size:32px;font-weight:500;color:var(--white)}
+.pc-price-note{font-size:12px;color:rgba(255,255,255,.35)}
+.pc-conf{font-size:11px;font-family:var(--mono);margin-bottom:16px}
+.pc-conf-bar{height:3px;border-radius:2px;margin-bottom:16px;background:rgba(255,255,255,.1);overflow:hidden}
+.pc-conf-fill{height:100%;border-radius:2px}
+.pc-features{flex:1;margin-bottom:18px}
+.pc-feat{font-size:12px;color:rgba(255,255,255,.5);padding:4px 0 4px 16px;position:relative;line-height:1.4}
+.pc-feat::before{content:'→';position:absolute;left:0;font-size:10px;top:5px}
+.pc-mid .pc-feat{color:rgba(255,255,255,.65)}
+.pc-mid .pc-feat::before{color:var(--teal)}
+.pc-pro .pc-feat{color:rgba(255,255,255,.6)}
+.pc-pro .pc-feat::before{color:rgba(255,255,255,.4)}
+.pc-btn{width:100%;padding:11px;font-family:var(--sans);font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.pc-t1 .pc-btn{background:transparent;color:rgba(255,255,255,.45);border:0.5px solid rgba(255,255,255,.15)}
+.pc-t1 .pc-btn:hover{border-color:var(--teal);color:var(--teal)}
+.pc-mid .pc-btn{background:var(--teal);color:var(--navy);border:none}
+.pc-mid .pc-btn:hover{background:var(--teald)}
+.pc-pro .pc-btn{background:transparent;color:rgba(255,255,255,.55);border:0.5px solid rgba(255,255,255,.2)}
+.pc-pro .pc-btn:hover{background:rgba(255,255,255,.06);color:var(--white)}
+.conf-chip{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;margin-bottom:14px}
+
+/* DEA */
+.dea-section{background:var(--warm);padding:60px 2rem}
+.dea-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.dea-badge{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:var(--tealp);color:var(--teald);border:0.5px solid var(--tealbdr);margin-bottom:12px}
+.dea-pts{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.dea-pt{display:flex;gap:9px;align-items:flex-start}
+.dea-pt-ic{width:26px;height:26px;border-radius:6px;background:var(--tealp);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
+.dea-pt strong{font-size:13px;font-weight:500;color:var(--char);display:block;margin-bottom:1px}
+.dea-pt span{font-size:12px;color:var(--muted)}
+.dea-link{display:inline-flex;align-items:center;gap:7px;margin-top:18px;background:var(--navy);color:var(--teal);font-size:13px;font-weight:500;padding:11px 20px;border-radius:7px;text-decoration:none;transition:background .2s}
+.dea-link:hover{background:var(--navy2)}
+.dea-box{background:var(--navy);border:0.5px solid rgba(78,203,168,.14);border-radius:12px;padding:18px}
+.db-lbl{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:12px}
+.db-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,.05)}
+.db-row:last-child{border-bottom:none}
+.db-band{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:white;flex-shrink:0}
+.db-info{flex:1;min-width:0}
+.db-addr{font-size:12px;font-weight:500;color:var(--white)}
+.db-bar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:3px}
+.db-fill{height:100%;border-radius:2px}
+.db-st{font-size:10px;font-family:var(--mono);flex-shrink:0}
+
+/* timeline */
+.tl-section{background:var(--navy);padding:56px 2rem}
+.tl{display:flex;gap:0;margin-top:34px;position:relative}
+.tl::before{content:'';position:absolute;top:14px;left:0;right:0;height:1px;background:rgba(255,255,255,.08)}
+.tl-item{flex:1;text-align:center;padding-top:30px;position:relative}
+.tl-dot{width:10px;height:10px;border-radius:50%;position:absolute;top:9px;left:50%;transform:translateX(-50%);border:2px solid}
+.d-past{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.12)}
+.d-now{background:var(--teal);border-color:var(--teal);box-shadow:0 0 10px rgba(78,203,168,.5)}
+.d-future{background:transparent;border-color:rgba(255,255,255,.18)}
+.tl-yr{font-family:var(--mono);font-size:12px;font-weight:500;margin-bottom:4px}
+.tl-yr.past{color:rgba(255,255,255,.18)}.tl-yr.now{color:var(--teal)}.tl-yr.future{color:rgba(255,255,255,.38)}
+.tl-desc{font-size:11px;color:rgba(255,255,255,.28);line-height:1.5;padding:0 4px}
+
+/* footer */
+footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:30px 2rem}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.foot-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:rgba(255,255,255,.32)}
+.foot-logo span{color:var(--teal)}
+.foot-links{display:flex;gap:16px}
+.foot-link{font-size:12px;color:rgba(255,255,255,.2);text-decoration:none}
+.foot-link:hover{color:rgba(255,255,255,.42)}
+.foot-copy{font-size:12px;color:rgba(255,255,255,.18)}
+
+/* utils */
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.12);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MOBILE RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* NAV */
+  .nav-links { display: none; }
+  .nav-inner { padding: 0 1.25rem; }
+  .logo { font-size: 18px; }
+  /* Show just a CTA button on mobile */
+  .nav-inner::after {
+    content: 'Check property';
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--teal);
+    color: var(--navy);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  /* HERO */
+  .hero { padding: 80px 1.25rem 40px; }
+  .hero-h { font-size: 34px; line-height: 1.1; }
+  .hero-sub { font-size: 14px; margin-bottom: 24px; }
+  .hero-pill { font-size: 10px; padding: 4px 11px; }
+  .search-wrap { max-width: 100%; }
+  .search-card { padding: 16px; }
+  .sc-row { flex-direction: column; gap: 8px; }
+  .find-btn { width: 100%; padding: 13px; }
+  .pc-input { font-size: 16px; } /* 16px prevents iOS zoom */
+
+  /* HERO STATS */
+  .hero-stats { flex-wrap: wrap; }
+  .hstat { flex: 1 1 50%; border-right: none !important;
+    border-bottom: 0.5px solid rgba(255,255,255,.08); }
+  .hstat:nth-child(odd) { border-right: 0.5px solid rgba(255,255,255,.08) !important; }
+  .hstat-val { font-size: 16px; }
+
+  /* FREE RESULT */
+  .fr-body { padding: 12px 13px; }
+
+  /* TIER BUTTONS */
+  .tier-btn, .tier3-btn { padding: 10px 12px; }
+  .tbtn-price, .t3-price { font-size: 15px; min-width: 42px; }
+  .tbtn-name, .t3-name { font-size: 12px; }
+  .tbtn-desc, .t3-desc { font-size: 10px; }
+
+  /* HOW IT WORKS — stack vertically */
+  #how > div:last-child {
+    grid-template-columns: 1fr !important;
+    padding: 0 1.25rem !important;
+  }
+  #how > div:first-child { padding: 0 1.25rem 32px !important; }
+  /* Live preview goes below steps on mobile */
+  #how > div:last-child > div:last-child {
+    position: static !important;
+    max-height: none !important;
+    border-radius: 12px !important;
+    margin-bottom: 40px;
+  }
+
+  /* TOOL SECTION */
+  .tool-bar { padding: 12px 1.25rem; }
+  .tool-bar-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .tool-body {
+    grid-template-columns: 1fr !important;
+    padding: 16px 1.25rem !important;
+    gap: 16px !important;
+  }
+  /* Right panel goes above measures on mobile */
+  .rp { order: -1; }
+
+  /* SCOREBOARD — 2x2 on mobile */
+  .scores { grid-template-columns: 1fr 1fr !important; }
+
+  /* PRICING — single column on mobile */
+  .price-grid { grid-template-columns: 1fr !important; max-width: 100% !important; }
+  .pc { padding: 20px; }
+  .pc-badge { position: static; margin: 0 0 10px; display: inline-block; }
+
+  /* DEA SECTION */
+  .dea-inner { grid-template-columns: 1fr !important; gap: 32px !important; }
+
+  /* TIMELINE */
+  .tl { flex-direction: column; gap: 0; }
+  .tl::before { display: none; }
+  .tl-item { text-align: left; padding-top: 0; padding-left: 28px; padding-bottom: 20px; }
+  .tl-dot { left: 0 !important; top: 4px; transform: none; }
+  .tl-yr { margin-bottom: 3px; }
+
+  /* FOOTER */
+  .foot-inner { flex-direction: column; gap: 14px; text-align: center; }
+  .foot-links { flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+  /* SECTIONS */
+  .section { padding: 48px 1.25rem; }
+  .sec-h { font-size: 26px; }
+
+  /* EXEMPTION PANELS */
+  .rp-card { padding: 13px; }
+
+  /* BAND BARS */
+  .bb-label, .tbl { font-size: 10px; }
+
+  /* PREV MEASURES in live preview */
+  #prev-measures > div { font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .hero-h { font-size: 28px; }
+  .hero-stats { display: none; } /* hide on very small screens */
+  .scores { grid-template-columns: 1fr 1fr !important; gap: 7px; }
+  .stv { font-size: 16px; }
+  .price-grid { gap: 10px; }
+}
+
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
+    <div class="nav-links">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#dea" class="nav-link">For DEAs</a>
+      <button class="nav-cta" onclick="scrollTo({top:document.getElementById('hero').offsetTop,behavior:'smooth'})">Check your property</button>
+    </div>
+    <!-- Mobile CTA - only shows on small screens -->
+    <button class="nav-cta" id="mob-cta" style="display:none" onclick="scrollTo({top:document.getElementById('hero').offsetTop,behavior:'smooth'})">Check property</button>
+  </div>
+</nav>
+<style>
+@media(max-width:768px){
+  #mob-cta{display:flex !important}
+  .nav-inner::after{display:none}
+}
+</style>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-pill">MEES compliance · UK landlords · EPC C by 2030</div>
+    <h1 class="hero-h">Is your rental<br>property <em>compliant</em><br>by <strong>2030?</strong></h1>
+    <p class="hero-sub">Free instant compliance check. Interactive planning tool. Professional survey service.<br>Powered by GoGreen Alliance.</p>
+
+    <div class="search-wrap">
+      <div class="search-card">
+        <div class="sc-eyebrow">Start with your postcode — free, instant, no account needed</div>
+        <div class="sc-row">
+          <input class="pc-input" id="pc" type="text" placeholder="e.g. WV11 3TY" maxlength="8" autocomplete="off" onkeydown="if(event.key==='Enter')lookup()"/>
+          <button class="find-btn" id="find-btn" onclick="lookup()">Find my property</button>
+        </div>
+        <div class="prop-list" id="prop-list">
+          <div class="prop-list-hdr" id="pl-hdr"></div>
+          <div id="pl-items"></div>
+        </div>
+        <div class="free-result" id="free-result">
+          <div class="fr-head">
+            <div class="fr-addr" id="fr-addr"></div>
+            <div class="fr-tags" id="fr-tags"></div>
+          </div>
+          <div class="fr-body">
+            <!-- Band bar -->
+            <div class="bb-label">Current EPC position</div>
+            <div style="position:relative;margin-bottom:3px">
+              <div class="bb" id="hero-bb">
+                <div class="bb-seg" style="width:7%;background:var(--epc-g)">G</div>
+                <div class="bb-seg" style="width:9%;background:var(--epc-f)">F</div>
+                <div class="bb-seg" style="width:11%;background:var(--epc-e)">E</div>
+                <div class="bb-seg" style="width:13%;background:var(--epc-d)">D</div>
+                <div class="bb-seg" style="width:15%;background:var(--epc-c)">C</div>
+                <div class="bb-seg" style="width:20%;background:var(--epc-b)">B</div>
+                <div class="bb-seg" style="width:25%;background:var(--epc-a)">A</div>
+                <div class="bb-needle" id="hero-needle" style="left:5%"></div>
+                <div class="bb-target" style="left:40%"></div>
+              </div>
+            </div>
+            <div class="bb-labs"><span>G</span><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span></div>
+
+            <!-- Confidence bar -->
+            <div class="conf-bar-wrap">
+              <div class="conf-bar-label"><span>Data confidence</span><span id="conf-label" style="color:var(--amber)">Low–Medium · EPC register data</span></div>
+              <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:30%;background:var(--amber)"></div></div>
+            </div>
+
+            <!-- Verdict -->
+            <div class="hero-verdict" id="hero-verdict"></div>
+
+            <!-- Improvements since EPC -->
+            <div id="improvements-panel" style="display:none;margin:12px 0">
+              <div style="border:0.5px solid rgba(78,203,168,.2);border-radius:10px;overflow:hidden">
+                <!-- Header - clickable to expand -->
+                <div id="imp-header" onclick="toggleImprovements()" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:rgba(78,203,168,.06);transition:background .15s" onmouseover="this.style.background='rgba(78,203,168,.1)'" onmouseout="this.style.background='rgba(78,203,168,.06)'">
+                  <div>
+                    <div style="font-size:12px;font-weight:500;color:var(--teal);margin-bottom:2px">Have improvements been made since this EPC was lodged?</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.4">Tick any works already done — we'll update your estimated position</div>
+                  </div>
+                  <div id="imp-chevron" style="color:var(--teal);font-size:13px;flex-shrink:0;margin-left:10px;transition:transform .2s">▾</div>
+                </div>
+                <!-- Expandable body -->
+                <div id="imp-body" style="display:none;padding:13px 14px;border-top:0.5px solid rgba(78,203,168,.15)">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px" id="imp-grid">
+                    <!-- Improvements injected by JS -->
+                  </div>
+                  <!-- Updated position -->
+                  <div id="imp-result" style="display:none;border-radius:8px;padding:10px 12px;background:rgba(78,203,168,.08);border:0.5px solid rgba(78,203,168,.2);margin-bottom:10px">
+                    <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:5px">Updated estimated position</div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                      <div style="font-size:13px;color:rgba(255,255,255,.55)">Original: <span id="imp-orig-band" style="font-family:var(--mono);font-weight:500;color:var(--white)"></span></div>
+                      <div style="color:var(--teal)">→</div>
+                      <div style="font-size:13px;color:rgba(255,255,255,.55)">With improvements: <span id="imp-new-band" style="font-family:var(--mono);font-weight:500;color:var(--teal)"></span></div>
+                      <div style="font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.38)" id="imp-conf-note">Self-declared · Medium confidence</div>
+                    </div>
+                  </div>
+                  <!-- EPC caveat -->
+                  <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.55;border-top:0.5px solid rgba(255,255,255,.08);padding-top:9px">
+                    <strong style="color:rgba(255,255,255,.45)">Important:</strong> Self-declared improvements are not reflected in your lodged EPC. To confirm your updated rating for MEES compliance purposes, a new EPC assessment must be lodged by a qualified DEA. <span style="color:var(--teal);cursor:pointer" onclick="orderSurvey()">Order a verified survey →</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unlock strip -->
+            <div class="unlock-strip">
+              <div class="unlock-label">What would you like to do?</div>
+              <div class="tier-btns">
+                <div class="tier-btn t-featured" onclick="payAndLoad('plan',19.99)">
+                  <div class="tbtn-price">£19.99</div>
+                  <div class="tbtn-body">
+                    <div class="tbtn-name">Compliance Plan — interactive measure tool</div>
+                    <div class="tbtn-desc">Toggle measures · projected EPC band · funding & grants · MEES exemptions · planning PDF · Medium confidence</div>
+                  </div>
+                  <div class="tbtn-arrow">→</div>
+                </div>
+                <div class="tier3-btn" onclick="orderSurvey()">
+                  <div class="t3-price">£149+</div>
+                  <div class="t3-body">
+                    <div class="t3-name">Verified Compliance Survey — DEA-backed report</div>
+                    <div class="t3-desc">New EPC · XML extraction · DEA notes · photos · Awaab review · professional PDF · High confidence</div>
+                  </div>
+                  <div style="color:rgba(255,255,255,.2);font-size:13px;flex-shrink:0">→</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-val">2.5<span>M</span></div><div class="hstat-label">Properties below EPC C</div></div>
+      <div class="hstat"><div class="hstat-val">£30<span>k</span></div><div class="hstat-label">Max MEES penalty</div></div>
+      <div class="hstat"><div class="hstat-val">2030</div><div class="hstat-label">Compliance deadline</div></div>
+      <div class="hstat"><div class="hstat-val">7</div><div class="hstat-label">Exemption types</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL SECTION (Tier 2 — unlocked after payment) -->
+<div id="tool-section">
+  <div class="tool-bar">
+    <div class="tool-bar-inner">
+      <div class="tool-prop">
+        <div class="tool-prop-addr" id="tool-addr">—</div>
+        <div class="tool-prop-meta" id="tool-meta">Compliance Plan · Interactive measure tool</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span class="tool-tier-pill" id="tool-pill">Compliance Plan · £19.99</span>
+        <button class="tool-back" onclick="scrollTo({top:0,behavior:'smooth'})">← Back</button>
+      </div>
+    </div>
+  </div>
+  <div class="tool-body">
+    <!-- LEFT -->
+    <div>
+      <div class="scores" id="scores">
+        <div class="stile" id="st0"><div class="stl">Current band</div><div class="stv" id="sv0">—</div><div class="sts" id="ss0"></div></div>
+        <div class="stile" id="st1"><div class="stl">Projected band</div><div class="stv" id="sv1">—</div><div class="sts" id="ss1">Select measures</div></div>
+        <div class="stile" id="st2"><div class="stl">Selected cost</div><div class="stv" id="sv2">£0</div><div class="sts" id="ss2">0 measures</div></div>
+        <div class="stile" id="st3"><div class="stl">Bands to C</div><div class="stv" id="sv3">—</div><div class="sts">Need band C or above</div></div>
+      </div>
+      <div class="tool-band-wrap">
+        <div class="tbl">Estimated EPC band pathway with selected measures</div>
+        <div style="position:relative">
+          <div class="tool-bb">
+            <div class="tbb-seg" style="width:7%;background:var(--epc-g)">G</div>
+            <div class="tbb-seg" style="width:9%;background:var(--epc-f)">F</div>
+            <div class="tbb-seg" style="width:11%;background:var(--epc-e)">E</div>
+            <div class="tbb-seg" style="width:13%;background:var(--epc-d)">D</div>
+            <div class="tbb-seg" style="width:15%;background:var(--epc-c)">C</div>
+            <div class="tbb-seg" style="width:20%;background:var(--epc-b)">B</div>
+            <div class="tbb-seg" style="width:25%;background:var(--epc-a)">A</div>
+            <div class="tool-needle" id="tool-needle" style="left:5%"></div>
+            <div class="tool-target" style="left:40%"></div>
+          </div>
+        </div>
+        <div class="tbb-labs"><span>G</span><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span></div>
+        <div class="c-achieved" id="c-achieved">✓ Estimated EPC C achieved with selected measures — lodge a new EPC to confirm</div>
+        <div class="band-disclaimer">Band uplift estimates are planning-level indicators based on EPC register data (Medium confidence). A qualified DEA must lodge a new EPC to confirm any rating change. For High confidence estimates, upgrade to a Verified Compliance Survey.</div>
+      </div>
+      <div class="frow">
+        <span class="flbl">Filter:</span>
+        <div class="pill on" onclick="setFilter('all',this)">All</div>
+        <div class="pill" onclick="setFilter('essential',this)">Essential first</div>
+        <div class="pill" onclick="setFilter('grant',this)">Has grant</div>
+        <div class="pill" onclick="setFilter('under2k',this)">Under £2k</div>
+        <div class="pill" onclick="setFilter('available',this)">Not blocked</div>
+      </div>
+      <div id="mlist"></div>
+    </div>
+    <!-- RIGHT -->
+    <div class="rp">
+      <div class="rp-card">
+        <div class="rp-label">Compliance status</div>
+        <div class="cv cv-none" id="tool-cv">
+          <div class="cv-icon">→</div>
+          <div class="cv-title">Select measures to see your path</div>
+          <div class="cv-body">Toggle measures on the left. MEES exemptions unlock automatically as you go based on your selections.</div>
+        </div>
+      </div>
+      <div class="rp-card">
+        <div class="rp-label">MEES exemptions <span class="ex-count-badge" id="ex-badge" style="display:none"></span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Exemptions unlock as you select measures. Valid for <strong>10 years</strong> under 2026 regulations. Must be registered on the PRS Exemptions Register.</div>
+        <div id="ex-list"></div>
+      </div>
+      <div class="rp-card" id="cta-card">
+        <div class="rp-label">Your report</div>
+        <div id="cta-inner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS — split: steps left, live preview right -->
+<section id="how" style="background:var(--navy);padding:72px 0 0;overflow:hidden">
+
+  <!-- Section label + headline -->
+  <div style="max-width:1100px;margin:0 auto;padding:0 2rem 48px">
+    <div class="sec-ey" style="color:var(--teal)">How it works</div>
+    <h2 class="sec-h" style="color:var(--white)">See it working —<br><em>before you pay anything</em></h2>
+    <p class="sec-sub" style="color:rgba(255,255,255,.45)">Toggle the measures on the right and watch the EPC band and compliance verdict update live. This is exactly what the £19.99 Compliance Plan gives you — for your specific property.</p>
+  </div>
+
+  <!-- Split layout -->
+  <div style="max-width:1100px;margin:0 auto;padding:0 2rem;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start">
+
+    <!-- LEFT: numbered steps -->
+    <div style="padding-bottom:60px">
+
+      <!-- Step 1 -->
+      <div style="display:flex;gap:16px;margin-bottom:32px">
+        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--tealp);border:1.5px solid var(--tealbdr);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:500;color:var(--teal);margin-top:2px">1</div>
+        <div>
+          <div style="font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--teal);margin-bottom:5px">Free · no account needed</div>
+          <div style="font-size:17px;font-weight:500;color:var(--white);margin-bottom:8px;font-family:var(--serif);font-weight:300;letter-spacing:-.01em">Enter your postcode,<br>select your property</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.7">EPC data loads automatically from the government register — your current band, construction details and recommended measures. You get an instant verdict: works likely, exemption likely, or already compliant.</div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div style="margin-left:18px;border-left:1.5px dashed rgba(78,203,168,.2);height:24px;margin-bottom:8px"></div>
+
+      <!-- Step 2 -->
+      <div style="display:flex;gap:16px;margin-bottom:32px">
+        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--tealp);border:1.5px solid var(--tealbdr);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:500;color:var(--teal);margin-top:2px">2</div>
+        <div>
+          <div style="font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--teal);margin-bottom:5px">Compliance Plan · £19.99</div>
+          <div style="font-size:17px;font-weight:500;color:var(--white);margin-bottom:8px;font-family:var(--serif);font-weight:300;letter-spacing:-.01em">Toggle measures,<br>see your EPC band move</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.7">Select and deselect improvements individually. The projected EPC band updates instantly. MEES exemptions unlock automatically as you go — based on what you've selected, not a static list. Try it on the right →</div>
+          <!-- Mini feature chips -->
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">
+            <span style="font-size:11px;padding:3px 9px;border-radius:12px;background:rgba(78,203,168,.1);color:var(--teal);border:0.5px solid var(--tealbdr)">Interactive toggles</span>
+            <span style="font-size:11px;padding:3px 9px;border-radius:12px;background:rgba(78,203,168,.1);color:var(--teal);border:0.5px solid var(--tealbdr)">Live band tracker</span>
+            <span style="font-size:11px;padding:3px 9px;border-radius:12px;background:rgba(78,203,168,.1);color:var(--teal);border:0.5px solid var(--tealbdr)">Grant matching</span>
+            <span style="font-size:11px;padding:3px 9px;border-radius:12px;background:rgba(78,203,168,.1);color:var(--teal);border:0.5px solid var(--tealbdr)">MEES exemptions</span>
+            <span style="font-size:11px;padding:3px 9px;border-radius:12px;background:rgba(78,203,168,.1);color:var(--teal);border:0.5px solid var(--tealbdr)">Planning PDF</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div style="margin-left:18px;border-left:1.5px dashed rgba(78,203,168,.2);height:24px;margin-bottom:8px"></div>
+
+      <!-- Step 3 -->
+      <div style="display:flex;gap:16px;margin-bottom:36px">
+        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:rgba(5,150,105,.1);border:1.5px solid rgba(5,150,105,.25);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:500;color:var(--green);margin-top:2px">3</div>
+        <div>
+          <div style="font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:5px">Verified Survey · from £149</div>
+          <div style="font-size:17px;font-weight:500;color:var(--white);margin-bottom:8px;font-family:var(--serif);font-weight:300;letter-spacing:-.01em">Get a survey-backed<br>compliance report</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.7">A qualified DEA visits the property, conducts a new EPC assessment and uploads the XML. Produces a verified compliance report with high-confidence cost estimates, ventilation review, Awaab observations and enhanced exemption assessment.</div>
+          <div style="margin-top:10px;font-size:12px;font-style:italic;color:rgba(255,255,255,.28)">"Suitable for landlords requiring a survey-backed compliance assessment."</div>
+        </div>
+      </div>
+
+      <button onclick="scrollTo({top:document.getElementById('hero').offsetTop,behavior:'smooth'})" style="font-family:var(--sans);font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:12px 24px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='var(--teald)'" onmouseout="this.style.background='var(--teal)'">Check your property — free ↑</button>
+    </div>
+
+    <!-- RIGHT: live interactive preview -->
+    <div style="background:var(--warm);border-radius:14px 14px 0 0;padding:20px;position:sticky;top:70px;max-height:calc(100vh - 90px);overflow-y:auto">
+
+      <!-- Preview header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--teald);margin-bottom:2px">Live preview</div>
+          <div style="font-size:13px;font-weight:500;color:var(--char)">14 Birchwood Close, Manchester · EPC E</div>
+        </div>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.05em;background:var(--tealp);color:var(--teald);border:0.5px solid var(--tealbdr);padding:3px 9px;border-radius:10px">Interactive demo</span>
+      </div>
+
+      <!-- Mini scoreboard -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">
+        <div style="background:var(--white);border:0.5px solid var(--rule);border-radius:8px;padding:10px 11px">
+          <div style="font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Current</div>
+          <div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--epc-e)">E</div>
+        </div>
+        <div style="background:var(--white);border:0.5px solid var(--rule);border-radius:8px;padding:10px 11px;transition:all .3s" id="prev-proj-tile">
+          <div style="font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Projected</div>
+          <div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--char);transition:color .3s" id="prev-proj">E</div>
+        </div>
+        <div style="background:var(--white);border:0.5px solid var(--rule);border-radius:8px;padding:10px 11px">
+          <div style="font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Est. cost</div>
+          <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--char)" id="prev-cost">£0</div>
+        </div>
+      </div>
+
+      <!-- Mini band bar -->
+      <div style="background:var(--white);border:0.5px solid var(--rule);border-radius:8px;padding:11px 12px;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">EPC band pathway</div>
+        <div style="position:relative">
+          <div style="display:flex;height:18px;border-radius:4px;overflow:hidden">
+            <div style="width:7%;background:var(--epc-g);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">G</div>
+            <div style="width:9%;background:var(--epc-f);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">F</div>
+            <div style="width:11%;background:var(--epc-e);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">E</div>
+            <div style="width:13%;background:var(--epc-d);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">D</div>
+            <div style="width:15%;background:var(--epc-c);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">C</div>
+            <div style="width:20%;background:var(--epc-b);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">B</div>
+            <div style="width:25%;background:var(--epc-a);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:white">A</div>
+            <!-- Needle -->
+            <div id="prev-needle" style="position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--char);border-radius:1px;transition:left .45s cubic-bezier(.4,0,.2,1);left:19%">
+              <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--char)">▼</div>
+            </div>
+            <!-- C target -->
+            <div style="position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--green);opacity:.6;left:40%">
+              <div style="position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--green);font-family:var(--mono);font-weight:600;white-space:nowrap">C</div>
+            </div>
+          </div>
+        </div>
+        <div id="prev-c-hit" style="display:none;margin-top:8px;background:var(--greenp);border:1px solid rgba(5,150,105,.3);color:var(--green);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:500;text-align:center">✓ Estimated EPC C achieved</div>
+      </div>
+
+      <!-- Verdict -->
+      <div id="prev-verdict" style="border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--rule);background:var(--warm2);font-size:12px;line-height:1.6;color:var(--muted)">
+        ← Toggle measures below to see how your EPC band and compliance verdict change in real time
+      </div>
+
+      <!-- Demo measures to toggle -->
+      <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Select measures to toggle</div>
+
+      <div id="prev-measures"></div>
+
+      <div style="margin-top:12px;font-size:11px;color:var(--hint);line-height:1.5;text-align:center">Band uplift estimates are planning-level indicators. Medium confidence — EPC API data.</div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+// ── Live preview demo ──────────────────────────────────────
+const PREV_MEASURES=[
+  {id:'p1',name:'Cavity wall insulation',cost:600,bu:2,grant:'ECO4 — often free',desc:'The single most cost-effective measure for a cavity wall property'},
+  {id:'p2',name:'Loft insulation top-up',cost:400,bu:1,grant:'ECO4 / GBIS',desc:'Top up to 270mm — fast, low disruption, excellent payback'},
+  {id:'p3',name:'Boiler upgrade (A-rated)',cost:1000,bu:1,grant:'ECO4 if eligible',desc:'Replace old non-condensing boiler with modern condensing unit'},
+  {id:'p4',name:'Heating controls & TRVs',cost:375,bu:0,grant:'ECO4 (bundled)',desc:'Full TRV set and programmable thermostat'},
+  {id:'p5',name:'Solar PV (3kWp)',cost:5500,bu:1,grant:'0% VAT + SEG',desc:'Rooftop solar — reduces grid consumption, improves band'},
+];
+const PREV_BANDS=['G','F','E','D','C','B','A'];
+const PREV_NP={G:'3.5%',F:'10.5%',E:'19%',D:'29%',C:'40%',B:'57%',A:'80%'};
+const PREV_EPCOL={G:'var(--epc-g)',F:'var(--epc-f)',E:'var(--epc-e)',D:'var(--epc-d)',C:'var(--epc-c)',B:'var(--epc-b)',A:'var(--epc-a)'};
+const prevSel=new Set();
+
+function renderPrevMeasures(){
+  document.getElementById('prev-measures').innerHTML=PREV_MEASURES.map(m=>{
+    const isSel=prevSel.has(m.id);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:9px;border:0.5px solid ${isSel?'var(--green)':'var(--rule)'};background:${isSel?'var(--greenp)':'var(--white)'};cursor:pointer;transition:all .15s;box-shadow:${isSel?'0 0 0 1px var(--green)':''}" id="pm-${m.id}" onclick="togglePrev('${m.id}')">
+      <div style="width:18px;height:18px;border-radius:50%;border:1.5px solid ${isSel?'var(--green)':'var(--rule)'};flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isSel?'var(--green)':'var(--white)'};font-size:10px;color:white;transition:all .12s">${isSel?'✓':''}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:var(--char);margin-bottom:2px">${m.name}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <span style="font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;background:var(--warm);color:var(--muted)">£${m.cost.toLocaleString()}</span>
+          ${m.bu>0?`<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:var(--greenp);color:var(--green);font-weight:500">+${m.bu} band${m.bu>1?'s':''}</span>`:'<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:var(--warm);color:var(--hint)">minor uplift</span>'}
+          <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:var(--purplep);color:var(--purple)">${m.grant}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePrev(id){
+  if(prevSel.has(id))prevSel.delete(id);
+  else prevSel.add(id);
+  updatePrev();
+}
+
+function updatePrev(){
+  const sel=[...prevSel].map(id=>PREV_MEASURES.find(m=>m.id===id)).filter(Boolean);
+  const uplift=sel.reduce((a,m)=>a+m.bu,0);
+  const cost=sel.reduce((a,m)=>a+m.cost,0);
+  const baseI=PREV_BANDS.indexOf('E');
+  const projI=Math.min(PREV_BANDS.length-1,baseI+uplift);
+  const proj=PREV_BANDS[projI];
+  const atC=projI>=PREV_BANDS.indexOf('C');
+
+  // Update tiles
+  const projEl=document.getElementById('prev-proj');
+  projEl.textContent=proj;
+  projEl.style.color=PREV_EPCOL[proj]||'var(--char)';
+  document.getElementById('prev-cost').textContent=cost>0?'£'+cost.toLocaleString():'£0';
+
+  const tile=document.getElementById('prev-proj-tile');
+  tile.style.background=atC?'var(--greenp)':cost>0?'var(--amberp)':'var(--white)';
+  tile.style.borderColor=atC?'rgba(5,150,105,.3)':cost>0?'rgba(217,119,6,.3)':'var(--rule)';
+
+  // Needle
+  document.getElementById('prev-needle').style.left=PREV_NP[proj]||'19%';
+
+  // C achieved
+  document.getElementById('prev-c-hit').style.display=(atC&&sel.length>0)?'block':'none';
+
+  // Verdict
+  const v=document.getElementById('prev-verdict');
+  if(sel.length===0){
+    v.style.cssText='border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--rule);background:var(--warm2);font-size:12px;line-height:1.6;color:var(--muted)';
+    v.textContent='← Toggle measures above to see how your EPC band and compliance verdict change in real time';
+  } else if(atC){
+    v.style.cssText='border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--green);background:var(--greenp);font-size:12px;line-height:1.6;color:var(--green)';
+    v.innerHTML='<strong>✓ Compliant</strong> — selected measures estimated to reach EPC C. Install works and lodge a new EPC to confirm.';
+  } else {
+    const gap=PREV_BANDS.indexOf('C')-projI;
+    v.style.cssText='border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--amber);background:var(--amberp);font-size:12px;line-height:1.6;color:var(--amber)';
+    v.innerHTML=`<strong>→ ${gap} band${gap!==1?'s':''} still needed</strong> — keep selecting measures, or a MEES exemption may apply once all feasible measures are selected.`;
+  }
+
+  renderPrevMeasures();
+}
+
+// Init preview
+renderPrevMeasures();
+
+// ── Improvements since EPC ─────────────────────────────
+const IMPROVEMENTS = [
+  { id:'i1', label:'New boiler installed',         bu:1, icon:'🔥' },
+  { id:'i2', label:'Loft insulation added',        bu:1, icon:'🏠' },
+  { id:'i3', label:'Cavity wall insulation',       bu:2, icon:'🧱' },
+  { id:'i4', label:'Double glazing added',         bu:1, icon:'🪟' },
+  { id:'i5', label:'Solar panels installed',       bu:1, icon:'☀️' },
+  { id:'i6', label:'Heat pump installed',          bu:2, icon:'♨️' },
+  { id:'i7', label:'Internal wall insulation',     bu:2, icon:'🏗️' },
+  { id:'i8', label:'Heating controls upgraded',    bu:1, icon:'🌡️' },
+];
+const impSel = new Set();
+
+function renderImprovements() {
+  document.getElementById('imp-grid').innerHTML = IMPROVEMENTS.map(m => {
+    const isSel = impSel.has(m.id);
+    return `<div onclick="toggleImp('${m.id}')" style="
+      display:flex;align-items:center;gap:8px;padding:8px 10px;
+      border-radius:8px;border:0.5px solid ${isSel ? 'rgba(78,203,168,.4)' : 'rgba(255,255,255,.1)'};
+      background:${isSel ? 'rgba(78,203,168,.1)' : 'rgba(255,255,255,.03)'};
+      cursor:pointer;transition:all .14s;user-select:none">
+      <div style="
+        width:17px;height:17px;border-radius:50%;flex-shrink:0;
+        border:1.5px solid ${isSel ? 'var(--teal)' : 'rgba(255,255,255,.2)'};
+        background:${isSel ? 'var(--teal)' : 'transparent'};
+        display:flex;align-items:center;justify-content:center;
+        font-size:9px;color:var(--navy)">${isSel ? '✓' : ''}</div>
+      <div style="font-size:11px;font-weight:500;color:${isSel ? 'var(--white)' : 'rgba(255,255,255,.5)'}">
+        ${m.icon} ${m.label}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleImp(id) {
+  if (impSel.has(id)) impSel.delete(id);
+  else impSel.add(id);
+  renderImprovements();
+  updateImpResult();
+}
+
+function updateImpResult() {
+  if (!selProp) return;
+  const sel = [...impSel].map(id => IMPROVEMENTS.find(m => m.id === id)).filter(Boolean);
+  const uplift = sel.reduce((a, m) => a + m.bu, 0);
+  const baseIdx = BANDS.indexOf(selProp.rating);
+  const newIdx = Math.min(BANDS.length - 1, baseIdx + uplift);
+  const newBand = BANDS[newIdx];
+  const result = document.getElementById('imp-result');
+  const needle = document.getElementById('hero-needle');
+
+  if (sel.length > 0) {
+    result.style.display = 'block';
+    document.getElementById('imp-orig-band').textContent = selProp.rating;
+    document.getElementById('imp-new-band').textContent = newBand;
+    // Move hero needle to reflect improvements
+    needle.style.left = NP[newBand] || NP[selProp.rating];
+    // Update confidence note
+    document.getElementById('imp-conf-note').textContent =
+      sel.length + ' improvement' + (sel.length !== 1 ? 's' : '') + ' declared · Medium confidence';
+    // Update the hero verdict text to reflect new position
+    updateHeroVerdictWithImprovements(newBand, selProp.rating);
+  } else {
+    result.style.display = 'none';
+    needle.style.left = NP[selProp.rating] || '19%';
+    // Reset verdict
+    showFree(selProp);
+  }
+}
+
+function updateHeroVerdictWithImprovements(newBand, origBand) {
+  const ri = BANDS.indexOf(newBand);
+  const ci = BANDS.indexOf('C');
+  const gap = ci - ri;
+  const v = document.getElementById('hero-verdict');
+  let cls, label, title, body;
+
+  if (ri >= ci) {
+    cls = 'hv-ok'; label = 'Likely compliant with declared improvements';
+    title = 'Based on declared improvements, this property may already meet EPC C';
+    body = `Original EPC: ${origBand}. With the improvements you've declared, the estimated band is ${newBand}. A new EPC must be lodged to confirm this for MEES compliance — but you may already be there.`;
+  } else if (gap === 1) {
+    cls = 'hv-works'; label = 'Close — one more band needed';
+    title = `Estimated EPC ${newBand} with declared improvements — one band from C`;
+    body = `Good progress from the original ${origBand}. One band of further improvement needed. The Compliance Plan will show exactly which remaining measures close that gap.`;
+  } else if (gap === 2) {
+    cls = 'hv-works'; label = 'Works still required';
+    title = `Estimated EPC ${newBand} with declared improvements — ${gap} bands from C`;
+    body = `Progress from ${origBand} is noted. ${gap} more bands of improvement still needed. The Compliance Plan identifies the most cost-effective remaining measures.`;
+  } else {
+    cls = 'hv-exemption'; label = 'Exemption still likely needed';
+    title = `Estimated EPC ${newBand} with declared improvements — exemption may still be required`;
+    body = `Even with declared improvements, EPC C is unlikely through works alone. A MEES exemption is likely the right route. The Compliance Plan identifies which exemption applies.`;
+  }
+
+  v.className = 'hero-verdict ' + cls;
+  v.innerHTML = `<div class="hv-label">${label}</div>
+    <div class="hv-title">${title}</div>
+    <div class="hv-body">${body}</div>
+    <div class="hv-conf">Confidence: Medium · Self-declared improvements · <a href="#pricing" style="color:var(--teal);text-decoration:none">get verified survey for High confidence →</a></div>`;
+}
+
+function toggleImprovements() {
+  const body = document.getElementById('imp-body');
+  const chev = document.getElementById('imp-chevron');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+  if (!isOpen) renderImprovements();
+}
+
+function showImprovementsPanel() {
+  const panel = document.getElementById('improvements-panel');
+  panel.style.display = 'block';
+  // Animate in
+  panel.style.opacity = '0';
+  panel.style.transform = 'translateY(-8px)';
+  panel.style.transition = 'opacity .3s, transform .3s';
+  setTimeout(() => {
+    panel.style.opacity = '1';
+    panel.style.transform = 'translateY(0)';
+  }, 50);
+}
+
+// Restore tool if returning from Stripe payment
+(function(){
+  if(new URLSearchParams(window.location.search).has('ref'))return;
+  const prop=sessionStorage.getItem('epc2c_prop');
+  const tier=sessionStorage.getItem('epc2c_tier');
+  // Check if returning from Stripe (Stripe adds ?session_id or we check referrer)
+  const fromStripe=document.referrer.includes('stripe.com')||
+    document.referrer.includes('buy.stripe.com')||
+    window.location.search.includes('paid=1');
+  if(prop&&tier&&fromStripe){
+    try{
+      selProp=JSON.parse(prop);
+      curTier=tier;
+      sessionStorage.removeItem('epc2c_prop');
+      sessionStorage.removeItem('epc2c_tier');
+      // Show thank you message briefly then load tool
+      setTimeout(()=>{
+        loadTool(selProp);
+        // Show success toast
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:70px;right:20px;z-index:999;background:#059669;color:white;font-family:var(--sans);font-size:13px;font-weight:500;padding:12px 20px;border-radius:9px;box-shadow:0 4px 20px rgba(0,0,0,.15)';
+        toast.textContent='✓ Payment confirmed — your compliance plan is ready';
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),5000);
+      },500);
+    }catch(e){}
+  } else if(fromStripe){
+    // sessionStorage lost — Stripe redirected to a different origin (e.g. localhost → epc2c.co.uk)
+    setTimeout(()=>{
+      const banner=document.createElement('div');
+      banner.id='paid-banner';
+      banner.style.cssText='position:fixed;top:58px;left:0;right:0;z-index:300;background:#059669;color:white;font-family:var(--sans);font-size:14px;font-weight:500;padding:14px 24px;text-align:center;line-height:1.6;box-shadow:0 2px 12px rgba(0,0,0,.18)';
+      banner.innerHTML='✓ Payment confirmed — please search your postcode to load your compliance plan. <span onclick="document.getElementById(\'paid-banner\').remove()" style="margin-left:16px;cursor:pointer;opacity:.7;font-size:18px;line-height:1;vertical-align:middle">×</span>';
+      document.body.appendChild(banner);
+      scrollTo({top:0,behavior:'smooth'});
+      setTimeout(()=>document.getElementById('pc')&&document.getElementById('pc').focus(),600);
+    },300);
+  }
+})();
+</script>
+
+<!-- PRICING -->
+<section class="price-section" id="pricing">
+  <div class="inner">
+    <div class="sec-ey" style="color:var(--teal)">Pricing</div>
+    <h2 class="sec-h" style="color:var(--white)">Three tiers. One clear<br><em style="color:var(--teal)">compliance</em> pathway.</h2>
+    <p class="sec-sub" style="color:rgba(255,255,255,.4)">Each tier is designed for a distinct landlord need. Start free — pay only when you need more.</p>
+    <div class="price-grid">
+
+      <!-- Tier 1 -->
+      <div class="pc pc-t1">
+        <div class="pc-eyebrow">Tier 1 — Instant check</div>
+        <div class="pc-name">Free <em>assessment</em></div>
+        <div class="pc-desc">Know immediately whether your property has a problem — before spending a penny.</div>
+        <div class="pc-price-row"><div class="pc-price">£0</div></div>
+        <div class="conf-chip" style="background:rgba(217,119,6,.15);color:var(--amber)">● Low–Medium confidence</div>
+        <div class="pc-conf-bar"><div class="pc-conf-fill" style="width:30%;background:var(--amber)"></div></div>
+        <div class="pc-features">
+          <div class="pc-feat">EPC register lookup by postcode</div>
+          <div class="pc-feat">Compliance verdict instantly</div>
+          <div class="pc-feat">Current EPC band position</div>
+          <div class="pc-feat">Basic pathway indication</div>
+          <div class="pc-feat">"Works likely" or "Exemption likely"</div>
+          <div class="pc-feat">Basic projected band uplift</div>
+        </div>
+        <button class="pc-btn" onclick="scrollTo({top:0,behavior:'smooth'})">Check your property</button>
+      </div>
+
+      <!-- Tier 2 -->
+      <div class="pc pc-mid">
+        <div class="pc-eyebrow">Tier 2 — Compliance Plan</div>
+        <div class="pc-name"><em>Interactive</em> planning tool</div>
+        <div class="pc-desc">Our scalable automated product. Plan your compliance path, understand your costs, and download a planning PDF.</div>
+        <div class="pc-price-row"><div class="pc-price">£19.99</div><div class="pc-price-note">per property · one-off</div></div>
+        <div class="conf-chip" style="background:rgba(78,203,168,.12);color:var(--teal)">● Medium confidence · EPC API + rules engine</div>
+        <div class="pc-conf-bar"><div class="pc-conf-fill" style="width:60%;background:var(--teal)"></div></div>
+        <div class="pc-features">
+          <div class="pc-feat">Everything in Tier 1</div>
+          <div class="pc-feat">Interactive measure toggles</div>
+          <div class="pc-feat">Estimated costs per measure</div>
+          <div class="pc-feat">Projected EPC band pathway</div>
+          <div class="pc-feat">Grant & funding suggestions</div>
+          <div class="pc-feat">Reactive MEES exemption logic</div>
+          <div class="pc-feat">Basic ventilation flags</div>
+          <div class="pc-feat">Downloadable planning PDF</div>
+        </div>
+        <button class="pc-btn" onclick="payAndLoad('plan',19.99)">Get Compliance Plan — £19.99</button>
+      </div>
+
+      <!-- Tier 3 -->
+      <div class="pc pc-pro">
+        <div class="pc-eyebrow">Tier 3 — Verified Survey</div>
+        <div class="pc-name">Professional <em>DEA report</em></div>
+        <div class="pc-desc">Suitable for landlords requiring a survey-backed compliance assessment. DEA visits the property, conducts a new EPC and produces a verified report.</div>
+        <div class="pc-price-row"><div class="pc-price" style="font-size:24px">From £149</div></div>
+        <div class="conf-chip" style="background:rgba(5,150,105,.12);color:var(--green)">● High confidence · XML + DEA survey</div>
+        <div class="pc-conf-bar"><div class="pc-conf-fill" style="width:92%;background:var(--green)"></div></div>
+        <div class="pc-features">
+          <div class="pc-feat">New EPC assessment (lodged)</div>
+          <div class="pc-feat">RdSAP XML extraction</div>
+          <div class="pc-feat">DEA site notes & observations</div>
+          <div class="pc-feat">Property photos & floorplans</div>
+          <div class="pc-feat">Verified compliance report PDF</div>
+          <div class="pc-feat">High-confidence cost estimates (±15%)</div>
+          <div class="pc-feat">Ventilation & mould review</div>
+          <div class="pc-feat">Awaab's Law observations</div>
+          <div class="pc-feat">Enhanced exemption assessment</div>
+        </div>
+        <button class="pc-btn" onclick="orderSurvey()">Order Verified Survey →</button>
+      </div>
+    </div>
+
+    <!-- Exemption add-on -->
+    <div style="margin-top:14px;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;max-width:960px">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:3px">Managed MEES Exemption Registration</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.6">Can't reach EPC C? GoGreen Alliance handles evidence gathering, documentation and PRS Exemptions Register submission on your behalf. Add to any tier.</div>
+      </div>
+      <div style="flex-shrink:0;text-align:right">
+        <div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--white);margin-bottom:6px">From £149</div>
+        <button onclick="orderSurvey()" style="font-family:var(--sans);font-size:12px;font-weight:500;background:transparent;color:rgba(255,255,255,.5);border:0.5px solid rgba(255,255,255,.2);border-radius:7px;padding:7px 14px;cursor:pointer">Order service →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEA -->
+<section class="dea-section" id="dea">
+  <div class="dea-inner">
+    <div>
+      <div class="dea-badge">For DEAs — domestic energy assessors</div>
+      <h2 class="sec-h">Add a premium service<br>to every EPC <em>you already do</em></h2>
+      <p class="sec-sub">You already have the access, the data, and the client relationship. EPC2C provides the platform, the report engine, and the MEES compliance logic.</p>
+      <div class="dea-pts">
+        <div class="dea-pt"><div class="dea-pt-ic">📍</div><div><strong>No extra site visits needed for Tier 2</strong><span>The automated tool uses EPC register data. For Tier 3 surveys, your visit generates the XML and evidence base.</span></div></div>
+        <div class="dea-pt"><div class="dea-pt-ic">💰</div><div><strong>Wholesale from £19.90 per report</strong><span>Recommend £49–£79 to landlords at Tier 2. Tier 3 surveys priced at your discretion on top of the EPC fee.</span></div></div>
+        <div class="dea-pt"><div class="dea-pt-ic">🏷️</div><div><strong>White-label option</strong><span>Your branding on every report. Differentiate your offering and justify a premium over standard EPC-only services.</span></div></div>
+      </div>
+      <a href="mailto:dea@epc2c.co.uk" class="dea-link">Enquire about DEA partnership →</a>
+    </div>
+    <div class="dea-box">
+      <div class="db-lbl">Sample DEA portfolio</div>
+      <div class="db-row"><div class="db-band" style="background:var(--epc-e)">E</div><div class="db-info"><div class="db-addr">15 Prestwood Ave, Wolverhampton</div><div class="db-bar"><div class="db-fill" style="width:48%;background:var(--epc-e)"></div></div></div><div class="db-st" style="color:var(--amber)">Plan ordered</div></div>
+      <div class="db-row"><div class="db-band" style="background:var(--epc-f)">F</div><div class="db-info"><div class="db-addr">7 Maple Avenue, Manchester</div><div class="db-bar"><div class="db-fill" style="width:22%;background:var(--epc-f)"></div></div></div><div class="db-st" style="color:var(--teal)">Survey booked</div></div>
+      <div class="db-row"><div class="db-band" style="background:var(--epc-c)">C</div><div class="db-info"><div class="db-addr">22 Birchwood Close, Manchester</div><div class="db-bar"><div class="db-fill" style="width:80%;background:var(--epc-c)"></div></div></div><div class="db-st" style="color:var(--green)">Compliant ✓</div></div>
+      <div class="db-row"><div class="db-band" style="background:var(--epc-e)">E</div><div class="db-info"><div class="db-addr">14 Birchwood Close, Manchester</div><div class="db-bar"><div class="db-fill" style="width:45%;background:var(--epc-e)"></div></div></div><div class="db-st" style="color:var(--amber)">Exemption likely</div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.35);line-height:1.5">Portfolio dashboard — track all properties, compliance status and report history in one place.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="tl-section">
+  <div class="inner">
+    <div class="sec-ey" style="color:var(--teal)">Compliance timeline</div>
+    <h2 class="sec-h" style="color:var(--white)">The <em style="color:var(--teal)">deadline</em> is closer than it looks</h2>
+    <div class="tl">
+      <div class="tl-item"><div class="tl-dot d-past"></div><div class="tl-yr past">2018</div><div class="tl-desc">MEES introduced — EPC E minimum for new tenancies</div></div>
+      <div class="tl-item"><div class="tl-dot d-past"></div><div class="tl-yr past">2020</div><div class="tl-desc">EPC E extended to all existing PRS tenancies</div></div>
+      <div class="tl-item"><div class="tl-dot d-now"></div><div class="tl-yr now">Now</div><div class="tl-desc">2.5M properties still below EPC C — window to act</div></div>
+      <div class="tl-item"><div class="tl-dot d-future"></div><div class="tl-yr future">2028</div><div class="tl-desc">EPC C expected for new PRS tenancies</div></div>
+      <div class="tl-item"><div class="tl-dot d-future"></div><div class="tl-yr future">2030</div><div class="tl-desc">EPC C required for all PRS — up to £30,000 penalty</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-logo">EPC<span>2C</span> · powered by GoGreen Alliance</div>
+    <div class="foot-links"><a href="#" class="foot-link">Privacy</a><a href="#" class="foot-link">Terms</a><a href="mailto:hello@epc2c.co.uk" class="foot-link">Contact</a><a href="mailto:dea@epc2c.co.uk" class="foot-link">DEA enquiries</a></div>
+    <div class="foot-copy">© 2025 EPC2C · epc2c.co.uk</div>
+  </div>
+</footer>
+
+<script>
+// ── EPC API — all calls routed through local proxy (proxy.js) ──
+// Proxy forwards requests server-side with Basic Auth from .env
+// Run:  node proxy.js   (in a separate terminal)
+const PROXY_BASE='/api/epc';
+
+function sapToBand(sap){
+  const n=parseInt(sap)||0;
+  if(n>=92)return'A';if(n>=81)return'B';if(n>=69)return'C';
+  if(n>=55)return'D';if(n>=39)return'E';if(n>=21)return'F';return'G';
+}
+function parseCostRange(s){
+  if(!s)return{min:500,max:2000};
+  const nums=(s.match(/[\d,]+/g)||[]).map(x=>parseInt(x.replace(/,/g,'')));
+  if(!nums.length)return{min:500,max:2000};
+  if(nums.length===1)return{min:nums[0],max:Math.round(nums[0]*1.6)};
+  return{min:nums[0],max:nums[1]};
+}
+function grantsByType(descr){
+  const t=(descr||'').toLowerCase();const g=[];
+  if(t.includes('insul')||t.includes('boiler')||t.includes('heat pump'))g.push({n:'ECO4',d:'Subject to eligibility'});
+  if(t.includes('insul'))g.push({n:'GBIS',d:'Great British Insulation Scheme'});
+  if(t.includes('heat pump'))g.push({n:'Boiler Upgrade Scheme',d:'£7,500 grant',a:'£7,500'});
+  if(t.includes('solar')||t.includes('pv'))g.push({n:'0% VAT',d:'Zero-rated VAT on solar'},{n:'Smart Export Guarantee',d:'Earn for exported energy'});
+  return g;
+}
+async function fetchEpcProps(postcode){
+  const r=await fetch(PROXY_BASE+'/search?postcode='+encodeURIComponent(postcode)+'&size=10');
+  const d=await r.json();
+  console.log('[EPC] raw API response:', JSON.stringify(d, null, 2));
+  if(d.rows&&d.rows.length>0) console.log('[EPC] first row field names:', Object.keys(d.rows[0]));
+  if(!r.ok)throw new Error(d.error||'EPC API '+r.status);
+  return(d.rows||[]).map(row=>({
+    addr:[row['address1'],row['address2'],row['posttown'],row['postcode']].filter(Boolean).join(', '),
+    rating:row['current-energy-rating']||'E',
+    type:row['property-type']||'Residential',
+    era:row['construction-age-band']||'Unknown era',
+    walls:row['walls-description']||'',
+    heat:row['main-heating-description']||'',
+    lmkKey:row['lmk-key'],
+    currentSAP:parseInt(row['current-energy-efficiency'])||50,
+    potentialSAP:parseInt(row['potential-energy-efficiency'])||70,
+  }));
+}
+async function fetchRecs(lmkKey){
+  if(!lmkKey)return null;
+  const r=await fetch(PROXY_BASE+'/'+lmkKey+'/recommendations');
+  if(!r.ok)return null;
+  const d=await r.json();
+  const recs=d.rows||[];
+  if(!recs.length)return null;
+  const BANDS_L=['G','F','E','D','C','B','A'];
+  let prevSAP=50;
+  return recs.map((rec,i)=>{
+    const recSAP=parseInt(rec['energy-performance-rating'])||prevSAP;
+    const prevBand=sapToBand(prevSAP);
+    const newBand=sapToBand(recSAP);
+    const bu=Math.max(0,BANDS_L.indexOf(newBand)-BANDS_L.indexOf(prevBand));
+    prevSAP=recSAP;
+    const costs=parseCostRange(rec['indicative-cost']);
+    const descr=rec['improvement-summary-text']||rec['improvement-descr']||'';
+    const seq=parseInt(rec['seq'])||99;
+    return{
+      id:'r'+i,
+      name:rec['improvement-id-text']||descr.split('.')[0]||'Improvement '+(i+1),
+      description:descr,
+      priority:seq<=2?'essential':seq<=4?'recommended':'optional',
+      blocked:false,
+      bu,
+      cMin:costs.min,cMax:costs.max,
+      conf:'Medium',
+      uTxt:bu>=2?'Major band uplift':bu===1?'Partial band uplift':'Minor uplift',
+      funding:grantsByType(descr),
+      detail:descr,
+      blockedReason:'',
+    };
+  });
+}
+
+const BANDS=['G','F','E','D','C','B','A'];
+const EPC_COL={G:'var(--epc-g)',F:'var(--epc-f)',E:'var(--epc-e)',D:'var(--epc-d)',C:'var(--epc-c)',B:'var(--epc-b)',A:'var(--epc-a)'};
+const NP={G:'3.5%',F:'10.5%',E:'19%',D:'29%',C:'40%',B:'57%',A:'80%'};
+
+
+const MEASURES={
+  'Solid brick':[
+    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit — the most impactful single measure for most gas-heated properties.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible criteria met',a:'Full or partial funding'},{n:'Help2Heat',d:'Benefits-linked households',a:'Often fully funded'}],detail:'1–2 day installation. Minimal disruption. Essential if boiler is pre-2005 non-condensing.'},
+    {id:'m2',name:'Heating controls — full TRV set & programmer',priority:'essential',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set across all radiators plus programmable thermostat. Companion to boiler upgrade.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled with boiler upgrade'}],detail:'Half-day. Best installed at the same time as any boiler works.'},
+    {id:'m3',name:'Secondary glazing — single glazed windows',priority:'recommended',blocked:false,bu:1,cMin:800,cMax:2000,conf:'Medium',desc:'Internal secondary glazing fitted to all single-glazed windows. Non-invasive and permitted on most properties.',uTxt:'Partial band uplift',funding:[{n:'GBIS',d:'Great British Insulation Scheme — check eligibility'}],detail:'No planning permission needed in most cases. Good option for conservation areas.'},
+    {id:'m4',name:'Internal wall insulation',priority:'essential',blocked:false,bu:2,cMin:5000,cMax:9000,conf:'Medium',desc:'Insulated plasterboard fixed to internal face of solid walls. Largest single improvement available for solid-wall properties.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Partial funding available'}],detail:'Significant disruption — skirting, architraves and electrics need adjusting. Reduces room width by ~100mm per treated wall.'},
+    {id:'m5',name:'External wall insulation',priority:'optional',blocked:true,blockedReason:'Planning consent required',bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'External cladding system. Blocked pending planning consent for this property.',uTxt:'Major band uplift',funding:[],detail:'Requires planning in most cases for solid brick. Conservation areas almost always refused.'},
+    {id:'m6',name:'Solar PV panels (3–4kWp)',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'Rooftop solar installation. Reduces grid electricity consumption and improves band rating.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated VAT on solar installations',a:'Save ~£700–£1,200'},{n:'Smart Export Guarantee',d:'Earn income from electricity exported to the grid'}],detail:'South-facing roof preferred. 1–2 days. Permitted development in most cases.'},
+  ],
+  'Cavity (uninsulated)':[
+    {id:'m1',name:'Cavity wall insulation',priority:'essential',blocked:false,bu:2,cMin:400,cMax:800,conf:'High',desc:'Blown mineral fibre or EPS bead injected into existing cavity. The most cost-effective insulation measure available.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'Widely available',a:'Often fully funded'},{n:'GBIS',d:'Great British Insulation Scheme',a:'Check eligibility'}],detail:'4–6 hours. Small drill holes patched after. High confidence cost estimate based on standard semi-detached.'},
+    {id:'m2',name:'Loft insulation — top up to 270mm',priority:'essential',blocked:false,bu:1,cMin:300,cMax:600,conf:'High',desc:'Top up existing loft insulation to current 270mm standard. Excellent cost-to-improvement ratio.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'Often free for eligible households'},{n:'GBIS',d:'Check eligibility'}],detail:'2–4 hours. Requires accessible loft.'},
+    {id:'m3',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Full or partial'}],detail:'1–2 days. Most impactful for properties with pre-2005 boilers.'},
+    {id:'m4',name:'Heating controls — TRVs & programmer',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled'}],detail:'Half-day. Best done with boiler works.'},
+    {id:'m5',name:'Solar PV panels (3–4kWp)',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'Rooftop solar. Reduces grid consumption and improves band.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated VAT',a:'Save ~£700–£1,200'},{n:'Smart Export Guarantee',d:'Earn for exported energy'}],detail:'1–2 days. South-facing roof preferred.'},
+    {id:'m6',name:'Air source heat pump',priority:'optional',blocked:false,bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'Replace gas boiler with ASHP. Large band improvement but significant cost and disruption.',uTxt:'Major band uplift',funding:[{n:'Boiler Upgrade Scheme',d:'£7,500 government grant',a:'£7,500 grant available'},{n:'Green finance',d:'Low-rate green loans from some lenders'}],detail:'Requires external unit space. Best suited to well-insulated homes. 2–3 days.'},
+  ],
+  DEFAULT:[
+    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible'}],detail:'1–2 days.'},
+    {id:'m2',name:'Loft insulation',priority:'recommended',blocked:false,bu:1,cMin:300,cMax:700,conf:'High',desc:'Install or top up loft insulation to 270mm.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'Often free for eligible'},{n:'GBIS',d:'Check eligibility'}],detail:'2–4 hours.'},
+    {id:'m3',name:'Heating controls',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled'}],detail:'Half-day.'},
+    {id:'m4',name:'Solar PV panels',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'3–4kWp rooftop solar installation.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated',a:'Save ~£700–1,200'},{n:'Smart Export Guarantee',d:'Earn for exports'}],detail:'1–2 days.'},
+    {id:'m5',name:'Double glazing — full replacement',priority:'optional',blocked:false,bu:1,cMin:3000,cMax:7000,conf:'Medium',desc:'Replace single-glazed windows with A-rated double glazing.',uTxt:'Partial band uplift',funding:[],detail:'1–3 days. Planning may be needed in conservation areas.'},
+  ]
+};
+
+const EX_TMPL=[
+  {id:'all_improvements',type:'All improvements made',desc:'Available when all feasible unblocked measures have been selected/installed and the property still cannot reach EPC C.',dur:'10 years',reqs:['Installation certificates for all completed measures','Updated EPC post-installation confirming current rating','Written confirmation no further improvements are cost-effective']},
+  {id:'high_cost',type:'High cost exemption',desc:'Available when total improvement cost exceeds the £10,000 cap without achieving EPC C, or when the cheapest single measure alone exceeds £3,500.',dur:'10 years',reqs:['Quotes from at least three installers','Evidence total cost exceeds £10,000','Confirmation property still cannot reach EPC C within the cap']},
+  {id:'wall_insulation',type:'Wall insulation exemption',desc:'Available when wall insulation cannot be installed — typically solid walls where the only options are technically impractical or require planning consent that has been refused.',dur:'10 years',reqs:['Written confirmation from qualified installer','Photographs evidencing wall construction type','Planning refusal letter if applicable']},
+  {id:'consent',type:'Third-party consent exemption',desc:'Available when a third party (freeholder, planning authority, tenant) refuses permission for required works and that consent cannot reasonably be obtained.',dur:'10 years',reqs:['Evidence of request for consent','Written refusal from the third party','Record of reasonable attempts to obtain consent']},
+  {id:'devaluation',type:'Devaluation exemption',desc:'Available when a RICS-qualified surveyor confirms improvements would reduce the property\'s market value by more than 5%.',dur:'10 years',reqs:['RICS valuation report confirming devaluation >5%','Report from a RICS-regulated valuer']},
+  {id:'new_landlord',type:'New landlord exemption',desc:'Available if you recently became responsible for this property. Provides 6 months to register a permanent exemption or complete improvements.',dur:'6 months',reqs:['Evidence of when landlord responsibility commenced']},
+  {id:'listed_building',type:'Listed building / conservation area',desc:'Available if the property is listed or in a conservation area and the required works would unacceptably alter its character or planning consent has been refused.',dur:'10 years',reqs:['Listed building or conservation area confirmation','Conservation officer statement or planning refusal']},
+];
+
+// State
+let selProp=null, curTier=null, measures=[], sel=new Set(), selEx=null, filt='all';
+// Server-side property restore after Stripe redirect (?paid=1&ref=<sessionId>)
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const ref=params.get('ref');
+  const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||params.has('paid');
+  if(!ref||!fromStripe)return;
+  fetch('/api/get-property/'+ref)
+    .then(r=>r.ok?r.json():Promise.reject('not found'))
+    .then(data=>{
+      selProp=data;curTier='plan';
+      setTimeout(()=>{
+        loadTool(selProp);
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:70px;right:20px;z-index:999;background:#059669;color:white;font-family:var(--sans);font-size:13px;font-weight:500;padding:12px 20px;border-radius:9px;box-shadow:0 4px 20px rgba(0,0,0,.15)';
+        toast.textContent='✓ Payment confirmed — your compliance plan is ready';
+        document.body.appendChild(toast);setTimeout(()=>toast.remove(),5000);
+      },300);
+    })
+    .catch(()=>{
+      setTimeout(()=>{
+        const banner=document.createElement('div');
+        banner.id='paid-banner';
+        banner.style.cssText='position:fixed;top:58px;left:0;right:0;z-index:300;background:#059669;color:white;font-family:var(--sans);font-size:14px;font-weight:500;padding:14px 24px;text-align:center;line-height:1.6;box-shadow:0 2px 12px rgba(0,0,0,.18)';
+        banner.innerHTML='✓ Payment confirmed — please search your postcode to load your compliance plan. <span onclick="document.getElementById(\'paid-banner\').remove()" style="margin-left:16px;cursor:pointer;opacity:.7;font-size:18px;line-height:1;vertical-align:middle">×</span>';
+        document.body.appendChild(banner);
+        scrollTo({top:0,behavior:'smooth'});
+        setTimeout(()=>document.getElementById('pc')&&document.getElementById('pc').focus(),600);
+      },300);
+    });
+})();
+
+function bi(r){return BANDS.indexOf(r)}
+async function lookup(){
+  const pc=document.getElementById('pc').value.trim().toUpperCase().replace(/\s/g,'');
+  if(pc.length<3)return;
+  const btn=document.getElementById('find-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Searching…';
+  try{
+    const props=await fetchEpcProps(pc);
+    if(props.length>0){showProps(props);}
+    else{showNoResults();}
+  }catch(err){
+    console.error('EPC API error:',err.message);
+    showApiError(err.message);
+  }finally{
+    btn.disabled=false;btn.textContent='Find my property';
+  }
+}
+function showNoResults(){
+  document.getElementById('pl-hdr').textContent='No properties found — please check your postcode and try again';
+  document.getElementById('pl-items').innerHTML='<div style="padding:10px 12px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.6">No EPC records found for this postcode. The property may not have a lodged EPC, or the postcode may be incorrect.<br><br>If you believe an EPC exists, contact your DEA or check the government EPC register directly.</div>';
+  document.getElementById('prop-list').style.display='block';
+  document.getElementById('free-result').style.display='none';
+}
+function showApiError(msg){
+  document.getElementById('pl-hdr').textContent='Could not reach EPC register';
+  document.getElementById('pl-items').innerHTML='<div style="padding:10px 12px;font-size:12px;color:rgba(220,38,38,.7);line-height:1.6">EPC lookup failed: '+msg+'<br><br>Make sure the proxy is running (<code>node proxy.js</code>) and your API credentials in <code>.env</code> are correct.</div>';
+  document.getElementById('prop-list').style.display='block';
+  document.getElementById('free-result').style.display='none';
+}
+function showProps(props){
+  document.getElementById('pl-hdr').textContent=props.length+' properties found — select yours';
+  document.getElementById('pl-items').innerHTML=props.map((p,i)=>`
+    <div class="prop-item" id="pi-${i}" onclick="pickProp(${i})">
+      <div class="prop-addr">${p.addr}</div>
+      <div class="epc-badge" style="background:${EPC_COL[p.rating]}">${p.rating}</div>
+    </div>`).join('');
+  document.getElementById('prop-list').style.display='block';
+  document.getElementById('free-result').style.display='none';
+  window._props=props;
+}
+async function pickProp(i){
+  document.querySelectorAll('.prop-item').forEach(e=>e.classList.remove('sel'));
+  document.getElementById('pi-'+i).classList.add('sel');
+  selProp=window._props[i];
+  if(selProp.lmkKey){
+    try{
+      const apiMs=await fetchRecs(selProp.lmkKey);
+      if(apiMs&&apiMs.length>0)selProp._apiMeasures=apiMs;
+    }catch(e){/* fall through */}
+  }
+  setTimeout(()=>showFree(selProp),350);
+}
+function showFree(p){
+  const ri=bi(p.rating),ci=bi('C'),gap=ci-ri;
+  document.getElementById('fr-addr').textContent=p.addr;
+  document.getElementById('fr-tags').innerHTML=`
+    <span class="fr-tag" style="background:${EPC_COL[p.rating]};color:white">${p.rating}</span>
+    <span class="fr-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45)">${p.type}</span>
+    <span class="fr-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45)">${p.era}</span>`;
+  document.getElementById('hero-needle').style.left=NP[p.rating]||'5%';
+
+  // Confidence = Low-Medium for free tier
+  document.getElementById('conf-label').textContent='Low–Medium · EPC register data only';
+  document.getElementById('conf-fill').style.width='30%';
+  document.getElementById('conf-fill').style.background='var(--amber)';
+
+  let cls,label,title,body;
+  if(ri>=ci){cls='hv-ok';label='Already compliant';title='This property currently meets EPC C';body='No action required for the 2030 standard. Review again at next EPC renewal.';}
+  else if(gap===1){cls='hv-works';label='Works likely sufficient';title='EPC C is likely achievable with targeted improvements';body=`EPC ${p.rating}: one band improvement needed. Likely achievable with 1–2 measures. Upgrade to the Compliance Plan for specific costs and an interactive tool.`;}
+  else if(gap===2){cls='hv-works';label='Works required';title='EPC C is achievable — multiple measures needed';body=`EPC ${p.rating}: two bands of improvement needed. Multiple measures required. Estimated range: £2,000–£8,000. The Compliance Plan will show the exact path for this property.`;}
+  else{cls='hv-exemption';label='Exemption likely needed';title='EPC C is unlikely to be achievable through works alone';body=`EPC ${p.rating}: ${gap} bands needed. Based on the property type and construction era, a MEES exemption is likely required. The Compliance Plan identifies which exemption applies and how to register it.`;}
+
+  const v=document.getElementById('hero-verdict');
+  v.className='hero-verdict '+cls;
+  v.innerHTML=`<div class="hv-label">${label}</div><div class="hv-title">${title}</div><div class="hv-body">${body}</div><div class="hv-conf">Confidence: Low–Medium · EPC register data only · <a href="#pricing" style="color:var(--teal);text-decoration:none">upgrade for higher confidence →</a></div>`;
+  document.getElementById('free-result').style.display='block';
+  // Reset improvements panel
+  impSel.clear();
+  showImprovementsPanel();
+  setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+}
+
+async function payAndLoad(tier,price){
+  if(!selProp){alert('Please select a property first by entering your postcode above.');scrollTo({top:0,behavior:'smooth'});return;}
+  const LINKS={
+    plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',
+    survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00'
+  };
+  const base=LINKS[tier]||LINKS.plan;
+  try{
+    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
+    const {sessionId}=await r.json();
+    window.location.href=base+'?client_reference_id='+sessionId;
+  }catch(e){
+    sessionStorage.setItem('epc2c_prop',JSON.stringify(selProp));
+    sessionStorage.setItem('epc2c_tier',tier);
+    window.location.href=base+'?client_reference_id='+encodeURIComponent(selProp.addr||'');
+  }
+}
+async function orderSurvey(){
+  if(!selProp){window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00';return;}
+  try{
+    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
+    const {sessionId}=await r.json();
+    window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+sessionId;
+  }catch(e){
+    sessionStorage.setItem('epc2c_prop',JSON.stringify(selProp));
+    sessionStorage.setItem('epc2c_tier','survey');
+    window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+encodeURIComponent(selProp.addr||'');
+  }
+}
+
+function loadTool(p){
+  document.getElementById('tool-addr').textContent=p.addr;
+  document.getElementById('tool-meta').textContent=`${p.type} · ${p.era} · ${p.heat} · ${p.walls}`;
+  if(p._apiMeasures&&p._apiMeasures.length>0){
+    measures=p._apiMeasures;
+    document.getElementById('tool-pill').textContent='Compliance Plan · Live EPC data · £19.99';
+  }else{
+    const wk=Object.keys(MEASURES).find(k=>p.walls&&p.walls.includes(k))||'DEFAULT';
+    measures=MEASURES[wk];
+  }
+  sel.clear();selEx=null;
+  document.getElementById('tool-section').style.display='block';
+  setTimeout(()=>document.getElementById('tool-section').scrollIntoView({behavior:'smooth'}),100);
+  renderM();update();
+}
+
+function projBand(){
+  const base=selProp?selProp.rating:'G';
+  const baseI=bi(base);
+  const uplift=[...sel].reduce((a,id)=>{const m=measures.find(x=>x.id===id);return a+(m?m.bu:0);},0);
+  return BANDS[Math.min(BANDS.length-1,baseI+uplift)];
+}
+
+function update(){
+  if(!selProp)return;
+  const proj=projBand();
+  const baseI=bi(selProp.rating),projI=bi(proj);
+  const atC=projI>=bi('C');
+  const gap=Math.max(0,bi('C')-projI);
+  const selMs=[...sel].map(id=>measures.find(m=>m.id===id)).filter(Boolean);
+  const cMin=selMs.reduce((a,m)=>a+(m.cMin||0),0);
+  const cMax=selMs.reduce((a,m)=>a+(m.cMax||0),0);
+
+  document.getElementById('sv0').textContent=selProp.rating;
+  document.getElementById('ss0').textContent='EPC band';
+  document.getElementById('sv1').textContent=proj;
+  document.getElementById('ss1').textContent=proj!==selProp.rating?'from '+selProp.rating:'No change';
+  document.getElementById('sv2').textContent=cMin>0?'£'+cMin.toLocaleString()+(cMax>cMin?'–£'+cMax.toLocaleString():''):'£0';
+  document.getElementById('ss2').textContent=selMs.length+' measure'+(selMs.length!==1?'s':'');
+  document.getElementById('sv3').textContent=atC?'Achieved!':gap+' band'+(gap!==1?'s':'');
+  document.getElementById('st1').className='stile '+(atC?'ok':'');
+  document.getElementById('st3').className='stile '+(atC?'ok':gap===1?'warn':'');
+  document.getElementById('tool-needle').style.left=NP[proj]||'5%';
+  document.getElementById('c-achieved').style.display=(atC&&selMs.length>0)?'block':'none';
+  updateCV(proj,atC,selMs,cMin);
+  const ex=evalEx(proj,atC,selMs,cMin);
+  const ac=ex.filter(e=>e.status==='available'||e.status==='selected').length;
+  const badge=document.getElementById('ex-badge');
+  badge.style.display=ac>0?'inline':'none';if(ac>0)badge.textContent=ac;
+  renderEx(ex);
+  renderCTA(proj,atC,selMs);
+}
+
+function updateCV(proj,atC,selMs,cost){
+  const el=document.getElementById('tool-cv');
+  const ex=evalEx(proj,atC,selMs,cost);
+  const avEx=ex.filter(e=>e.status==='available');
+  const chosenEx=selEx?ex.find(e=>e.id===selEx):null;
+  let cls,icon,title,body,link='';
+  if(atC){cls='cv-ok';icon='✓';title='Compliant — estimated EPC C with selected measures';body='Install selected measures and lodge a new EPC to confirm compliance. Keep all installation certificates as evidence.';}
+  else if(chosenEx){cls='cv-partial';icon='🛡';title='Exemption selected: '+chosenEx.type;body='Register on the PRS Exemptions Register before letting the property. Exemptions are not automatic.';link=`<a class="cv-link cv-link-amber" href="https://www.gov.uk/guidance/domestic-private-rented-property-minimum-energy-efficiency-standard-landlord-guidance#exemptions" target="_blank">→ PRS Exemptions Register</a>`;}
+  else if(avEx.length>0){cls='cv-partial';icon='!';title=avEx.length+' exemption'+(avEx.length>1?'s':'')+' now available';body='Select one in the exemptions panel — then register on the PRS Exemptions Register.';}
+  else if(selMs.length>0){cls='cv-partial';icon='→';const r=measures.filter(m=>!m.blocked&&!sel.has(m.id)).length;title='Progress — '+(r>0?r+' more measure'+(r!==1?'s':'')+' available':'all available measures selected');body=r>0?'Continue selecting measures — exemptions will unlock when all feasible improvements have been attempted.':'All available measures selected. Exemptions will now appear in the panel.';}
+  else{cls='cv-none';icon='→';title='Select measures to see your compliance path';body='Toggle measures on the left. MEES exemptions unlock automatically as you go.';}
+  el.className='cv '+cls;
+  el.innerHTML=`<div class="cv-icon">${icon}</div><div class="cv-title">${title}</div><div class="cv-body">${body}</div>${link}`;
+}
+
+function evalEx(proj,atC,selMs,cost){
+  const CAP=10000;
+  const unblocked=measures.filter(m=>!m.blocked);
+  const allSel=unblocked.every(m=>sel.has(m.id));
+  const hasWallBlocked=measures.some(m=>m.blocked&&m.name.toLowerCase().includes('wall'));
+  const cheapestUnsel=unblocked.filter(m=>!sel.has(m.id)).reduce((mn,m)=>Math.min(mn,m.cMin||9999),9999);
+  const likelyListed=selProp&&(selProp.era==='Pre-1919'||selProp.walls==='Solid brick');
+  return EX_TMPL.map(e=>{
+    let status='locked',why='';
+    if(selEx===e.id) status='selected';
+    else switch(e.id){
+      case 'all_improvements':
+        if(allSel&&!atC&&unblocked.length>0){status='available';why='All available measures selected — property still cannot reach EPC C. This exemption now applies.';}
+        else{const r=unblocked.filter(m=>!sel.has(m.id)).length;why=r>0?`Select all ${r} remaining available measure${r!==1?'s':''} first.`:'Not needed — EPC C is achievable.';}break;
+      case 'high_cost':
+        if(cost>=CAP&&!atC){status='available';why=`£10,000 cost cap reached (£${cost.toLocaleString()} selected) without achieving EPC C.`;}
+        else if(cheapestUnsel>3500&&selMs.length===0&&!atC){status='available';why='Cheapest available measure exceeds £3,500 — high cost exemption applies immediately.';}
+        else{why=atC?'Not needed.':cost>0?`£${cost.toLocaleString()} of £10,000 cap used.`:'Select measures to assess.';}break;
+      case 'wall_insulation':
+        if(hasWallBlocked){status='available';why='Wall insulation is blocked for this property — exemption immediately available.';}
+        else{status='locked';why='No wall insulation measures are blocked.';}break;
+      case 'consent':
+        if(hasWallBlocked){status='available';why='A blocked measure may require third-party consent. Document refusal and register.';}
+        else{why='No consent-blocked measures. If a freeholder or planning authority refuses a measure, return here.';}break;
+      case 'devaluation':
+        if(selMs.length>0||hasWallBlocked){status='available';why='Commission a RICS valuation to confirm if improvements would reduce value by >5%.';}
+        else{why='Select measures first, then assess whether works would devalue the property.';}break;
+      case 'new_landlord':status='available';why='Available if you recently became responsible for this property.';break;
+      case 'listed_building':
+        if(likelyListed){status='available';why='Pre-1919 or solid wall property — check with local planning authority re listed or conservation area status.';}
+        else{status='locked';why='No listed building status identified. Check with LPA if uncertain.';}break;
+    }
+    return{...e,status,why};
+  });
+}
+
+function renderEx(ex){
+  const sects=[
+    {label:'Available now',color:'var(--amber)',items:ex.filter(e=>e.status==='available'||e.status==='selected')},
+    {label:'Locked — conditions not yet met',color:'var(--muted)',items:ex.filter(e=>e.status==='locked')},
+  ];
+  let html='';
+  for(const s of sects){
+    if(!s.items.length)continue;
+    html+=`<div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${s.color};margin:${html?'10px':'0'} 0 6px">${s.label}</div>`;
+    for(const e of s.items){
+      const isSel=e.status==='selected',isAv=e.status==='available';
+      const dotCls=isSel?'dot-sel':isAv?'dot-avail':'dot-locked';
+      const bdg=isSel?'bdg-sel':isAv?'bdg-avail':'bdg-locked';
+      const bt=isSel?'✓ Selected':isAv?'Available':'Locked';
+      const wCls=isSel?'why-sel':isAv?'why-avail':'why-locked';
+      const btn=isAv?`<button class="ex-sel-btn" onclick="pickEx('${e.id}',event)">Select this exemption</button>`:isSel?`<button class="ex-desel-btn" onclick="pickEx(null,event)">Remove selection</button>`:'';
+      const prs=(isAv||isSel)?`<a class="prs-a" href="https://www.gov.uk/guidance/domestic-private-rented-property-minimum-energy-efficiency-standard-landlord-guidance#exemptions" target="_blank">→ PRS Exemptions Register</a>`:'';
+      html+=`<div class="ex-panel" id="xp-${e.id}">
+        <div class="ex-hd" onclick="toggleEx('${e.id}')">
+          <div class="ex-dot ${dotCls}"></div>
+          <div class="ex-nm">${e.type}</div>
+          <div class="ex-bdg ${bdg}">${bt}</div>
+          <div class="ex-chev">▾</div>
+        </div>
+        <div class="ex-bd">
+          <div class="ex-desc">${e.desc}</div>
+          <div class="ex-why ${wCls}">${e.why}</div>
+          <div class="ex-rqs-lbl">Evidence required to register</div>
+          ${(e.reqs||[]).map(r=>`<div class="ex-rq">${r}</div>`).join('')}
+          <div class="ex-dur">Duration: <strong>${e.dur}</strong></div>
+          ${btn}${prs?`<br>${prs}`:''}
+        </div>
+      </div>`;
+    }
+  }
+  document.getElementById('ex-list').innerHTML=html||'<div style="font-size:12px;color:var(--muted);padding:4px 0">Select measures to unlock exemptions</div>';
+}
+
+function toggleEx(id){const el=document.getElementById('xp-'+id);if(el)el.classList.toggle('open');}
+function pickEx(id,e){e&&e.stopPropagation();selEx=id;update();if(id)setTimeout(()=>{const el=document.getElementById('xp-'+id);if(el&&!el.classList.contains('open'))el.classList.add('open');},50);}
+
+function setFilter(f,el){filt=f;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));el.classList.add('on');renderM();}
+
+function renderM(){
+  let list=[...measures];
+  if(filt==='essential')list=list.filter(m=>m.priority==='essential');
+  if(filt==='grant')list=list.filter(m=>m.funding&&m.funding.length>0);
+  if(filt==='under2k')list=list.filter(m=>m.cMin<2000);
+  if(filt==='available')list=list.filter(m=>!m.blocked);
+  if(!list.length){document.getElementById('mlist').innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:13px">No measures match this filter</div>';return;}
+  document.getElementById('mlist').innerHTML=list.map(m=>{
+    const isSel=sel.has(m.id);
+    const cost=m.cMin===m.cMax?'£'+m.cMin.toLocaleString():'£'+m.cMin.toLocaleString()+'–£'+m.cMax.toLocaleString();
+    const cTag=m.conf==='High'?'t-ch':m.conf==='Medium'?'t-cm':'t-cl';
+    const gTags=(m.funding||[]).map(f=>`<span class="tag t-grant">${f.n}</span>`).join('');
+    const bTag=m.blocked?`<span class="tag t-block">✕ ${m.blockedReason||'Blocked'}</span>`:'';
+    const fHTML=m.funding&&m.funding.length&&!m.blocked?`<div class="fb"><div class="fb-title">Grants & funding</div>${m.funding.map(f=>`<div class="fb-row"><div><div class="fb-name">${f.n}</div><div class="fb-desc">${f.d}</div>${f.a?`<div class="fb-amt">${f.a}</div>`:''}</div></div>`).join('')}</div>`:'';
+    return`<div class="mc ${isSel?'sel':''} ${m.blocked?'blocked':''}" id="mc-${m.id}" onclick="${m.blocked?'':` toggleM('${m.id}',this)`}">
+      <div class="mc-row">
+        <div class="mc-cb">${isSel?'✓':m.blocked?'✕':''}</div>
+        <div class="mc-body">
+          <div class="mc-name">${m.name}</div>
+          <div class="mc-tags">
+            <span class="tag t-cost">${cost}</span>
+            ${m.bu>0?`<span class="tag t-uplift">${m.uTxt}</span>`:''}
+            <span class="tag ${cTag}">● ${m.conf} confidence</span>
+            ${bTag}${gTags}
+          </div>
+          <div class="mc-desc">${m.desc}</div>
+          ${m.blocked&&m.blockedReason?`<div class="mc-block-note">⚠ ${m.blockedReason} — see exemptions panel →</div>`:''}
+          ${!m.blocked?`<span class="xbtn" onclick="toggleDetail('${m.id}',event)">▼ Funding & detail</span>
+          <div class="mc-detail"><div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:7px">${m.detail||''}</div>${fHTML}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleM(id,el){
+  if(measures.find(m=>m.id===id)?.blocked)return;
+  if(sel.has(id)){sel.delete(id);el.classList.remove('sel');el.querySelector('.mc-cb').textContent='';}
+  else{sel.add(id);el.classList.add('sel');el.querySelector('.mc-cb').textContent='✓';}
+  update();
+}
+function toggleDetail(id,e){
+  e.stopPropagation();const c=document.getElementById('mc-'+id);
+  c.classList.toggle('open');c.querySelector('.xbtn').textContent=c.classList.contains('open')?'▲ Less':'▼ Funding & detail';
+}
+
+function renderCTA(proj,atC,selMs){
+  const el=document.getElementById('cta-inner');
+  const hasSel=selMs.length>0||selEx;
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+      ${selMs.length} measure${selMs.length!==1?'s':''} selected${selEx?' · exemption selected':''}.
+      ${hasSel?'Your plan is ready.':'Select at least one measure to generate your report.'}
+    </div>
+    <button class="get-report-btn ${hasSel?'ready':''}" onclick="${hasSel?'requestReport()':''}">
+      ${hasSel?'Download planning PDF →':'Select measures to continue'}
+    </button>
+    <div style="font-size:11px;color:var(--hint);text-align:center;margin-top:7px;line-height:1.5">Planning PDF · Medium confidence · EPC API + rules engine</div>
+    <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid var(--rule)">
+      <div style="font-size:12px;font-weight:500;color:var(--char);margin-bottom:4px">Need higher confidence?</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px">Upgrade to a Verified Compliance Survey — a DEA visits the property and produces a survey-backed report with High confidence estimates.</div>
+      <button onclick="orderSurvey()" style="width:100%;padding:9px;font-family:var(--sans);font-size:12px;font-weight:500;background:var(--navy);color:var(--white);border:none;border-radius:7px;cursor:pointer">Order Verified Survey — from £149 →</button>
+    </div>`;
+}
+
+function requestReport(){
+  if(!selProp||(sel.size===0&&!selEx))return;
+  if(!window.jspdf){alert('PDF library still loading — please try again in a moment.');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const ML=20,W=170;
+
+  // Palette
+  const C={
+    navy:[15,30,51],teal:[78,203,168],tealD:[47,168,130],tealPale:[230,244,236],
+    warm:[245,242,236],warmMid:[236,232,224],rule:[232,228,220],
+    char:[26,35,50],body:[55,65,81],muted:[107,114,128],slate:[148,163,184],slate2:[100,116,139],
+    amber:[217,119,6],amberPal:[255,251,235],
+    red:[220,38,38],redPal:[254,242,242],
+    green:[5,150,105],greenPal:[236,253,245],
+    purple:[124,58,237],purplePal:[245,243,255],
+    blue:[29,78,216],bluePal:[239,246,255],
+    white:[255,255,255],
+  };
+  const EPC_RGB={G:[153,27,27],F:[220,38,38],E:[234,88,12],D:[217,119,6],C:[22,163,74],B:[21,128,61],A:[22,101,52]};
+  const BANDS_ARR=['G','F','E','D','C','B','A'];
+
+  // Helpers
+  const fill=col=>doc.setFillColor(...col);
+  const stroke=col=>doc.setDrawColor(...col);
+  const tc=col=>doc.setTextColor(...col);
+  const lw=w=>doc.setLineWidth(w);
+  const fnt=(f,s)=>doc.setFont(f||'helvetica',s||'normal');
+  const fs=sz=>doc.setFontSize(sz);
+  const txt=(t,x,y,opts)=>doc.text(String(t),x,y,opts||{});
+  const rrect=(x,y,w,h,r,sty,col)=>{if(col)fill(col);doc.roundedRect(x,y,w,h,r,r,sty||'F');};
+  const box=(x,y,w,h,sty,col)=>{if(col)fill(col);doc.rect(x,y,w,h,sty||'F');};
+
+  function splitTxt(t,maxW){return doc.splitTextToSize(String(t),maxW);}
+
+  function maybeNewPage(y,need){
+    if(y+need>278){doc.addPage();return 20;}
+    return y;
+  }
+
+  function secHeader(num,title,y){
+    fnt('helvetica','bold');fs(11);tc(C.char);
+    txt(String(num).padStart(2,'0')+'  '+title,ML,y+6);
+    stroke(C.teal);lw(1.5);doc.line(ML,y+8,ML+W,y+8);
+    return y+14;
+  }
+
+  function infoBox(t,y,style){
+    const map={info:{bg:C.bluePal,br:C.blue},warning:{bg:C.amberPal,br:C.amber},
+      success:{bg:C.greenPal,br:C.green},danger:{bg:C.redPal,br:C.red},purple:{bg:C.purplePal,br:C.purple}};
+    const s=map[style]||map.info;
+    const lines=splitTxt(t,W-14);
+    const h=Math.max(12,lines.length*4.5+8);
+    fill(s.bg);stroke(s.br);lw(0.3);doc.rect(ML,y,W,h,'FD');
+    fill(s.br);lw(3);doc.line(ML,y,ML,y+h);lw(0.3);
+    fnt('helvetica','normal');fs(8);tc(C.body);doc.text(lines,ML+6,y+6);
+    return y+h+3;
+  }
+
+  // State
+  const proj=projBand();
+  const selMs=[...sel].map(id=>measures.find(m=>m.id===id)).filter(Boolean);
+  const cMin=selMs.reduce((a,m)=>a+(m.cMin||0),0);
+  const cMax=selMs.reduce((a,m)=>a+(m.cMax||0),0);
+  const projI=BANDS_ARR.indexOf(proj);
+  const curI=BANDS_ARR.indexOf(selProp.rating);
+  const atC=projI>=BANDS_ARR.indexOf('C');
+
+  // Reference + date
+  const now=new Date();
+  const ref='EPC2C-'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+
+    String(now.getDate()).padStart(2,'0')+'-'+String(Math.floor(Math.random()*9000+1000));
+  const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  let y=0;
+
+  // ── HEADER ──────────────────────────────────────────────────
+  fill(C.navy);box(0,0,210,28,'F');
+  fill(C.teal);box(0,0,210,2,'F');
+
+  fnt('helvetica','bold');fs(22);tc(C.white);
+  const eW=doc.getTextWidth('EPC');
+  txt('EPC',ML,15);
+  tc(C.teal);const tW=doc.getTextWidth('2');txt('2',ML+eW,15);
+  fnt('helvetica','bolditalic');tc(C.white);txt('C',ML+eW+tW,15);
+
+  fnt('helvetica','normal');fs(8);tc(C.slate);
+  txt('MEES Compliance · Planning Report · Powered by GoGreen Alliance',ML,22);
+
+  fs(7.5);tc(C.slate2);
+  txt('Ref: '+ref,190,14,{align:'right'});
+  txt('Date: '+dateStr,190,21,{align:'right'});
+
+  fill(C.amber);rrect(152,22.5,36,5,1,'F');
+  fnt('helvetica','bold');fs(7);tc(C.white);
+  txt('PLANNING REPORT',170,26,{align:'center'});
+
+  y=33;
+
+  // ── PROPERTY HERO ────────────────────────────────────────────
+  fill(C.warm);box(0,y,210,22,'F');
+  fill(C.tealD);box(0,y,2,22,'F');
+
+  const parts=selProp.addr.split(',');
+  fnt('helvetica','bold');fs(7);tc(C.muted);txt('PROPERTY',ML,y+6);
+  fnt('helvetica','bold');fs(13);tc(C.char);txt(parts[0].trim(),ML,y+14);
+  if(parts.length>1){
+    fnt('helvetica','normal');fs(9);tc(C.body);
+    txt(parts.slice(1).map(p=>p.trim()).join(', '),ML,y+19);
+  }
+  const pillTxt=[selProp.type,selProp.era,selProp.walls].filter(Boolean).join('   ·   ');
+  fnt('helvetica','normal');fs(7.5);
+  const pillW=Math.min(doc.getTextWidth(pillTxt)+8,150);
+  fill(C.warmMid);rrect(ML,y+0.5,pillW,5.5,1,'F');
+  tc(C.muted);txt(pillTxt,ML+4,y+4.5);
+
+  y+=27;
+
+  // ── S1: COMPLIANCE VERDICT ───────────────────────────────────
+  y=secHeader(1,'Compliance Verdict',y);
+
+  let vBg,vBorder,vIcon,vTitle,vBody;
+  if(atC){
+    vBg=C.greenPal;vBorder=C.green;vIcon='+';
+    vTitle='Compliant — estimated EPC C achieved with selected measures';
+    vBody='Install selected measures and lodge a new EPC with a qualified DEA to confirm compliance. Retain all installation certificates as evidence.';
+  }else if(selEx){
+    vBg=C.amberPal;vBorder=C.amber;vIcon='!';
+    const ex=evalEx(proj,atC,selMs,cMin).find(e=>e.id===selEx);
+    vTitle='MEES Exemption selected: '+(ex?ex.type:'selected');
+    vBody='Register this exemption on the PRS Exemptions Register before letting the property. Exemptions are not automatic — registration is required.';
+  }else{
+    vBg=C.warm;vBorder=C.muted;vIcon='>';
+    const gap=BANDS_ARR.indexOf('C')-projI;
+    vTitle=gap>0?'Works in progress — '+gap+' band'+(gap!==1?'s':'')+' still needed for EPC C':'Select measures to build your compliance path';
+    vBody='Continue selecting measures or consider a MEES exemption. Lodge a new EPC once works are complete.';
+  }
+  const vBodyLines=splitTxt(vBody,W-25);
+  const vH=Math.max(20,vBodyLines.length*4.5+14);
+  fill(vBg);rrect(ML,y,W,vH,2,'F');
+  fill(vBorder);box(ML,y,3,vH,'F');
+  fill(vBorder);doc.circle(ML+12,y+vH/2,4,'F');
+  fnt('helvetica','bold');fs(10);tc(C.white);txt(vIcon,ML+12,y+vH/2+3,{align:'center'});
+  fnt('helvetica','bold');fs(10);tc(C.char);txt(vTitle,ML+20,y+8);
+  fnt('helvetica','normal');fs(8);tc(C.body);doc.text(vBodyLines,ML+20,y+14);
+  y+=vH+5;
+
+  // KPI strip
+  const kpiItems=[
+    {label:'Current EPC',val:selProp.rating,col:EPC_RGB[selProp.rating]||C.char},
+    {label:'Projected EPC',val:proj,col:EPC_RGB[proj]||C.char},
+    {label:'Est. uplift',val:projI>curI?'+'+String(projI-curI)+' band'+(projI-curI!==1?'s':''):'No change',col:C.tealD},
+    {label:'Est. cost',val:cMin>0?'£'+cMin.toLocaleString()+' - £'+cMax.toLocaleString():'n/a',col:C.char},
+  ];
+  const kW=W/4;
+  kpiItems.forEach((k,i)=>{
+    const kx=ML+i*kW;
+    fill(C.warm);box(kx,y,kW,18,'F');
+    if(i<3){stroke(C.rule);lw(0.3);doc.line(kx+kW,y,kx+kW,y+18);}
+    fnt('helvetica','normal');fs(7.5);tc(C.muted);txt(k.label,kx+kW/2,y+6,{align:'center'});
+    fnt('helvetica','bold');fs(k.val.length>9?12:18);tc(k.col);txt(k.val,kx+kW/2,y+15,{align:'center'});
+  });
+  stroke(C.rule);lw(0.3);box(ML,y,W,18,'S');
+  y+=23;
+
+  // ── S2: EPC POSITION ────────────────────────────────────────
+  y=secHeader(2,'EPC Position',y);
+
+  const barW=W*0.80,barH=12;
+  const segPcts=[7,9,11,13,15,20,25];
+  let bx=ML;
+  const segCX=[];
+  BANDS_ARR.forEach((band,i)=>{
+    const sw=barW*segPcts[i]/100;
+    fill(EPC_RGB[band]);box(bx,y+8,sw,barH,'F');
+    fnt('helvetica','bold');fs(8);tc(C.white);txt(band,bx+sw/2,y+8+8,{align:'center'});
+    segCX.push(bx+sw/2);
+    bx+=sw;
+  });
+
+  // Current position marker (above bar)
+  const curCX=segCX[curI];
+  fill(C.navy);box(curCX-2,y+5,4,3,'F');
+  fnt('helvetica','bold');fs(6.5);tc(C.navy);txt('NOW',curCX,y+3,{align:'center'});
+
+  // Projected marker (below bar, if different)
+  if(proj!==selProp.rating){
+    const projCX=segCX[projI];
+    fill(C.tealD);box(projCX-2,y+21,4,3,'F');
+    fnt('helvetica','bold');fs(6.5);tc(C.tealD);txt('TARGET',projCX,y+28,{align:'center'});
+  }
+
+  // C standard line
+  const cCX=segCX[BANDS_ARR.indexOf('C')];
+  stroke(C.green);lw(1);doc.line(cCX,y+6,cCX,y+22);lw(0.3);
+  fnt('helvetica','bold');fs(6.5);tc(C.green);txt('C',cCX,y+28,{align:'center'});
+
+  // Right — big band box
+  const panelX=ML+barW+5,panelW=W-barW-5;
+  fill(EPC_RGB[selProp.rating]);rrect(panelX,y+6,panelW,barH+4,2,'F');
+  fnt('helvetica','bold');fs(26);tc(C.white);txt(selProp.rating,panelX+panelW/2,y+18,{align:'center'});
+  fnt('helvetica','bold');fs(7);txt('CURRENT',panelX+panelW/2,y+23,{align:'center'});
+  if(proj!==selProp.rating){
+    const ub=projI-curI;
+    fnt('helvetica','bold');fs(7.5);tc(C.tealD);
+    txt('+'+ub+' band'+(ub!==1?'s':'')+' est.',panelX+panelW/2,y+30,{align:'center'});
+  }
+  y+=35;
+
+  y=infoBox('Band uplift estimates are planning-level indicators, not certified RdSAP calculations. A qualified DEA must lodge a new EPC to confirm any rating change for MEES compliance purposes.',y,'info');
+  y+=3;
+
+  // ── S3: IMPROVEMENT MEASURES ─────────────────────────────────
+  y=maybeNewPage(y,40);
+  y=secHeader(3,'Improvement Measures',y);
+
+  fnt('helvetica','normal');fs(7.5);tc(C.muted);
+  txt(selMs.length+' of '+measures.length+' measures selected  ·  Est. cost: £'+cMin.toLocaleString()+' - £'+cMax.toLocaleString(),ML,y);
+  y+=7;
+
+  // Table header
+  fill(C.navy);box(ML,y,W,8,'F');
+  fnt('helvetica','bold');fs(7.5);tc(C.white);
+  txt('Measure',ML+4,y+5.5);txt('Est. cost',ML+85,y+5.5);txt('Uplift',ML+118,y+5.5);txt('Funding',ML+148,y+5.5);
+  y+=9;
+
+  measures.forEach((m,idx)=>{
+    y=maybeNewPage(y,14);
+    const isSel=sel.has(m.id),isBlk=m.blocked;
+    fill(isSel?C.greenPal:isBlk?C.redPal:(idx%2===0?C.white:C.warm));box(ML,y,W,13,'F');
+    fill(isSel?C.green:isBlk?C.red:C.warmMid);box(ML,y,3,13,'F');
+
+    fnt('helvetica',isSel?'bold':'normal');fs(8);tc(C.char);
+    const nLines=splitTxt(m.name,78);
+    txt(nLines[0],ML+5,y+5.5);
+    if(nLines[1]){fs(7);txt(nLines[1],ML+5,y+10);}
+
+    fnt('helvetica','normal');fs(7.5);tc(C.muted);
+    const costTxt=(m.cMin===0&&m.cMax===0)?'n/a':'£'+m.cMin.toLocaleString()+' - £'+m.cMax.toLocaleString();
+    txt(costTxt,ML+85,y+5.5);
+    txt(m.uTxt||'-',ML+118,y+5.5);
+    const fund=m.funding&&m.funding.length?m.funding[0].n:'None';
+    txt(fund.length>14?fund.substring(0,12)+'..':fund,ML+148,y+5.5);
+
+    if(isSel||isBlk){
+      const badgeTxt=isSel?'SELECTED':'BLOCKED';
+      fill(isSel?C.green:C.red);rrect(ML+W-25,y+1.5,23,5,1,'F');
+      fnt('helvetica','bold');fs(6);tc(C.white);txt(badgeTxt,ML+W-13.5,y+5,{align:'center'});
+    }
+    stroke(C.rule);lw(0.2);doc.line(ML,y+13,ML+W,y+13);
+    y+=13;
+  });
+  y+=6;
+
+  // ── S4: MEES EXEMPTION ───────────────────────────────────────
+  if(selEx){
+    y=maybeNewPage(y,50);
+    y=secHeader(4,'MEES Exemption',y);
+    const chosenEx=evalEx(proj,atC,selMs,cMin).find(e=>e.id===selEx);
+    if(chosenEx){
+      const exLines=splitTxt(chosenEx.desc,W-12);
+      const exH=Math.max(18,exLines.length*4+16);
+      fill(C.amberPal);rrect(ML,y,W,exH,1.5,'F');
+      fill(C.amber);box(ML,y,2.5,exH,'F');
+      fnt('helvetica','bold');fs(10);tc(C.char);txt(chosenEx.type,ML+7,y+8);
+      fnt('helvetica','normal');fs(8);tc(C.body);doc.text(exLines,ML+7,y+14);
+      fnt('helvetica','bold');fs(7.5);tc(C.muted);txt('Valid for: '+chosenEx.dur,ML+7,y+exH-5);
+      y+=exH+6;
+
+      if(chosenEx.reqs&&chosenEx.reqs.length){
+        fnt('helvetica','bold');fs(8);tc(C.amber);txt('EVIDENCE REQUIRED TO REGISTER:',ML,y);y+=5;
+        chosenEx.reqs.forEach(req=>{
+          y=maybeNewPage(y,6);
+          fnt('helvetica','normal');fs(8);tc(C.body);txt('·  '+req,ML+4,y);y+=5;
+        });
+        y+=4;
+      }
+
+      y=maybeNewPage(y,16);
+      fill(C.purplePal);rrect(ML,y,W,14,1,'F');
+      fill(C.purple);box(ML,y,2.5,14,'F');
+      fnt('helvetica','bold');fs(8);tc(C.purple);txt('Register at PRS Exemptions Register:',ML+6,y+6);
+      fnt('helvetica','normal');fs(7.5);tc(C.body);
+      txt('gov.uk › domestic-private-rented-property-minimum-energy-efficiency-standard-landlord-guidance',ML+6,y+11);
+      y+=18;
+    }
+  }
+
+  // ── NEXT STEPS ───────────────────────────────────────────────
+  const secN=selEx?5:4;
+  y=maybeNewPage(y,30);
+  y=secHeader(secN,'Next Steps',y);
+
+  const steps=[];
+  if(selMs.length>0)steps.push('Commission written quotes for each selected measure and obtain formal installation certificates on completion.');
+  if(atC)steps.push('Lodge an updated EPC with a qualified DEA once all selected works are complete — this confirms your compliance rating.');
+  else{const gap=BANDS_ARR.indexOf('C')-projI;if(gap>0)steps.push(gap+' band'+(gap!==1?'s':'')+' still needed to reach EPC C. Continue selecting measures or assess a MEES exemption.');}
+  if(selEx)steps.push('Register selected MEES exemption on the PRS Exemptions Register before the property is next let.');
+  steps.push('Retain this report and all certificates as compliance evidence.');
+  steps.push('For a survey-backed High confidence report, order a Verified Compliance Survey from GoGreen Alliance — from £149.');
+
+  steps.forEach((step,i)=>{
+    y=maybeNewPage(y,12);
+    fill(C.teal);doc.circle(ML+5,y+2.5,2.5,'F');
+    fnt('helvetica','bold');fs(7.5);tc(C.white);txt(String(i+1),ML+5,y+3.5+1,{align:'center'});
+    const sLines=splitTxt(step,W-14);
+    fnt('helvetica','normal');fs(8);tc(C.body);doc.text(sLines,ML+11,y+3.5);
+    y+=sLines.length*4.5+4;
+  });
+  y+=5;
+
+  // Upgrade box
+  y=maybeNewPage(y,22);
+  fill(C.navy);rrect(ML,y,W,20,2,'F');
+  fnt('helvetica','bold');fs(9.5);tc(C.teal);
+  txt('Need higher confidence? Order a Verified Compliance Survey',ML+6,y+8);
+  fnt('helvetica','normal');fs(8);tc([150,160,180]);
+  txt('DEA site visit · new EPC lodged · High confidence estimates · ventilation & Awaab review · from £149',ML+6,y+15);
+  y+=24;
+
+  // ── FOOTER (all pages) ────────────────────────────────────────
+  const totalPages=doc.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    stroke(C.rule);lw(0.4);doc.line(ML,283,ML+W,283);
+    fnt('helvetica','normal');fs(7);tc(C.muted);
+    txt('EPC2C  ·  Ref: '+ref+'  ·  '+dateStr+'  ·  epc2c.co.uk  ·  Powered by GoGreen Alliance Ltd',ML,287.5);
+    txt('Band uplift estimates are indicative planning tools, not certified RdSAP calculations. A DEA must lodge a new EPC to confirm any rating. © GoGreen Alliance Ltd.',ML,291.5);
+    fnt('helvetica','bold');fs(7);txt('Page '+p+' of '+totalPages,ML+W,287.5,{align:'right'});
+  }
+
+  const safeName=(selProp.addr.split(',')[0]||'Property').trim().replace(/\s+/g,'-').replace(/[^a-zA-Z0-9-]/g,'');
+  doc.save('EPC2C-Plan-'+safeName+'-'+ref+'.pdf');
+}
+
+document.getElementById('pc').addEventListener('keyup',function(){
+  if(!this.value){document.getElementById('prop-list').style.display='none';document.getElementById('free-result').style.display='none';}
+});
+</script>
+</body>
+</html>
