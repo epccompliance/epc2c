@@ -4,7 +4,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   if (!redis) {
-    res.status(503).json({ error: 'Session storage not configured — add Upstash env vars' });
+    res.status(503).json({ error: 'Session storage not configured (UPSTASH env vars missing)' });
     return;
   }
 

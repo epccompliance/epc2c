@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST')    { res.status(405).json({ error: 'Method not allowed' }); return; }
 
   if (!redis) {
-    res.status(503).json({ error: 'Session storage not configured — add Upstash env vars' });
+    res.status(503).json({ error: 'Session storage not configured (UPSTASH env vars missing)' });
     return;
   }
 

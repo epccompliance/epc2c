@@ -1,0 +1,5 @@
+◇ injected env (3) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+EPC proxy running on http://localhost:3001
+Health check: http://localhost:3001/api/health
+EPC email:    hello@epc2c.co.uk
+EPC key:      X40HBHdY...

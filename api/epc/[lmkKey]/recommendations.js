@@ -11,6 +11,7 @@ module.exports = async function handler(req, res) {
   const { lmkKey } = req.query;
   const url = `${EPC_BASE}/${lmkKey}/recommendations`;
   console.log(`[EPC] GET ${url}`);
+
   try {
     const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
     const text = await r.text();

@@ -1,0 +1,119 @@
+I want you to perform a deep viability and market assessment of my startup project: EPC2C.co.uk.
+
+The platform is designed to help UK landlords understand the cheapest and most practical route to achieving EPC C compliance ahead of MEES 2030 regulations.
+
+Current stage:
+
+* Early prototype deployed on Vercel
+* Uses EPC API data for property lookup
+* User searches address and selects property
+* Goal is to generate a simplified EPC-to-C compliance pathway report
+* Initially testing with landlords and DEA (Domestic Energy Assessor) users
+* Planned low-cost validation pricing around £9.99
+* Considering freemium or partner-led models later
+
+Core concept:
+The platform should eventually allow users to:
+
+* View current EPC details
+* Understand likely upgrade measures
+* Experiment with upgrade selections
+* See estimated EPC improvements and costs
+* Understand MEES exemption pathways where relevant
+* Potentially connect with installers/funding options
+
+The broader vision is:
+
+* A scalable landlord compliance platform
+* B2B tools for letting agents, DEAs and installers
+* White-label opportunities
+* Portfolio compliance dashboards
+* Retrofit lead generation engine
+* Potential integration with grants/funding/installer fulfilment
+
+I want an honest, commercial and strategic assessment — not encouragement.
+
+Please analyse:
+
+1. Market viability
+
+* Is this a real problem worth solving?
+* How urgent/painful is MEES 2030 for landlords?
+* How large is the potential market?
+* What segments are strongest (landlords, agents, DEAs, lenders etc.)?
+
+2. Competitor analysis
+   Review companies/platforms such as:
+
+* GreenVal
+* Furbnow
+* Propflo
+* Vibrant
+* Existing EPC software providers
+* Any similar retrofit or compliance tools
+
+Please compare:
+
+* UX
+* Positioning
+* Monetisation
+* Technology
+* Weaknesses
+* Gaps in the market
+
+3. Commercial model assessment
+   Evaluate:
+
+* £9.99 low-cost report model
+* Freemium approach
+* SaaS subscription
+* White-label licensing
+* Referral/installer commission model
+* DEA partner network model
+
+Which model appears strongest and most scalable?
+
+4. Technical feasibility
+   Based on current UK EPC/RdSAP ecosystem:
+
+* How difficult would it be to build accurate EPC improvement modelling?
+* What are the biggest technical/data limitations?
+* What could realistically be automated?
+* What likely requires human survey input?
+
+5. Defensibility
+
+* Is this easy to copy?
+* Where could a moat develop?
+* Would data/network effects matter?
+* Could execution speed and partnerships create advantage?
+
+6. Risks and weaknesses
+   Please identify:
+
+* Reasons this could fail
+* Regulatory risks
+* Accuracy/liability risks
+* Adoption barriers
+* Trust/compliance concerns
+* Commercial risks
+
+7. Go-to-market strategy
+   Recommend:
+
+* Best initial customer segment
+* Fastest route to validation
+* Best pricing strategy
+* Whether B2C or B2B should come first
+* Whether this should remain lean or seek funding
+
+8. Final conclusion
+   Please provide:
+
+* Overall viability score out of 10
+* Probability this becomes a sustainable business
+* Probability it becomes a significant scalable platform
+* Most important next 3 actions
+* What you would do differently if you were founder
+
+Be direct and analytical rather than motivational.

@@ -13,6 +13,7 @@ module.exports = async function handler(req, res) {
 
   const url = `${EPC_BASE}/search?postcode=${encodeURIComponent(postcode)}&size=${size}`;
   console.log(`[EPC] GET ${url}`);
+
   try {
     const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
     const text = await r.text();
