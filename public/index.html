@@ -1515,36 +1515,48 @@ function showFree(p){
   setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
 
+const LINKS={
+  plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',
+  survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00'
+};
+
+function showStripeOverlay(){
+  const overlay=document.getElementById('stripe-overlay');
+  if(overlay){overlay.style.display='flex';}
+}
+
+async function saveProperty(prop,tier){
+  try{
+    const response=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({property:prop,tier:tier})});
+    const data=await response.json();
+    return data.sessionId;
+  }catch(e){
+    console.error('Save property failed:',e);
+    return 'fallback-'+Date.now();
+  }
+}
+
 async function payAndLoad(tier,price){
-  if(!selProp){alert('Please select a property first by entering your postcode above.');scrollTo({top:0,behavior:'smooth'});return;}
-  const LINKS={
-    plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',
-    survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00'
-  };
-  const base=LINKS[tier]||LINKS.plan;
-  // Build full address string for Stripe custom field
-  const address=[selProp.address1,selProp.address2,selProp.address3,selProp.posttown,selProp.postcode]
-    .filter(Boolean).join(', ')||selProp.addr||'';
-  console.log('[EPC2C] payAndLoad: full address for Stripe =', address);
-  // Step 1: Before Stripe redirect — save full property to localStorage
-  // localStorage survives cross-origin navigation; sessionStorage does NOT
-  console.log('[EPC2C] payAndLoad: saving property to localStorage before Stripe redirect');
+  if(!selProp){alert('Please select a property first.');scrollTo({top:0,behavior:'smooth'});return;}
+
+  // Show overlay immediately
+  showStripeOverlay();
+
+  // Save property and get sessionId
+  const sessionId=await saveProperty(selProp,tier);
+  console.log('Session ID:',sessionId);
+
+  // Store in localStorage as backup
   localStorage.setItem('epc2c_prop',JSON.stringify(selProp));
   localStorage.setItem('epc2c_tier',tier);
-  console.log('[EPC2C] payAndLoad: localStorage saved =', localStorage.getItem('epc2c_prop') ? 'OK' : 'FAILED');
-  try{
-    const response=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({property:selProp,tier:tier})});
-    const data=await response.json();
-    const sessionId=data.sessionId;
-    console.log('Session ID received:', sessionId);
-    localStorage.setItem('epc2c_pending_session',sessionId);
-    const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId)+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
-    window.location.href=stripeUrl;
-  }catch(e){
-    console.log('[EPC2C] payAndLoad: server save failed —', e.message, '— using addr fallback');
-    const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(selProp.addr||'')+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
-    window.location.href=stripeUrl;
-  }
+  localStorage.setItem('epc2c_session',sessionId);
+
+  // Wait 2 seconds minimum so user can read the overlay
+  await new Promise(r=>setTimeout(r,2000));
+
+  // Build Stripe URL
+  const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId||'unknown');
+  window.location.href=stripeUrl;
 }
 async function orderSurvey(){
   if(!selProp){window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00';return;}
@@ -2117,5 +2129,13 @@ document.getElementById('pc').addEventListener('keyup',function(){
   if(!this.value){document.getElementById('prop-list').style.display='none';document.getElementById('free-result').style.display='none';}
 });
 </script>
+
+<!-- Stripe redirect overlay -->
+<div id="stripe-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,30,51,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+  <div style="font-family:var(--serif);font-size:28px;color:white;margin-bottom:16px">EPC<span style="color:var(--teal)">2</span><em style="font-style:italic">C</em></div>
+  <div style="color:var(--teal);font-size:16px;font-weight:500;margin-bottom:8px">Redirecting to secure payment...</div>
+  <div style="color:rgba(255,255,255,.6);font-size:13px;text-align:center;max-width:300px;line-height:1.6;margin-bottom:24px">Please enter your property address in the Site address field on the payment page</div>
+  <div style="width:24px;height:24px;border:3px solid rgba(78,203,168,.3);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite"></div>
+</div>
 </body>
 </html>
