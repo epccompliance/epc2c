@@ -1,0 +1,7 @@
+node_modules/
+.env
+*.log
+proxy.log
+proxy.err
+serve.log
+serve.err
