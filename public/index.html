@@ -1533,15 +1533,16 @@ async function payAndLoad(tier,price){
   localStorage.setItem('epc2c_tier',tier);
   console.log('[EPC2C] payAndLoad: localStorage saved =', localStorage.getItem('epc2c_prop') ? 'OK' : 'FAILED');
   try{
-    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
-    const {sessionId}=await r.json();
+    const response=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({property:selProp,tier:tier})});
+    const data=await response.json();
+    const sessionId=data.sessionId;
+    console.log('Session ID received:', sessionId);
     localStorage.setItem('epc2c_pending_session',sessionId);
-    console.log('[EPC2C] payAndLoad: server session saved, sessionId =', sessionId, '— redirecting');
-    const stripeUrl=base+'?client_reference_id='+encodeURIComponent(sessionId)+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
+    const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId)+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
     window.location.href=stripeUrl;
   }catch(e){
-    console.log('[EPC2C] payAndLoad: server save failed —', e.message, '— localStorage is fallback, redirecting');
-    const stripeUrl=base+'?client_reference_id='+encodeURIComponent(selProp.addr||'')+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
+    console.log('[EPC2C] payAndLoad: server save failed —', e.message, '— using addr fallback');
+    const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(selProp.addr||'')+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
     window.location.href=stripeUrl;
   }
 }

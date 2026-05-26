@@ -15,11 +15,14 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     res.status(400).json({ error: 'property object required in request body' });
     return;
   }
+
+  // Accept either {property, tier} wrapper or a bare property object
+  const data = body.property || body;
 
   const sessionId = randomUUID();
   await redis.set(sessionId, JSON.stringify(data), { ex: TTL });
