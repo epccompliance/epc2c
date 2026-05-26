@@ -1290,7 +1290,7 @@ async function fetchEpcProps(postcode){
 }
 async function fetchRecs(lmkKey){
   if(!lmkKey)return null;
-  const r=await fetch(PROXY_BASE+'/'+lmkKey+'/recommendations');
+  const r=await fetch(PROXY_BASE+'/recommendations?lmkKey='+encodeURIComponent(lmkKey));
   if(!r.ok)return null;
   const d=await r.json();
   const recs=d.rows||[];
