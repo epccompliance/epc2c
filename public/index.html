@@ -1081,7 +1081,7 @@ function showImprovementsPanel() {
       },500);
     }catch(e){}
   } else if(fromStripe){
-    // sessionStorage lost — Stripe redirected to a different origin (e.g. localhost → epc2c.co.uk)
+    if(localStorage.getItem('epc2c_pending_session'))return;
     setTimeout(()=>{
       const banner=document.createElement('div');
       banner.id='paid-banner';
@@ -1350,15 +1350,17 @@ const EX_TMPL=[
 
 // State
 let selProp=null, curTier=null, measures=[], sel=new Set(), selEx=null, filt='all';
-// Server-side property restore after Stripe redirect (?paid=1&ref=<sessionId>)
+// Restore property after Stripe redirect — uses localStorage sessionId to survive cross-origin navigation
 (function(){
   const params=new URLSearchParams(window.location.search);
-  const ref=params.get('ref');
   const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||params.has('paid');
-  if(!ref||!fromStripe)return;
+  if(!fromStripe)return;
+  const ref=params.get('ref')||localStorage.getItem('epc2c_pending_session');
+  if(!ref)return;
   fetch('/api/get-property/'+ref)
     .then(r=>r.ok?r.json():Promise.reject('not found'))
     .then(data=>{
+      localStorage.removeItem('epc2c_pending_session');
       selProp=data;curTier='plan';
       setTimeout(()=>{
         loadTool(selProp);
@@ -1369,6 +1371,7 @@ let selProp=null, curTier=null, measures=[], sel=new Set(), selEx=null, filt='al
       },300);
     })
     .catch(()=>{
+      localStorage.removeItem('epc2c_pending_session');
       setTimeout(()=>{
         const banner=document.createElement('div');
         banner.id='paid-banner';
@@ -1473,10 +1476,9 @@ async function payAndLoad(tier,price){
   try{
     const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
     const {sessionId}=await r.json();
+    localStorage.setItem('epc2c_pending_session',sessionId);
     window.location.href=base+'?client_reference_id='+sessionId;
   }catch(e){
-    sessionStorage.setItem('epc2c_prop',JSON.stringify(selProp));
-    sessionStorage.setItem('epc2c_tier',tier);
     window.location.href=base+'?client_reference_id='+encodeURIComponent(selProp.addr||'');
   }
 }
@@ -1485,10 +1487,9 @@ async function orderSurvey(){
   try{
     const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
     const {sessionId}=await r.json();
+    localStorage.setItem('epc2c_pending_session',sessionId);
     window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+sessionId;
   }catch(e){
-    sessionStorage.setItem('epc2c_prop',JSON.stringify(selProp));
-    sessionStorage.setItem('epc2c_tier','survey');
     window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+encodeURIComponent(selProp.addr||'');
   }
 }

@@ -866,24 +866,13 @@ function showImprovementsPanel(){
   setTimeout(()=>{panel.style.opacity='1';panel.style.transform='translateY(0)';},50);
 }
 
+// Restore property after Stripe redirect — uses localStorage sessionId to survive cross-origin navigation
 (function(){
-  const prop=sessionStorage.getItem('epc2e_prop');
-  const tier=sessionStorage.getItem('epc2e_tier');
-  const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||window.location.search.includes('paid=1');
-  if(prop&&tier&&fromStripe){
-    try{
-      selProp=JSON.parse(prop);curTier=tier;
-      sessionStorage.removeItem('epc2e_prop');sessionStorage.removeItem('epc2e_tier');
-      setTimeout(()=>{
-        loadTool(selProp);
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:70px;right:20px;z-index:999;background:#059669;color:white;font-family:var(--sans);font-size:13px;font-weight:500;padding:12px 20px;border-radius:9px;box-shadow:0 4px 20px rgba(0,0,0,.15)';
-        toast.textContent='✓ Payment confirmed — your compliance plan is ready';
-        document.body.appendChild(toast);setTimeout(()=>toast.remove(),5000);
-      },500);
-    }catch(e){}
-  } else if(fromStripe){
-    // sessionStorage lost — Stripe redirected to a different origin (e.g. localhost → epc2c.co.uk)
+  const params=new URLSearchParams(window.location.search);
+  const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||params.has('paid')||window.location.search.includes('paid=1');
+  if(!fromStripe)return;
+  const ref=params.get('ref')||localStorage.getItem('epc2e_pending_session');
+  if(!ref){
     setTimeout(()=>{
       const banner=document.createElement('div');
       banner.id='paid-banner';
@@ -893,7 +882,33 @@ function showImprovementsPanel(){
       scrollTo({top:0,behavior:'smooth'});
       setTimeout(()=>document.getElementById('pc')&&document.getElementById('pc').focus(),600);
     },300);
+    return;
   }
+  fetch('/api/get-property/'+ref)
+    .then(r=>r.ok?r.json():Promise.reject('not found'))
+    .then(data=>{
+      localStorage.removeItem('epc2e_pending_session');
+      selProp=data;curTier='plan';
+      setTimeout(()=>{
+        loadTool(selProp);
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:70px;right:20px;z-index:999;background:#059669;color:white;font-family:var(--sans);font-size:13px;font-weight:500;padding:12px 20px;border-radius:9px;box-shadow:0 4px 20px rgba(0,0,0,.15)';
+        toast.textContent='✓ Payment confirmed — your compliance plan is ready';
+        document.body.appendChild(toast);setTimeout(()=>toast.remove(),5000);
+      },500);
+    })
+    .catch(()=>{
+      localStorage.removeItem('epc2e_pending_session');
+      setTimeout(()=>{
+        const banner=document.createElement('div');
+        banner.id='paid-banner';
+        banner.style.cssText='position:fixed;top:58px;left:0;right:0;z-index:300;background:#059669;color:white;font-family:var(--sans);font-size:14px;font-weight:500;padding:14px 24px;text-align:center;line-height:1.6;box-shadow:0 2px 12px rgba(0,0,0,.18)';
+        banner.innerHTML='✓ Payment confirmed — please search your postcode to load your compliance plan. <span onclick="document.getElementById(\'paid-banner\').remove()" style="margin-left:16px;cursor:pointer;opacity:.7;font-size:18px;line-height:1;vertical-align:middle">×</span>';
+        document.body.appendChild(banner);
+        scrollTo({top:0,behavior:'smooth'});
+        setTimeout(()=>document.getElementById('pc')&&document.getElementById('pc').focus(),600);
+      },300);
+    });
 })();
 </script>
 
@@ -1218,21 +1233,29 @@ function showFree(p){
   setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
 
-function payAndLoad(tier,price){
+async function payAndLoad(tier,price){
   if(!selProp){alert('Please select a property first by entering your postcode above.');scrollTo({top:0,behavior:'smooth'});return;}
-  sessionStorage.setItem('epc2e_prop',JSON.stringify(selProp));
-  sessionStorage.setItem('epc2e_tier',tier);
   const LINKS={plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00'};
   const base=LINKS[tier]||LINKS.plan;
-  const ref=encodeURIComponent(selProp.addr||'');
-  window.location.href=base+'?client_reference_id='+ref;
+  try{
+    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
+    const {sessionId}=await r.json();
+    localStorage.setItem('epc2e_pending_session',sessionId);
+    window.location.href=base+'?client_reference_id='+sessionId;
+  }catch(e){
+    window.location.href=base+'?client_reference_id='+encodeURIComponent(selProp.addr||'');
+  }
 }
-function orderSurvey(){
+async function orderSurvey(){
   if(!selProp){window.location.href='https://buy.stripe.com/8x200ja1KgISd071i3eEo01';return;}
-  sessionStorage.setItem('epc2e_prop',JSON.stringify(selProp));
-  sessionStorage.setItem('epc2e_tier','survey');
-  const ref=encodeURIComponent(selProp.addr||'');
-  window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+ref;
+  try{
+    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
+    const {sessionId}=await r.json();
+    localStorage.setItem('epc2e_pending_session',sessionId);
+    window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+sessionId;
+  }catch(e){
+    window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00?client_reference_id='+encodeURIComponent(selProp.addr||'');
+  }
 }
 
 function loadTool(p){
