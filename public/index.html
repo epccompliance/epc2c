@@ -1268,31 +1268,10 @@ async function fetchEpcProps(postcode){
     };
   }
   const base=PROXY_BASE+'/search?postcode='+encodeURIComponent(postcode);
-  const r=await fetch(base+'&size=25&from=0');
+  const r=await fetch(base+'&size=5000');
   const d=await r.json();
-  console.log('[EPC] page-1 keys:', Object.keys(d), '| rows:', (d.rows||[]).length, '| total:', d.total, '| totalResults:', d.totalResults, '| count:', d.count);
   if(!r.ok)throw new Error(d.error||'EPC API '+r.status);
-  let allRows=d.rows||[];
-  const total=typeof d.total==='number'?d.total:typeof d.totalResults==='number'?d.totalResults:null;
-  if(allRows.length===25){
-    if(total!==null&&total>25){
-      const pages=[];
-      for(let from=25;from<total;from+=25)pages.push(from);
-      const results=await Promise.all(pages.map(async from=>{
-        const r2=await fetch(base+'&size=25&from='+from);
-        if(!r2.ok)return[];
-        const d2=await r2.json();
-        return d2.rows||[];
-      }));
-      allRows=allRows.concat(...results);
-    } else if(total===null){
-      try{
-        const r2=await fetch(base+'&size=5000&from=0');
-        if(r2.ok){const d2=await r2.json();const big=d2.rows||[];if(big.length>allRows.length)allRows=big;}
-      }catch(e){/* keep first 25 */}
-    }
-  }
-  console.log('[EPC] total props fetched:', allRows.length);
+  const allRows=d.rows||[];
   return allRows.map((row,i)=>mapRow(row,i));
 }
 async function fetchRecs(lmkKey){
