@@ -8,10 +8,11 @@ const EPC_AUTH    = 'Basic ' + Buffer.from(EPC_EMAIL + ':' + EPC_API_KEY).toStri
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  const { postcode, size = 10 } = req.query;
+  const { postcode, size = 10, from } = req.query;
   if (!postcode) { res.status(400).json({ error: 'postcode required', rows: [] }); return; }
 
-  const url = `${EPC_BASE}/search?postcode=${encodeURIComponent(postcode)}&size=${size}`;
+  let url = `${EPC_BASE}/search?postcode=${encodeURIComponent(postcode)}&size=${size}`;
+  if (from !== undefined) url += `&from=${from}`;
   console.log(`[EPC] GET ${url}`);
 
   try {

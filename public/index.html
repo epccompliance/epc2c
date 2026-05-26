@@ -529,7 +529,17 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
             <div class="fr-addr" id="fr-addr"></div>
             <div class="fr-tags" id="fr-tags"></div>
           </div>
-          <div class="fr-body">
+          <div id="ownership-q" style="display:none;padding:14px 16px;border-bottom:0.5px solid rgba(255,255,255,.07)">
+            <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:10px">Have you owned or been responsible for this property for more than 6 months?</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="answerOwnership('yes')" style="flex:1;min-width:140px;background:var(--teal);border:none;border-radius:20px;padding:9px 16px;color:var(--navy);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer">Yes — more than 6 months</button>
+              <button onclick="answerOwnership('no')" style="flex:1;min-width:140px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:9px 16px;color:rgba(255,255,255,.7);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer">No — less than 6 months</button>
+            </div>
+          </div>
+          <div id="ownership-note" style="display:none;padding:10px 16px;background:rgba(78,203,168,.06);border-bottom:0.5px solid rgba(78,203,168,.15)">
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.55">6-month grace period — MEES compliance is not yet required. We've shown your property's full position below so you can plan ahead.</div>
+          </div>
+          <div class="fr-body" id="fr-body" style="display:none">
             <!-- Band bar -->
             <div class="bb-label">Current EPC position</div>
             <div style="position:relative;margin-bottom:3px">
@@ -862,10 +872,10 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 <script>
 // ── Live preview demo ──────────────────────────────────────
 const PREV_MEASURES=[
-  {id:'p1',name:'Cavity wall insulation',cost:600,bu:2,grant:'ECO4 — often free',desc:'The single most cost-effective measure for a cavity wall property'},
-  {id:'p2',name:'Loft insulation top-up',cost:400,bu:1,grant:'ECO4 / GBIS',desc:'Top up to 270mm — fast, low disruption, excellent payback'},
-  {id:'p3',name:'Boiler upgrade (A-rated)',cost:1000,bu:1,grant:'ECO4 if eligible',desc:'Replace old non-condensing boiler with modern condensing unit'},
-  {id:'p4',name:'Heating controls & TRVs',cost:375,bu:0,grant:'ECO4 (bundled)',desc:'Full TRV set and programmable thermostat'},
+  {id:'p1',name:'Cavity wall insulation',cost:600,bu:2,grant:'Warm Homes Plan',desc:'The single most cost-effective measure for a cavity wall property'},
+  {id:'p2',name:'Loft insulation top-up',cost:400,bu:1,grant:'Warm Homes Plan / LA Flex',desc:'Top up to 270mm — fast, low disruption, excellent payback'},
+  {id:'p3',name:'Boiler upgrade (A-rated)',cost:1000,bu:1,grant:'Warm Homes Plan',desc:'Replace old non-condensing boiler with modern condensing unit'},
+  {id:'p4',name:'Heating controls & TRVs',cost:375,bu:0,grant:'Warm Homes Plan',desc:'Full TRV set and programmable thermostat'},
   {id:'p5',name:'Solar PV (3kWp)',cost:5500,bu:1,grant:'0% VAT + SEG',desc:'Rooftop solar — reduces grid consumption, improves band'},
 ];
 const PREV_BANDS=['G','F','E','D','C','B','A'];
@@ -1235,30 +1245,55 @@ function parseCostRange(s){
 }
 function grantsByType(descr){
   const t=(descr||'').toLowerCase();const g=[];
-  if(t.includes('insul')||t.includes('boiler')||t.includes('heat pump'))g.push({n:'ECO4',d:'Subject to eligibility'});
-  if(t.includes('insul'))g.push({n:'GBIS',d:'Great British Insulation Scheme'});
-  if(t.includes('heat pump'))g.push({n:'Boiler Upgrade Scheme',d:'£7,500 grant',a:'£7,500'});
+  if(t.includes('insul')||t.includes('boiler')||t.includes('heat pump'))g.push({n:'Warm Homes Plan',d:'Check eligibility at gov.uk'});
+  if(t.includes('insul'))g.push({n:'LA Flex',d:'Local authority scheme — check eligibility'});
+  if(t.includes('heat pump'))g.push({n:'Boiler Upgrade Scheme',d:'£7,500 grant',a:'£7,500'},{n:'0% VAT',d:'Zero-rated VAT on heat pumps'});
   if(t.includes('solar')||t.includes('pv'))g.push({n:'0% VAT',d:'Zero-rated VAT on solar'},{n:'Smart Export Guarantee',d:'Earn for exported energy'});
+  if(t.includes('boiler')||t.includes('heat pump')||t.includes('insul'))g.push({n:'Green finance',d:'Low-rate green mortgages and loans'});
   return g;
 }
 async function fetchEpcProps(postcode){
-  const r=await fetch(PROXY_BASE+'/search?postcode='+encodeURIComponent(postcode)+'&size=25');
+  function mapRow(row,idx){
+    return{
+      _idx:idx,
+      addr:[row['address1'],row['address2'],row['posttown'],row['postcode']].filter(Boolean).join(', '),
+      rating:row['current-energy-rating']||'E',
+      type:row['property-type']||'Residential',
+      era:row['construction-age-band']||'Unknown era',
+      walls:row['walls-description']||'',
+      heat:row['main-heating-description']||'',
+      lmkKey:row['lmk-key'],
+      currentSAP:parseInt(row['current-energy-efficiency'])||50,
+      potentialSAP:parseInt(row['potential-energy-efficiency'])||70,
+    };
+  }
+  const base=PROXY_BASE+'/search?postcode='+encodeURIComponent(postcode);
+  const r=await fetch(base+'&size=25&from=0');
   const d=await r.json();
-  console.log('[EPC] raw API response:', JSON.stringify(d, null, 2));
-  if(d.rows&&d.rows.length>0) console.log('[EPC] first row field names:', Object.keys(d.rows[0]));
+  console.log('[EPC] page-1 keys:', Object.keys(d), '| rows:', (d.rows||[]).length, '| total:', d.total, '| totalResults:', d.totalResults, '| count:', d.count);
   if(!r.ok)throw new Error(d.error||'EPC API '+r.status);
-  return(d.rows||[]).map((row,i)=>({
-    _idx:i,
-    addr:[row['address1'],row['address2'],row['posttown'],row['postcode']].filter(Boolean).join(', '),
-    rating:row['current-energy-rating']||'E',
-    type:row['property-type']||'Residential',
-    era:row['construction-age-band']||'Unknown era',
-    walls:row['walls-description']||'',
-    heat:row['main-heating-description']||'',
-    lmkKey:row['lmk-key'],
-    currentSAP:parseInt(row['current-energy-efficiency'])||50,
-    potentialSAP:parseInt(row['potential-energy-efficiency'])||70,
-  }));
+  let allRows=d.rows||[];
+  const total=typeof d.total==='number'?d.total:typeof d.totalResults==='number'?d.totalResults:null;
+  if(allRows.length===25){
+    if(total!==null&&total>25){
+      const pages=[];
+      for(let from=25;from<total;from+=25)pages.push(from);
+      const results=await Promise.all(pages.map(async from=>{
+        const r2=await fetch(base+'&size=25&from='+from);
+        if(!r2.ok)return[];
+        const d2=await r2.json();
+        return d2.rows||[];
+      }));
+      allRows=allRows.concat(...results);
+    } else if(total===null){
+      try{
+        const r2=await fetch(base+'&size=5000&from=0');
+        if(r2.ok){const d2=await r2.json();const big=d2.rows||[];if(big.length>allRows.length)allRows=big;}
+      }catch(e){/* keep first 25 */}
+    }
+  }
+  console.log('[EPC] total props fetched:', allRows.length);
+  return allRows.map((row,i)=>mapRow(row,i));
 }
 async function fetchRecs(lmkKey){
   if(!lmkKey)return null;
@@ -1302,25 +1337,25 @@ const NP={G:'3.5%',F:'10.5%',E:'19%',D:'29%',C:'40%',B:'57%',A:'80%'};
 
 const MEASURES={
   'Solid brick':[
-    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit — the most impactful single measure for most gas-heated properties.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible criteria met',a:'Full or partial funding'},{n:'Help2Heat',d:'Benefits-linked households',a:'Often fully funded'}],detail:'1–2 day installation. Minimal disruption. Essential if boiler is pre-2005 non-condensing.'},
-    {id:'m2',name:'Heating controls — full TRV set & programmer',priority:'essential',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set across all radiators plus programmable thermostat. Companion to boiler upgrade.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled with boiler upgrade'}],detail:'Half-day. Best installed at the same time as any boiler works.'},
-    {id:'m3',name:'Secondary glazing — single glazed windows',priority:'recommended',blocked:false,bu:1,cMin:800,cMax:2000,conf:'Medium',desc:'Internal secondary glazing fitted to all single-glazed windows. Non-invasive and permitted on most properties.',uTxt:'Partial band uplift',funding:[{n:'GBIS',d:'Great British Insulation Scheme — check eligibility'}],detail:'No planning permission needed in most cases. Good option for conservation areas.'},
-    {id:'m4',name:'Internal wall insulation',priority:'essential',blocked:false,bu:2,cMin:5000,cMax:9000,conf:'Medium',desc:'Insulated plasterboard fixed to internal face of solid walls. Largest single improvement available for solid-wall properties.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Partial funding available'}],detail:'Significant disruption — skirting, architraves and electrics need adjusting. Reduces room width by ~100mm per treated wall.'},
-    {id:'m5',name:'External wall insulation',priority:'optional',blocked:false,blockedReason:'',planningWarn:true,bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'External cladding system applied to solid walls. Significant band improvement — planning permission required in most cases.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Partial funding may be available'}],detail:'Requires planning in most cases for solid brick. Conservation areas almost always refused. GoGreen Alliance can advise on eligibility before works begin.'},
+    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit — the most impactful single measure for most gas-heated properties.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Subject to household criteria'},{n:'Green finance',d:'Low-rate green mortgages and loans'}],detail:'1–2 day installation. Minimal disruption. Essential if boiler is pre-2005 non-condensing.'},
+    {id:'m2',name:'Heating controls — full TRV set & programmer',priority:'essential',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set across all radiators plus programmable thermostat. Companion to boiler upgrade.',uTxt:'Minor uplift',funding:[{n:'Warm Homes Plan',d:'Often bundled with boiler upgrade'}],detail:'Half-day. Best installed at the same time as any boiler works.'},
+    {id:'m3',name:'Secondary glazing — single glazed windows',priority:'recommended',blocked:false,bu:1,cMin:800,cMax:2000,conf:'Medium',desc:'Internal secondary glazing fitted to all single-glazed windows. Non-invasive and permitted on most properties.',uTxt:'Partial band uplift',funding:[{n:'LA Flex',d:'Local authority scheme — check eligibility'}],detail:'No planning permission needed in most cases. Good option for conservation areas.'},
+    {id:'m4',name:'Internal wall insulation',priority:'essential',blocked:false,bu:2,cMin:5000,cMax:9000,conf:'Medium',desc:'Insulated plasterboard fixed to internal face of solid walls. Largest single improvement available for solid-wall properties.',uTxt:'Major band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Partial funding may be available'}],detail:'Significant disruption — skirting, architraves and electrics need adjusting. Reduces room width by ~100mm per treated wall.'},
+    {id:'m5',name:'External wall insulation',priority:'optional',blocked:false,blockedReason:'',planningWarn:true,bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'External cladding system applied to solid walls. Significant band improvement — planning permission required in most cases.',uTxt:'Major band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Subject to planning consent'}],detail:'Requires planning in most cases for solid brick. Conservation areas almost always refused. GoGreen Alliance can advise on eligibility before works begin.'},
     {id:'m6',name:'Solar PV panels (3–4kWp)',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'Rooftop solar installation. Reduces grid electricity consumption and improves band rating.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated VAT on solar installations',a:'Save ~£700–£1,200'},{n:'Smart Export Guarantee',d:'Earn income from electricity exported to the grid'}],detail:'South-facing roof preferred. 1–2 days. Permitted development in most cases.'},
   ],
   'Cavity (uninsulated)':[
-    {id:'m1',name:'Cavity wall insulation',priority:'essential',blocked:false,bu:2,cMin:400,cMax:800,conf:'High',desc:'Blown mineral fibre or EPS bead injected into existing cavity. The most cost-effective insulation measure available.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'Widely available',a:'Often fully funded'},{n:'GBIS',d:'Great British Insulation Scheme',a:'Check eligibility'}],detail:'4–6 hours. Small drill holes patched after. High confidence cost estimate based on standard semi-detached.'},
-    {id:'m2',name:'Loft insulation — top up to 270mm',priority:'essential',blocked:false,bu:1,cMin:300,cMax:600,conf:'High',desc:'Top up existing loft insulation to current 270mm standard. Excellent cost-to-improvement ratio.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'Often free for eligible households'},{n:'GBIS',d:'Check eligibility'}],detail:'2–4 hours. Requires accessible loft.'},
-    {id:'m3',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Full or partial'}],detail:'1–2 days. Most impactful for properties with pre-2005 boilers.'},
-    {id:'m4',name:'Heating controls — TRVs & programmer',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled'}],detail:'Half-day. Best done with boiler works.'},
+    {id:'m1',name:'Cavity wall insulation',priority:'essential',blocked:false,bu:2,cMin:400,cMax:800,conf:'High',desc:'Blown mineral fibre or EPS bead injected into existing cavity. The most cost-effective insulation measure available.',uTxt:'Major band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Often funded'},{n:'LA Flex',d:'Local authority scheme — check eligibility'}],detail:'4–6 hours. Small drill holes patched after. High confidence cost estimate based on standard semi-detached.'},
+    {id:'m2',name:'Loft insulation — top up to 270mm',priority:'essential',blocked:false,bu:1,cMin:300,cMax:600,conf:'High',desc:'Top up existing loft insulation to current 270mm standard. Excellent cost-to-improvement ratio.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Often funded'},{n:'LA Flex',d:'Check eligibility'}],detail:'2–4 hours. Requires accessible loft.'},
+    {id:'m3',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility'},{n:'Boiler Upgrade Scheme',d:'Consider heat pump upgrade',a:'£7,500 grant'}],detail:'1–2 days. Most impactful for properties with pre-2005 boilers.'},
+    {id:'m4',name:'Heating controls — TRVs & programmer',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'Warm Homes Plan',d:'Often bundled'}],detail:'Half-day. Best done with boiler works.'},
     {id:'m5',name:'Solar PV panels (3–4kWp)',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'Rooftop solar. Reduces grid consumption and improves band.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated VAT',a:'Save ~£700–£1,200'},{n:'Smart Export Guarantee',d:'Earn for exported energy'}],detail:'1–2 days. South-facing roof preferred.'},
     {id:'m6',name:'Air source heat pump',priority:'optional',blocked:false,bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'Replace gas boiler with ASHP. Large band improvement but significant cost and disruption.',uTxt:'Major band uplift',funding:[{n:'Boiler Upgrade Scheme',d:'£7,500 government grant',a:'£7,500 grant available'},{n:'Green finance',d:'Low-rate green loans from some lenders'}],detail:'Requires external unit space. Best suited to well-insulated homes. 2–3 days.'},
   ],
   DEFAULT:[
-    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible'}],detail:'1–2 days.'},
-    {id:'m2',name:'Loft insulation',priority:'recommended',blocked:false,bu:1,cMin:300,cMax:700,conf:'High',desc:'Install or top up loft insulation to 270mm.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'Often free for eligible'},{n:'GBIS',d:'Check eligibility'}],detail:'2–4 hours.'},
-    {id:'m3',name:'Heating controls',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled'}],detail:'Half-day.'},
+    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility'}],detail:'1–2 days.'},
+    {id:'m2',name:'Loft insulation',priority:'recommended',blocked:false,bu:1,cMin:300,cMax:700,conf:'High',desc:'Install or top up loft insulation to 270mm.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Often funded'},{n:'LA Flex',d:'Check eligibility'}],detail:'2–4 hours.'},
+    {id:'m3',name:'Heating controls',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'Warm Homes Plan',d:'Often bundled'}],detail:'Half-day.'},
     {id:'m4',name:'Solar PV panels',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'3–4kWp rooftop solar installation.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated',a:'Save ~£700–1,200'},{n:'Smart Export Guarantee',d:'Earn for exports'}],detail:'1–2 days.'},
     {id:'m5',name:'Double glazing — full replacement',priority:'optional',blocked:false,bu:1,cMin:3000,cMax:7000,conf:'Medium',desc:'Replace single-glazed windows with A-rated double glazing.',uTxt:'Partial band uplift',funding:[],detail:'1–3 days. Planning may be needed in conservation areas.'},
   ]
@@ -1344,21 +1379,11 @@ let xmlUploaded=false, xmlDimensions=null;
 // SECONDARY: epc2c_pending_session (sessionId) + server fetch
 (function(){
   const params=new URLSearchParams(window.location.search);
-  const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||params.has('paid');
-
-  // Step 2: On page load — confirm ?paid=1 is detected
-  console.log('[EPC2C] Page load — URL:', window.location.href);
-  console.log('[EPC2C] Page load — paid=1 detected:', params.has('paid'));
-  console.log('[EPC2C] Page load — referrer:', document.referrer);
-  console.log('[EPC2C] Page load — fromStripe:', fromStripe);
-
+  const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||params.has('paid')||params.get('redirect_status')==='succeeded';
   if(!fromStripe){checkWelcomeBack();return;}
 
-  // Step 3: Confirm localStorage.getItem returns property
   const propRaw=localStorage.getItem('epc2c_prop');
   const sessionRef=params.get('ref')||localStorage.getItem('epc2c_pending_session');
-  console.log('[EPC2C] localStorage epc2c_prop:', propRaw ? 'FOUND — '+propRaw.substring(0,100) : 'NOT FOUND');
-  console.log('[EPC2C] sessionRef:', sessionRef||'NOT FOUND');
 
   function showToast(){
     const toast=document.createElement('div');
@@ -1383,32 +1408,19 @@ let xmlUploaded=false, xmlDimensions=null;
       localStorage.removeItem('epc2c_tier');
       localStorage.removeItem('epc2c_pending_session');
       selProp=data;curTier='plan';
-      console.log('[EPC2C] Property parsed from localStorage OK:', selProp.addr);
-      // Step 4: Confirm loadTool() is called
-      setTimeout(()=>{
-        console.log('[EPC2C] Calling loadTool() with property:', selProp.addr);
-        loadTool(selProp);showToast();
-      },300);
-    }catch(e){
-      console.error('[EPC2C] Failed to parse epc2c_prop:', e);
-      setTimeout(showBanner,300);
-    }
+      setTimeout(()=>{loadTool(selProp);showToast();},300);
+    }catch(e){setTimeout(showBanner,300);}
     return;
   }
 
   // SECONDARY path: server-side session fetch
   if(sessionRef){
-    console.log('[EPC2C] Trying server fetch for sessionRef:', sessionRef);
     fetch('/api/get-property/'+sessionRef)
       .then(r=>r.ok?r.json():Promise.reject('not found'))
       .then(data=>{
         localStorage.removeItem('epc2c_pending_session');
         selProp=data;curTier='plan';
-        console.log('[EPC2C] Server fetch OK:', selProp.addr);
-        setTimeout(()=>{
-          console.log('[EPC2C] Calling loadTool() via server fetch');
-          loadTool(selProp);showToast();
-        },300);
+        setTimeout(()=>{loadTool(selProp);showToast();},300);
       })
       .catch((err)=>{
         localStorage.removeItem('epc2c_pending_session');
@@ -1451,19 +1463,8 @@ function showApiError(msg){
   document.getElementById('prop-list').style.display='block';
   document.getElementById('free-result').style.display='none';
 }
-function showProps(props){
-  window._props=props;
-  document.getElementById('pl-hdr').textContent=props.length+' properties found — select yours';
-  const filterEl=document.getElementById('pl-filter');
-  filterEl.style.display=props.length>5?'block':'none';
-  filterEl.value='';
-  document.getElementById('pl-count').style.display='none';
-  renderPropItems(props);
-  document.getElementById('prop-list').style.display='block';
-  document.getElementById('free-result').style.display='none';
-}
-function renderPropItems(props){
-  document.getElementById('pl-items').innerHTML=props.map((p,i)=>`
+function renderPropItems(list){
+  document.getElementById('pl-items').innerHTML=list.map(p=>`
     <div class="prop-item" id="pi-${p._idx}" onclick="pickProp(${p._idx})">
       <div class="prop-addr">${p.addr}</div>
       <div class="epc-badge" style="background:${EPC_COL[p.rating]}">${p.rating}</div>
@@ -1471,12 +1472,24 @@ function renderPropItems(props){
 }
 function filterProps(){
   const q=document.getElementById('pl-filter').value.trim().toLowerCase();
-  const all=window._props;
-  const filtered=q?all.filter(p=>p.addr.toLowerCase().includes(q)):all;
+  const all=window._props||[];
+  const list=q?all.filter(p=>p.addr.toLowerCase().includes(q)):all;
   const countEl=document.getElementById('pl-count');
-  countEl.style.display=q?'block':'none';
-  countEl.textContent=filtered.length+' of '+all.length+' shown';
-  renderPropItems(filtered);
+  if(q&&list.length!==all.length){countEl.textContent=list.length+' of '+all.length+' shown';countEl.style.display='block';}
+  else{countEl.style.display='none';}
+  renderPropItems(list);
+}
+function showProps(props){
+  window._props=props;
+  const n=props.length;
+  document.getElementById('pl-hdr').textContent=n+' properties found — enter house number or name to find yours';
+  const filterEl=document.getElementById('pl-filter');
+  filterEl.style.display=n>1?'block':'none';
+  filterEl.value='';
+  document.getElementById('pl-count').style.display='none';
+  renderPropItems(props);
+  document.getElementById('prop-list').style.display='block';
+  document.getElementById('free-result').style.display='none';
 }
 async function pickProp(i){
   document.querySelectorAll('.prop-item').forEach(e=>e.classList.remove('sel'));
@@ -1491,33 +1504,39 @@ async function pickProp(i){
   setTimeout(()=>showFree(selProp),350);
 }
 function showFree(p){
-  const ri=bi(p.rating),ci=bi('C'),gap=ci-ri;
   document.getElementById('fr-addr').textContent=p.addr;
   document.getElementById('fr-tags').innerHTML=`
     <span class="fr-tag" style="background:${EPC_COL[p.rating]};color:white">${p.rating}</span>
     <span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.type}</span>
     <span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.era}</span>`;
+  document.getElementById('ownership-q').style.display='block';
+  document.getElementById('ownership-note').style.display='none';
+  document.getElementById('fr-body').style.display='none';
+  document.getElementById('free-result').style.display='block';
+  setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+}
+function answerOwnership(answer){
+  document.getElementById('ownership-q').style.display='none';
+  if(answer==='no') document.getElementById('ownership-note').style.display='block';
+  document.getElementById('fr-body').style.display='block';
+  showFreeBody(selProp);
+}
+function showFreeBody(p){
+  const ri=bi(p.rating),ci=bi('C'),gap=ci-ri;
   document.getElementById('hero-needle').style.left=NP[p.rating]||'5%';
-
-  // Confidence = Low-Medium for free tier
   document.getElementById('conf-label').textContent='Low–Medium · EPC register data only';
   document.getElementById('conf-fill').style.width='30%';
   document.getElementById('conf-fill').style.background='var(--amber)';
-
   let cls,label,title,body;
   if(ri>=ci){cls='hv-ok';label='Already compliant';title='This property currently meets EPC C';body='No action required for the 2030 standard. Review again at next EPC renewal.';}
   else if(gap===1){cls='hv-works';label='Works likely sufficient';title='EPC C is likely achievable with targeted improvements';body=`EPC ${p.rating}: one band improvement needed. Likely achievable with 1–2 measures. Upgrade to the Compliance Plan for specific costs and an interactive tool.`;}
   else if(gap===2){cls='hv-works';label='Works required';title='EPC C is achievable — multiple measures needed';body=`EPC ${p.rating}: two bands of improvement needed. Multiple measures required. Estimated range: £2,000–£8,000. The Compliance Plan will show the exact path for this property.`;}
   else{cls='hv-exemption';label='Exemption likely needed';title='EPC C is unlikely to be achievable through works alone';body=`EPC ${p.rating}: ${gap} bands needed. Based on the property type and construction era, a MEES exemption is likely required. The Compliance Plan identifies which exemption applies and how to register it.`;}
-
   const v=document.getElementById('hero-verdict');
   v.className='hero-verdict '+cls;
   v.innerHTML=`<div class="hv-label">${label}</div><div class="hv-title">${title}</div><div class="hv-body">${body}</div><div class="hv-conf">Confidence: Low–Medium · EPC register data only · <a href="#pricing" style="color:var(--teal);text-decoration:none">upgrade for higher confidence →</a></div>`;
-  document.getElementById('free-result').style.display='block';
-  // Reset improvements panel
   impSel.clear();
   showImprovementsPanel();
-  setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
 
 const LINKS={
@@ -2010,10 +2029,7 @@ function requestReport(){
   fill(C.warmMid);rrect(ML,y+0.5,pillW,5.5,1,'F');
   tc(C.body);txt(pillTxt,ML+4,y+4.5);
 
-  if(selProp.lmkKey){
-    fnt('helvetica','normal');fs(6.5);tc(C.body);
-    txt('EPC Ref: '+selProp.lmkKey,ML+W,y+6,{align:'right'});
-  }
+  if(selProp.lmkKey){fnt('helvetica','normal');fs(6.5);tc(C.body);txt('EPC Ref: '+selProp.lmkKey,ML+W,y+6,{align:'right'});}
 
   y+=27;
 

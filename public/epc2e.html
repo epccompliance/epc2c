@@ -702,10 +702,10 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 <!-- SCRIPT BLOCK 1 PLACEHOLDER -->
 <script>
 const PREV_MEASURES=[
-  {id:'p1',name:'Cavity wall insulation',cost:600,bu:2,grant:'ECO4 — often free',desc:'The single most cost-effective measure for a cavity wall property'},
-  {id:'p2',name:'Loft insulation top-up',cost:400,bu:1,grant:'ECO4 / GBIS',desc:'Top up to 270mm — fast, low disruption, excellent payback'},
-  {id:'p3',name:'Boiler upgrade (A-rated)',cost:1000,bu:1,grant:'ECO4 if eligible',desc:'Replace old non-condensing boiler with modern condensing unit'},
-  {id:'p4',name:'Heating controls & TRVs',cost:375,bu:0,grant:'ECO4 (bundled)',desc:'Full TRV set and programmable thermostat'},
+  {id:'p1',name:'Cavity wall insulation',cost:600,bu:2,grant:'Warm Homes Plan',desc:'The single most cost-effective measure for a cavity wall property'},
+  {id:'p2',name:'Loft insulation top-up',cost:400,bu:1,grant:'Warm Homes Plan / LA Flex',desc:'Top up to 270mm — fast, low disruption, excellent payback'},
+  {id:'p3',name:'Boiler upgrade (A-rated)',cost:1000,bu:1,grant:'Warm Homes Plan',desc:'Replace old non-condensing boiler with modern condensing unit'},
+  {id:'p4',name:'Heating controls & TRVs',cost:375,bu:0,grant:'Warm Homes Plan',desc:'Full TRV set and programmable thermostat'},
   {id:'p5',name:'Solar PV (3kWp)',cost:5500,bu:1,grant:'0% VAT + SEG',desc:'Rooftop solar — reduces grid consumption, improves band'},
 ];
 const PREV_BANDS=['G','F','E','D','C','B','A'];
@@ -1056,10 +1056,11 @@ function parseCostRange(s){
 }
 function grantsByType(descr){
   const t=(descr||'').toLowerCase();const g=[];
-  if(t.includes('insul')||t.includes('boiler')||t.includes('heat pump'))g.push({n:'ECO4',d:'Subject to eligibility'});
-  if(t.includes('insul'))g.push({n:'GBIS',d:'Great British Insulation Scheme'});
-  if(t.includes('heat pump'))g.push({n:'Boiler Upgrade Scheme',d:'£7,500 grant',a:'£7,500'});
+  if(t.includes('insul')||t.includes('boiler')||t.includes('heat pump'))g.push({n:'Warm Homes Plan',d:'Check eligibility at gov.uk'});
+  if(t.includes('insul'))g.push({n:'LA Flex',d:'Local authority scheme — check eligibility'});
+  if(t.includes('heat pump'))g.push({n:'Boiler Upgrade Scheme',d:'£7,500 grant',a:'£7,500'},{n:'0% VAT',d:'Zero-rated VAT on heat pumps'});
   if(t.includes('solar')||t.includes('pv'))g.push({n:'0% VAT',d:'Zero-rated VAT on solar'},{n:'Smart Export Guarantee',d:'Earn for exported energy'});
+  if(t.includes('boiler')||t.includes('heat pump')||t.includes('insul'))g.push({n:'Green finance',d:'Low-rate green mortgages and loans'});
   return g;
 }
 async function fetchEpcProps(postcode){
@@ -1112,25 +1113,25 @@ const NP={G:'3.5%',F:'10.5%',E:'19%',D:'29%',C:'40%',B:'57%',A:'80%'};
 
 const MEASURES={
   'Solid brick':[
-    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible criteria met',a:'Full or partial funding'}],detail:'1–2 day installation. Minimal disruption.'},
-    {id:'m2',name:'Heating controls — full TRV set & programmer',priority:'essential',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set across all radiators plus programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled with boiler upgrade'}],detail:'Half-day. Best installed at same time as boiler works.'},
-    {id:'m3',name:'Secondary glazing — single glazed windows',priority:'recommended',blocked:false,bu:1,cMin:800,cMax:2000,conf:'Medium',desc:'Internal secondary glazing fitted to all single-glazed windows.',uTxt:'Partial band uplift',funding:[{n:'GBIS',d:'Great British Insulation Scheme — check eligibility'}],detail:'No planning permission needed in most cases.'},
-    {id:'m4',name:'Internal wall insulation',priority:'essential',blocked:false,bu:2,cMin:5000,cMax:9000,conf:'Medium',desc:'Insulated plasterboard fixed to internal face of solid walls. Largest single improvement for solid-wall properties.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Partial funding available'}],detail:'Significant disruption. Reduces room width by ~100mm per treated wall.'},
+    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Subject to household criteria'},{n:'Green finance',d:'Low-rate green mortgages and loans'}],detail:'1–2 day installation. Minimal disruption.'},
+    {id:'m2',name:'Heating controls — full TRV set & programmer',priority:'essential',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set across all radiators plus programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'Warm Homes Plan',d:'Often bundled with boiler upgrade'}],detail:'Half-day. Best installed at same time as boiler works.'},
+    {id:'m3',name:'Secondary glazing — single glazed windows',priority:'recommended',blocked:false,bu:1,cMin:800,cMax:2000,conf:'Medium',desc:'Internal secondary glazing fitted to all single-glazed windows.',uTxt:'Partial band uplift',funding:[{n:'LA Flex',d:'Local authority scheme — check eligibility'}],detail:'No planning permission needed in most cases.'},
+    {id:'m4',name:'Internal wall insulation',priority:'essential',blocked:false,bu:2,cMin:5000,cMax:9000,conf:'Medium',desc:'Insulated plasterboard fixed to internal face of solid walls. Largest single improvement for solid-wall properties.',uTxt:'Major band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Partial funding may be available'}],detail:'Significant disruption. Reduces room width by ~100mm per treated wall.'},
     {id:'m5',name:'External wall insulation',priority:'optional',blocked:true,blockedReason:'Planning consent required',bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'External cladding system. Blocked pending planning consent.',uTxt:'Major band uplift',funding:[],detail:'Requires planning in most cases for solid brick.'},
     {id:'m6',name:'Solar PV panels (3–4kWp)',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'Rooftop solar installation. Reduces grid electricity consumption and improves band rating.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated VAT',a:'Save ~£700–£1,200'},{n:'Smart Export Guarantee',d:'Earn for exported energy'}],detail:'South-facing roof preferred. 1–2 days.'},
   ],
   'Cavity (uninsulated)':[
-    {id:'m1',name:'Cavity wall insulation',priority:'essential',blocked:false,bu:2,cMin:400,cMax:800,conf:'High',desc:'Blown mineral fibre or EPS bead injected into existing cavity. Most cost-effective insulation measure available.',uTxt:'Major band uplift',funding:[{n:'ECO4',d:'Widely available',a:'Often fully funded'},{n:'GBIS',d:'Great British Insulation Scheme',a:'Check eligibility'}],detail:'4–6 hours. High confidence cost estimate.'},
-    {id:'m2',name:'Loft insulation — top up to 270mm',priority:'essential',blocked:false,bu:1,cMin:300,cMax:600,conf:'High',desc:'Top up existing loft insulation to current 270mm standard.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'Often free for eligible households'},{n:'GBIS',d:'Check eligibility'}],detail:'2–4 hours. Requires accessible loft.'},
-    {id:'m3',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible',a:'Full or partial'}],detail:'1–2 days.'},
-    {id:'m4',name:'Heating controls — TRVs & programmer',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled'}],detail:'Half-day.'},
+    {id:'m1',name:'Cavity wall insulation',priority:'essential',blocked:false,bu:2,cMin:400,cMax:800,conf:'High',desc:'Blown mineral fibre or EPS bead injected into existing cavity. Most cost-effective insulation measure available.',uTxt:'Major band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility',a:'Often funded'},{n:'LA Flex',d:'Local authority scheme — check eligibility'}],detail:'4–6 hours. High confidence cost estimate.'},
+    {id:'m2',name:'Loft insulation — top up to 270mm',priority:'essential',blocked:false,bu:1,cMin:300,cMax:600,conf:'High',desc:'Top up existing loft insulation to current 270mm standard.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Often funded'},{n:'LA Flex',d:'Check eligibility'}],detail:'2–4 hours. Requires accessible loft.'},
+    {id:'m3',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with modern A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility'},{n:'Boiler Upgrade Scheme',d:'Consider heat pump upgrade',a:'£7,500 grant'}],detail:'1–2 days.'},
+    {id:'m4',name:'Heating controls — TRVs & programmer',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'Warm Homes Plan',d:'Often bundled'}],detail:'Half-day.'},
     {id:'m5',name:'Solar PV panels (3–4kWp)',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'Rooftop solar. Reduces grid consumption and improves band.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated',a:'Save ~£700–£1,200'},{n:'Smart Export Guarantee',d:'Earn for exported energy'}],detail:'1–2 days.'},
     {id:'m6',name:'Air source heat pump',priority:'optional',blocked:false,bu:2,cMin:8000,cMax:15000,conf:'Low',desc:'Replace gas boiler with ASHP. Large band improvement.',uTxt:'Major band uplift',funding:[{n:'Boiler Upgrade Scheme',d:'£7,500 government grant',a:'£7,500 grant available'}],detail:'2–3 days.'},
   ],
   DEFAULT:[
-    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'If eligible'}],detail:'1–2 days.'},
-    {id:'m2',name:'Loft insulation',priority:'recommended',blocked:false,bu:1,cMin:300,cMax:700,conf:'High',desc:'Install or top up loft insulation to 270mm.',uTxt:'Partial band uplift',funding:[{n:'ECO4',d:'Often free for eligible'},{n:'GBIS',d:'Check eligibility'}],detail:'2–4 hours.'},
-    {id:'m3',name:'Heating controls',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'ECO4',d:'Often bundled'}],detail:'Half-day.'},
+    {id:'m1',name:'Boiler upgrade — A-rated condensing',priority:'essential',blocked:false,bu:1,cMin:600,cMax:1400,conf:'High',desc:'Replace old boiler with A-rated condensing unit.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Check eligibility'}],detail:'1–2 days.'},
+    {id:'m2',name:'Loft insulation',priority:'recommended',blocked:false,bu:1,cMin:300,cMax:700,conf:'High',desc:'Install or top up loft insulation to 270mm.',uTxt:'Partial band uplift',funding:[{n:'Warm Homes Plan',d:'Often funded'},{n:'LA Flex',d:'Check eligibility'}],detail:'2–4 hours.'},
+    {id:'m3',name:'Heating controls',priority:'recommended',blocked:false,bu:0,cMin:250,cMax:500,conf:'High',desc:'Full TRV set and programmable thermostat.',uTxt:'Minor uplift',funding:[{n:'Warm Homes Plan',d:'Often bundled'}],detail:'Half-day.'},
     {id:'m4',name:'Solar PV panels',priority:'optional',blocked:false,bu:1,cMin:4000,cMax:7000,conf:'Medium',desc:'3–4kWp rooftop solar installation.',uTxt:'Partial band uplift',funding:[{n:'0% VAT',d:'Zero-rated'},{n:'Smart Export Guarantee',d:'Earn for exports'}],detail:'1–2 days.'},
     {id:'m5',name:'Double glazing — full replacement',priority:'optional',blocked:false,bu:1,cMin:3000,cMax:7000,conf:'Medium',desc:'Replace single-glazed windows with A-rated double glazing.',uTxt:'Partial band uplift',funding:[],detail:'1–3 days.'},
   ]
