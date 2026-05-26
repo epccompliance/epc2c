@@ -25,12 +25,36 @@ module.exports = async function handler(req, res) {
     return m ? m[1].trim() : null;
   }
 
+  // RdSAP SAP 10.2 lookup tables
+  const HEATING_CATEGORY = {
+    '1':'None','2':'Boiler and radiators','3':'Boiler and underfloor heating',
+    '4':'Heat pump and radiators','5':'Heat pump and underfloor heating',
+    '6':'Micro-cogeneration','7':'Electric storage heaters',
+    '8':'Electric underfloor heating','9':'Warm air system',
+    '10':'Room heaters','11':'Other system',
+  };
+  const FUEL_TYPE = {
+    '1':'Mains gas','2':'LPG','3':'LPG (special condition)','4':'Oil',
+    '7':'Coal','8':'Smokeless fuel','9':'Anthracite',
+    '10':'Wood logs','11':'Wood chips','12':'Wood pellets (auto)',
+    '14':'Grid electricity','17':'Electricity (unspecified)',
+    '22':'Bioethanol','26':'Applewood','27':'Wood pellets',
+    '35':'LPG (bulk)','36':'Mains gas (individual metered)',
+    '37':'Bottled gas','38':'Oil (35 sec)','39':'Oil (standard)',
+    '40':'Solid fuel','42':'Coal (national average)',
+    '46':'Biomass boiler','47':'Wood','50':'Community heat pump',
+    '51':'Community CHP','52':'Community boiler','58':'Community biomass',
+    '99':'Unknown',
+  };
+
   const totalFloorArea = parseFloat(getField(xmlContent, 'Total-Floor-Area')) || 0;
   const wallArea       = parseFloat(getField(xmlContent, 'Wall-Area'))        || 0;
   const roofArea       = parseFloat(getField(xmlContent, 'Roof-Area'))        || 0;
   const windowArea     = parseFloat(getField(xmlContent, 'Window-Area'))      || 0;
-  const mainHeating    = getField(xmlContent, 'Main-Heating-Category')        || '';
-  const mainFuel       = getField(xmlContent, 'Main-Fuel-Type')               || '';
+  const mainHeatingCode = getField(xmlContent, 'Main-Heating-Category') || '';
+  const mainFuelCode    = getField(xmlContent, 'Main-Fuel-Type')        || '';
+  const mainHeating     = HEATING_CATEGORY[mainHeatingCode] || (mainHeatingCode ? 'Code '+mainHeatingCode : '');
+  const mainFuel        = FUEL_TYPE[mainFuelCode]           || (mainFuelCode    ? 'Code '+mainFuelCode    : '');
   const constructionAgeBand  = getField(xmlContent, 'Construction-Age-Band') || '';
   const currentEnergyRating  = getField(xmlContent, 'Current-Energy-Rating') || '';
 
