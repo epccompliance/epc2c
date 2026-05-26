@@ -18,6 +18,14 @@
     {
       "source": "/epc2e",
       "destination": "/epc2e.html"
+    },
+    {
+      "source": "/dea",
+      "destination": "/dea.html"
+    },
+    {
+      "source": "/agents",
+      "destination": "/agents.html"
     }
   ]
 }

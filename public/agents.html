@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Letting Agent Partnership — EPC2C</title>
+<meta name="description" content="MEES compliance tools for letting agents. Protect your landlords, reduce void risk, and offer a white-label compliance service. Powered by GoGreen Alliance."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1e33;--navy2:#162843;--navy3:#1c3450;
+  --teal:#4ecba8;--teald:#2fa882;--tealp:rgba(78,203,168,.1);--tealbdr:rgba(78,203,168,.22);
+  --warm:#f5f2ec;--warm2:#ece8e0;--warm3:#d4d0c8;
+  --char:#1a2332;--body:#374151;--muted:#6b7280;--hint:#9ca3af;
+  --rule:#e8e4dc;--white:#ffffff;
+  --amber:#d97706;--amberp:#fffbeb;
+  --green:#059669;--greenp:#ecfdf5;
+  --serif:'Fraunces',Georgia,serif;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--body);font-size:15px;line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--white);text-decoration:none;letter-spacing:-.02em;display:flex;align-items:baseline;gap:0}
+.logo-num{color:var(--teal)}
+.logo-c{font-style:italic;font-weight:300;color:var(--white)}
+.nav-links{display:flex;align-items:center;gap:22px}
+.nav-link{font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--white)}
+.nav-cta{font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);padding:7px 16px;border-radius:6px;text-decoration:none;cursor:pointer;border:none;font-family:var(--sans);transition:background .2s}
+.nav-cta:hover{background:var(--teald)}
+
+/* HERO */
+.hero{background:var(--navy);padding:120px 2rem 80px;position:relative;overflow:hidden}
+.hero-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(78,203,168,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(78,203,168,.035) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.hero-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(78,203,168,.06) 0%,transparent 60%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:760px;margin:0 auto}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);background:rgba(78,203,168,.1);border:0.5px solid var(--tealbdr);padding:5px 14px;border-radius:20px;margin-bottom:24px}
+.hero-h{font-family:var(--serif);font-size:48px;font-weight:300;line-height:1.09;letter-spacing:-.03em;color:var(--white);margin-bottom:18px}
+.hero-h em{font-style:italic;color:var(--teal)}
+.hero-sub{font-size:16px;color:rgba(255,255,255,.55);line-height:1.65;max-width:580px;margin-bottom:32px}
+.hero-cta-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:var(--navy);font-family:var(--sans);font-size:14px;font-weight:500;padding:12px 24px;border-radius:8px;text-decoration:none;transition:background .2s}
+.btn-primary:hover{background:var(--teald)}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--teal);font-family:var(--sans);font-size:14px;font-weight:500;padding:12px 24px;border-radius:8px;text-decoration:none;border:0.5px solid var(--tealbdr);transition:all .2s}
+.btn-ghost:hover{background:var(--tealp)}
+
+/* STATS BAR */
+.stats-bar{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.05);border-bottom:0.5px solid rgba(255,255,255,.05)}
+.stats-inner{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex}
+.stat{flex:1;padding:22px 0;text-align:center;border-right:0.5px solid rgba(255,255,255,.06)}
+.stat:last-child{border-right:none}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--white)}
+.stat-val span{color:var(--teal)}
+.stat-lbl{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+
+/* SECTIONS */
+.section{padding:72px 2rem}
+.section-navy{background:var(--navy)}
+.section-warm{background:var(--warm)}
+.inner{max-width:1100px;margin:0 auto}
+.sec-ey{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+.sec-h{font-family:var(--serif);font-size:36px;font-weight:300;line-height:1.15;letter-spacing:-.025em;color:var(--char);margin-bottom:12px}
+.sec-h-white{font-family:var(--serif);font-size:36px;font-weight:300;line-height:1.15;letter-spacing:-.025em;color:var(--white);margin-bottom:12px}
+.sec-sub{font-size:15px;color:var(--muted);line-height:1.65;max-width:620px;margin-bottom:40px}
+.sec-sub-white{font-size:15px;color:rgba(255,255,255,.55);line-height:1.65;max-width:620px;margin-bottom:40px}
+
+/* WHY SECTION */
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+.why-card{background:var(--navy);border:0.5px solid rgba(78,203,168,.12);border-radius:14px;padding:24px}
+.why-icon{font-size:22px;margin-bottom:12px}
+.why-title{font-size:14px;font-weight:500;color:var(--white);margin-bottom:7px}
+.why-body{font-size:13px;color:rgba(255,255,255,.45);line-height:1.6}
+
+/* RISK SECTION */
+.risk-box{background:rgba(217,119,6,.06);border:0.5px solid rgba(217,119,6,.25);border-radius:14px;padding:28px 32px;margin-top:40px}
+.risk-h{font-size:15px;font-weight:500;color:var(--amber);margin-bottom:14px}
+.risk-items{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.risk-item{font-size:13px;color:var(--body);padding-left:16px;border-left:2px solid var(--amber);line-height:1.5}
+.risk-item strong{display:block;color:var(--char);font-weight:500;margin-bottom:2px}
+
+/* OFFER SECTION */
+.offer-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
+.offer-card{border-radius:14px;padding:26px;border:0.5px solid var(--rule);background:var(--white)}
+.offer-badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:10px;margin-bottom:12px}
+.badge-teal{background:var(--tealp);color:var(--teald);border:0.5px solid var(--tealbdr)}
+.badge-amber{background:var(--amberp);color:var(--amber);border:0.5px solid rgba(217,119,6,.25)}
+.offer-name{font-size:18px;font-weight:500;color:var(--char);margin-bottom:5px}
+.offer-note{font-size:13px;color:var(--muted);margin-bottom:18px}
+.offer-items{display:flex;flex-direction:column;gap:8px}
+.offer-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--body)}
+.offer-item::before{content:'✓';color:var(--green);font-weight:600;flex-shrink:0;margin-top:1px}
+
+/* WHITE LABEL */
+.wl-box{background:var(--navy);border:0.5px solid rgba(78,203,168,.18);border-radius:14px;padding:32px;margin-top:32px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center}
+.wl-badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:3px 10px;border-radius:10px;background:var(--tealp);color:var(--teal);border:0.5px solid var(--tealbdr);margin-bottom:10px}
+.wl-h{font-size:20px;font-weight:400;color:var(--white);margin-bottom:8px;font-family:var(--serif)}
+.wl-body{font-size:13px;color:rgba(255,255,255,.5);line-height:1.65;max-width:520px}
+.wl-points{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.wl-pt{display:flex;gap:8px;font-size:13px;color:rgba(255,255,255,.6)}
+.wl-pt::before{content:'→';color:var(--teal);flex-shrink:0}
+
+/* DASHBOARD */
+.db-section{background:var(--navy2);border:0.5px solid rgba(78,203,168,.1);border-radius:14px;padding:32px;margin-top:40px}
+.db-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.db-title{font-size:18px;font-weight:500;color:var(--white)}
+.db-soon{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;background:rgba(217,119,6,.12);color:var(--amber);border:0.5px solid rgba(217,119,6,.3);padding:4px 12px;border-radius:20px}
+.db-sub{font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:24px;max-width:520px}
+.db-mockup{background:var(--navy);border:0.5px solid rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
+.db-bar{background:rgba(10,20,38,.8);padding:10px 16px;border-bottom:0.5px solid rgba(255,255,255,.06);display:flex;gap:10px;align-items:center}
+.db-dot{width:8px;height:8px;border-radius:50%}
+.db-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:0.5px solid rgba(255,255,255,.04);font-size:13px}
+.db-row:last-of-type{border-bottom:none}
+.db-band{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:white;flex-shrink:0}
+.db-info{flex:1}
+.db-addr{font-size:12px;color:rgba(255,255,255,.65);margin-bottom:3px}
+.db-prog{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.db-fill{height:100%;border-radius:2px}
+.db-status{font-size:11px;font-family:var(--mono);flex-shrink:0}
+.db-footer-note{padding:14px 16px;font-size:11px;color:rgba(255,255,255,.25);border-top:0.5px solid rgba(255,255,255,.05);font-style:italic}
+
+/* SIGN UP */
+.signup-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:40px}
+.signup-step{text-align:center;padding:24px 16px}
+.ss-n{width:38px;height:38px;border-radius:50%;background:var(--tealp);border:1.5px solid var(--tealbdr);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:500;color:var(--teal);margin:0 auto 14px}
+.ss-title{font-size:14px;font-weight:500;color:var(--white);margin-bottom:6px}
+.ss-body{font-size:12px;color:rgba(255,255,255,.45);line-height:1.6}
+
+/* CONTACT */
+.contact-box{max-width:560px;margin:0 auto;text-align:center;padding:60px 2rem}
+.contact-icon{font-size:36px;margin-bottom:18px}
+.contact-h{font-family:var(--serif);font-size:28px;font-weight:300;color:var(--white);margin-bottom:10px;letter-spacing:-.02em}
+.contact-body{font-size:14px;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:28px}
+.contact-email{display:inline-flex;align-items:center;gap:10px;background:var(--teal);color:var(--navy);font-family:var(--sans);font-size:15px;font-weight:500;padding:14px 28px;border-radius:9px;text-decoration:none;transition:background .2s}
+.contact-email:hover{background:var(--teald)}
+
+/* FOOTER */
+footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:30px 2rem}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.foot-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:rgba(255,255,255,.32)}
+.foot-logo span{color:var(--teal)}
+.foot-links{display:flex;gap:16px}
+.foot-link{font-size:12px;color:rgba(255,255,255,.2);text-decoration:none}
+.foot-link:hover{color:rgba(255,255,255,.42)}
+.foot-copy{font-size:12px;color:rgba(255,255,255,.18)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero-h{font-size:34px}
+  .why-grid{grid-template-columns:1fr}
+  .risk-items{grid-template-columns:1fr}
+  .offer-grid{grid-template-columns:1fr}
+  .wl-box{grid-template-columns:1fr}
+  .signup-steps{grid-template-columns:1fr 1fr}
+  .stats-inner{flex-wrap:wrap}
+  .stat{min-width:50%;border-right:none;border-bottom:0.5px solid rgba(255,255,255,.06)}
+  .foot-inner{flex-direction:column;gap:14px;text-align:center}
+  .foot-links{flex-wrap:wrap;justify-content:center;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">For landlords</a>
+      <a href="/dea" class="nav-link">For DEAs</a>
+      <a href="mailto:agents@epc2c.co.uk" class="nav-cta">Enquire now</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-pill">For letting agents</div>
+    <h1 class="hero-h">Protect your landlords.<br>Reduce void risk.<br><em>Stay ahead of MEES.</em></h1>
+    <p class="hero-sub">2.5 million rental properties are below EPC C. Every non-compliant property in your portfolio is a liability — for your landlord and for your agency. EPC2C gives you the tools to act before 2030.</p>
+    <div class="hero-cta-row">
+      <a href="mailto:agents@epc2c.co.uk" class="btn-primary">Get in touch →</a>
+      <a href="#what-we-offer" class="btn-ghost">What we offer</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-val">2.5<span>M</span></div><div class="stat-lbl">PRS properties below EPC C</div></div>
+    <div class="stat"><div class="stat-val">2030</div><div class="stat-lbl">Compliance deadline</div></div>
+    <div class="stat"><div class="stat-val">£30<span>k</span></div><div class="stat-lbl">Maximum penalty per property</div></div>
+    <div class="stat"><div class="stat-val">7</div><div class="stat-lbl">Exemption types available</div></div>
+  </div>
+</div>
+
+<!-- WHY IT MATTERS -->
+<section class="section section-navy" id="why">
+  <div class="inner">
+    <div class="sec-ey" style="color:var(--teal)">Why this matters for agents</div>
+    <h2 class="sec-h-white">Your landlords need guidance.<br><em style="font-style:italic;color:var(--teal)">Most don't know where to start.</em></h2>
+    <p class="sec-sub-white">MEES compliance is complex. Landlords are confused about costs, exemptions, and deadlines. The agents who step in with clear, actionable advice will be the ones who retain clients through 2030 and beyond.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🏠</div>
+        <div class="why-title">Reduce void risk</div>
+        <div class="why-body">A non-compliant property cannot be legally let after the MEES deadline. Identifying risk early means landlords can plan works — not face emergency void periods.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🛡</div>
+        <div class="why-title">Protect your agency</div>
+        <div class="why-body">Agents who facilitate the letting of non-compliant properties face their own regulatory exposure. A clear compliance process protects your business as well as your clients.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📈</div>
+        <div class="why-title">Add a revenue stream</div>
+        <div class="why-body">Offer compliance reports as a value-added service at the point of instruction or renewal. Agencies running 50+ properties have a significant captive market already on their books.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📋</div>
+        <div class="why-title">Stand out at valuation</div>
+        <div class="why-body">Arrive at a landlord valuation with a MEES compliance report already run on their property. Demonstrate expertise that competitors without EPC2C simply cannot match.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">⚡</div>
+        <div class="why-title">Instant, not manual</div>
+        <div class="why-body">Enter a postcode and select the property — EPC register data loads automatically. A full compliance report with cost estimates and exemption assessment takes under two minutes.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🔖</div>
+        <div class="why-title">Your brand, not ours</div>
+        <div class="why-body">White-label reports carry your agency logo and contact details. Landlords see a professional compliance service from their agent — not a third-party tool they could find themselves.</div>
+      </div>
+    </div>
+
+    <!-- Risk box -->
+    <div class="risk-box">
+      <div class="risk-h">⚠ What's at stake for your landlord clients</div>
+      <div class="risk-items">
+        <div class="risk-item"><strong>Up to £30,000 penalty</strong>Local authorities can fine landlords for each non-compliant tenancy after the deadline.</div>
+        <div class="risk-item"><strong>Property unlettable</strong>A property below EPC C cannot be legally let or re-let after 2030 without a registered exemption.</div>
+        <div class="risk-item"><strong>Exemptions not automatic</strong>Every exemption must be registered on the PRS Exemptions Register before the property is let — not applied retroactively.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT WE OFFER -->
+<section class="section" id="what-we-offer">
+  <div class="inner">
+    <div class="sec-ey">What we offer</div>
+    <h2 class="sec-h">Two tiers. One clear<br>compliance picture.</h2>
+    <p class="sec-sub">Both tiers produce a professional PDF compliance report. Tier 2 runs on register data in minutes. Tier 3 uses a DEA survey for a high-confidence assessment suitable for complex or disputed cases.</p>
+    <div class="offer-grid">
+      <div class="offer-card">
+        <div class="offer-badge badge-teal">Tier 2 — Compliance Plan</div>
+        <div class="offer-name">Automated compliance report</div>
+        <div class="offer-note">Based on EPC register data · Medium confidence · No site visit</div>
+        <div class="offer-items">
+          <div class="offer-item">Current EPC band and MEES compliance verdict</div>
+          <div class="offer-item">Interactive measure tool with projected band movement</div>
+          <div class="offer-item">Indicative costs for each improvement measure</div>
+          <div class="offer-item">Grant and funding matching — ECO4, GBIS and others</div>
+          <div class="offer-item">All 7 MEES exemption types assessed automatically</div>
+          <div class="offer-item">Professional branded PDF for landlord records</div>
+          <div class="offer-item">Suitable for most standard PRS properties</div>
+        </div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-badge badge-amber">Tier 3 — Verified Survey</div>
+        <div class="offer-name">DEA-backed compliance report</div>
+        <div class="offer-note">Based on new EPC assessment · High confidence · Site visit required</div>
+        <div class="offer-items">
+          <div class="offer-item">Everything in Tier 2, plus verified RdSAP data</div>
+          <div class="offer-item">New EPC lodged by a qualified DEA</div>
+          <div class="offer-item">RdSAP XML extraction — floor areas, construction, heating</div>
+          <div class="offer-item">DEA site notes, observations and photographs</div>
+          <div class="offer-item">Awaab's Law damp and mould risk assessment</div>
+          <div class="offer-item">Ventilation review and upgrade recommendations</div>
+          <div class="offer-item">Suitable for complex, disputed or high-value cases</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- White label -->
+    <div class="wl-box">
+      <div>
+        <div class="wl-badge">White-label option</div>
+        <div class="wl-h">Your agency's name on every report</div>
+        <div class="wl-body">White-label reports replace EPC2C branding with your agency logo, practice name, and contact details. Landlords receive a professional compliance document from their agent — strengthening your relationship rather than introducing a third-party tool.</div>
+        <div class="wl-points">
+          <div class="wl-pt">Agency logo and branding on cover and all pages</div>
+          <div class="wl-pt">Your contact details as the primary call to action</div>
+          <div class="wl-pt">Available for agencies running 10+ reports per month</div>
+          <div class="wl-pt">No EPC2C branding visible to your landlord clients</div>
+        </div>
+      </div>
+      <div style="text-align:center;flex-shrink:0">
+        <div style="background:var(--tealp);border:1px solid var(--tealbdr);border-radius:10px;padding:20px 24px;min-width:160px">
+          <div style="font-size:11px;color:var(--teal);font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Available from</div>
+          <div style="font-family:var(--mono);font-size:28px;font-weight:500;color:var(--white)">10<span style="font-size:14px;color:rgba(255,255,255,.4);font-weight:400"> reports/mo</span></div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:6px">Contact us for pricing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO DASHBOARD -->
+<section class="section section-warm" id="dashboard">
+  <div class="inner">
+    <div class="sec-ey">Portfolio dashboard</div>
+    <h2 class="sec-h">Track every property.<br>Spot risk before it becomes a void.</h2>
+    <p class="sec-sub">The portfolio dashboard gives your agency a single view of all managed properties — current EPC band, compliance status, outstanding actions, and exemption registrations. Run a report, share with the landlord, mark as complete.</p>
+
+    <div class="db-section">
+      <div class="db-header">
+        <div class="db-title">Portfolio dashboard</div>
+        <div class="db-soon">⏳ Coming soon</div>
+      </div>
+      <div class="db-sub">A full portfolio tracking dashboard is in development. Partner agencies will receive early access when it launches. Contact us to be added to the waitlist.</div>
+      <div class="db-mockup">
+        <div class="db-bar">
+          <div class="db-dot" style="background:#dc2626"></div>
+          <div class="db-dot" style="background:#d97706"></div>
+          <div class="db-dot" style="background:#16a34a"></div>
+          <div style="margin-left:8px;font-size:11px;color:rgba(255,255,255,.25)">EPC2C — Agency Portfolio</div>
+        </div>
+        <div class="db-row">
+          <div class="db-band" style="background:#ea580c">E</div>
+          <div class="db-info">
+            <div class="db-addr">15 Prestwood Avenue, Wolverhampton</div>
+            <div class="db-prog"><div class="db-fill" style="width:48%;background:#ea580c"></div></div>
+          </div>
+          <div class="db-status" style="color:#d97706">Plan ordered</div>
+        </div>
+        <div class="db-row">
+          <div class="db-band" style="background:#dc2626">F</div>
+          <div class="db-info">
+            <div class="db-addr">7 Maple Avenue, Manchester</div>
+            <div class="db-prog"><div class="db-fill" style="width:22%;background:#dc2626"></div></div>
+          </div>
+          <div class="db-status" style="color:#4ecba8">Survey booked</div>
+        </div>
+        <div class="db-row">
+          <div class="db-band" style="background:#16a34a">C</div>
+          <div class="db-info">
+            <div class="db-addr">22 Birchwood Close, Manchester</div>
+            <div class="db-prog"><div class="db-fill" style="width:80%;background:#16a34a"></div></div>
+          </div>
+          <div class="db-status" style="color:#059669">Compliant ✓</div>
+        </div>
+        <div class="db-row">
+          <div class="db-band" style="background:#dc2626">F</div>
+          <div class="db-info">
+            <div class="db-addr">3 Oak Lane, Birmingham</div>
+            <div class="db-prog"><div class="db-fill" style="width:18%;background:#dc2626"></div></div>
+          </div>
+          <div class="db-status" style="color:#dc2626">Action needed</div>
+        </div>
+        <div class="db-row">
+          <div class="db-band" style="background:#d97706">D</div>
+          <div class="db-info">
+            <div class="db-addr">44 Station Road, Leeds</div>
+            <div class="db-prog"><div class="db-fill" style="width:62%;background:#d97706"></div></div>
+          </div>
+          <div class="db-status" style="color:rgba(255,255,255,.35)">Report pending</div>
+        </div>
+        <div class="db-footer-note">Preview only — portfolio dashboard in development. Partner agencies receive early access.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO SIGN UP -->
+<section class="section section-navy" id="signup">
+  <div class="inner">
+    <div class="sec-ey" style="color:var(--teal)">How to get started</div>
+    <h2 class="sec-h-white">Up and running<br>across your whole portfolio.</h2>
+    <p class="sec-sub-white">No software to install. No long contracts. We onboard agency partners quickly so you can start generating reports for your landlords straight away.</p>
+    <div class="signup-steps">
+      <div class="signup-step">
+        <div class="ss-n">1</div>
+        <div class="ss-title">Email us</div>
+        <div class="ss-body">Send a short introduction to <span style="color:var(--teal)">agents@epc2c.co.uk</span> — your agency name, number of managed properties, and what you're looking for.</div>
+      </div>
+      <div class="signup-step">
+        <div class="ss-n">2</div>
+        <div class="ss-title">Discovery call</div>
+        <div class="ss-body">20-minute call to understand your portfolio, walk through the tool, and discuss white-label options, volume pricing, and dashboard access.</div>
+      </div>
+      <div class="signup-step">
+        <div class="ss-n">3</div>
+        <div class="ss-title">Onboarding</div>
+        <div class="ss-body">Receive agency access credentials and white-label setup (if applicable). Run your first batch of compliance reports the same day.</div>
+      </div>
+      <div class="signup-step">
+        <div class="ss-n">4</div>
+        <div class="ss-title">Roll out to landlords</div>
+        <div class="ss-body">Add compliance reports to your landlord onboarding, annual review, and renewal process. Flag non-compliant properties before the deadline arrives.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section section-navy" style="padding-top:0">
+  <div class="contact-box">
+    <div class="contact-icon">✉</div>
+    <h2 class="contact-h">Ready to get started?</h2>
+    <p class="contact-body">Email us directly and we'll come back to you within one working day. No sales process, no obligation — just a conversation about what your agency needs.</p>
+    <a href="mailto:agents@epc2c.co.uk" class="contact-email">agents@epc2c.co.uk →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-logo">EPC<span>2C</span> · powered by GoGreen Alliance</div>
+    <div class="foot-links">
+      <a href="/" class="foot-link">For landlords</a>
+      <a href="/dea" class="foot-link">For DEAs</a>
+      <a href="#" class="foot-link">Privacy</a>
+      <a href="#" class="foot-link">Terms</a>
+      <a href="mailto:hello@epc2c.co.uk" class="foot-link">Contact</a>
+    </div>
+    <div class="foot-copy">© 2025 EPC2C · epc2c.co.uk</div>
+  </div>
+</footer>
+
+</body>
+</html>
