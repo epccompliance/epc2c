@@ -13,7 +13,27 @@
     },
     {
       "source": "/",
-      "destination": "/epc2c_v3.html"
+      "destination": "/index.html"
+    },
+    {
+      "source": "/epc-c-calculator",
+      "destination": "/epc-c-calculator.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/methodology.html"
     },
     {
       "source": "/epc2e",

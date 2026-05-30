@@ -68,10 +68,22 @@ function serveHtml(filename) {
 }
 
 // ── Static routes ─────────────────────────────────────────────────────────────
-app.get('/',               serveHtml('epc2c_v3.html'));
-app.get('/epc2c_v3.html',  serveHtml('epc2c_v3.html')); // direct link compat
-app.get('/epc2e',          serveHtml('epc2e.html'));
-app.get('/epc2e.html',     serveHtml('epc2e.html'));     // direct link compat
+// Serve everything in /public as-is (for assets and direct .html access)
+app.use(express.static(path.join(DIR, 'public')));
+
+// Clean URLs (mirror vercel.json rewrites)
+app.get('/',                  serveHtml('public/index.html'));
+app.get('/epc-c-calculator',  serveHtml('public/epc-c-calculator.html'));
+app.get('/about',             serveHtml('public/about.html'));
+app.get('/privacy',           serveHtml('public/privacy.html'));
+app.get('/terms',             serveHtml('public/terms.html'));
+app.get('/methodology',       serveHtml('public/methodology.html'));
+app.get('/dea',               serveHtml('public/dea.html'));
+app.get('/agents',            serveHtml('public/agents.html'));
+app.get('/epc2e',             serveHtml('public/epc2e.html'));
+// Legacy direct links — keep working for backwards compat
+app.get('/epc2c_v3.html',     serveHtml('epc2c_v3.html'));
+app.get('/epc2e.html',        serveHtml('epc2e.html'));
 
 // ── Property session endpoints ────────────────────────────────────────────────
 
@@ -108,10 +120,11 @@ app.get('/get-property/:id', (req, res) => {
 
 // GET /api/epc/search?postcode=WV11+3TY&size=10
 app.get('/api/epc/search', async (req, res) => {
-  const { postcode, size = 10 } = req.query;
+  const { postcode, size = 10, from } = req.query;
   if (!postcode) return res.status(400).json({ error: 'postcode required', rows: [] });
 
-  const url = `${EPC_BASE}/search?postcode=${encodeURIComponent(postcode)}&size=${size}`;
+  let url = `${EPC_BASE}/search?postcode=${encodeURIComponent(postcode)}&size=${size}`;
+  if (from !== undefined) url += `&from=${from}`;
   console.log(`[EPC] GET ${url}`);
   try {
     const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
