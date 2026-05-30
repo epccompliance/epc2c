@@ -36,6 +36,14 @@
       "destination": "/methodology.html"
     },
     {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
       "source": "/epc2e",
       "destination": "/epc2e.html"
     },

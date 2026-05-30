@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard &middot; EPC2C</title>
+<meta name="description" content="Your EPC2C account dashboard."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1e33;--navy2:#162843;--teal:#4ecba8;--teald:#2fa882;--tealp:rgba(78,203,168,.1);--tealbdr:rgba(78,203,168,.22);
+  --warm:#f5f2ec;--char:#1a2332;--body:#374151;--muted:#6b7280;--rule:#e8e4dc;--white:#ffffff;
+  --amber:#d97706;--amberp:#fffbeb;--green:#059669;--greenp:#ecfdf5;
+  --serif:'Fraunces',Georgia,serif;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--body);font-size:15px;line-height:1.6}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--white);text-decoration:none;letter-spacing:-.02em}
+.logo-num{color:var(--teal)}.logo-c{font-style:italic;font-weight:300}
+.nav-links{display:flex;align-items:center;gap:22px}
+.nav-link{font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--white)}
+.nav-cta{font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);padding:7px 16px;border-radius:6px;text-decoration:none}
+
+.page-hero{background:var(--navy);padding:120px 2rem 64px;text-align:center}
+.page-eyebrow{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:14px}
+.page-h{font-family:var(--serif);font-size:44px;font-weight:300;color:var(--white);line-height:1.1;margin-bottom:16px}
+.page-sub{font-size:15px;color:rgba(255,255,255,.45);max-width:480px;margin:0 auto;line-height:1.7}
+
+.content{max-width:620px;margin:0 auto;padding:56px 2rem}
+.acct-card{background:var(--white);border:0.5px solid var(--rule);border-radius:14px;padding:28px}
+.acct-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.acct-email{font-family:var(--mono);font-size:14px;color:var(--char);word-break:break-all}
+.acct-status{font-size:13px;color:var(--muted);margin-top:18px;padding-top:18px;border-top:0.5px solid var(--rule);line-height:1.6}
+.loading{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.spinner{width:14px;height:14px;border:2px solid var(--rule);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.btn-primary{font-family:var(--sans);font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:7px;padding:10px 18px;cursor:pointer;text-decoration:none;transition:background .2s}
+.btn-primary:hover{background:var(--teald)}
+.btn-secondary{font-family:var(--sans);font-size:13px;font-weight:500;background:transparent;color:var(--muted);border:0.5px solid var(--rule);border-radius:7px;padding:10px 18px;cursor:pointer;transition:all .2s}
+.btn-secondary:hover{background:var(--warm);color:var(--char)}
+.coming-soon{margin-top:18px;background:var(--warm);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--muted);line-height:1.6}
+.coming-soon strong{color:var(--char);font-weight:600}
+
+footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:28px 2rem;margin-top:64px}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.foot-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:rgba(255,255,255,.32)}
+.foot-logo span{color:var(--teal)}
+.foot-links{display:flex;gap:14px;flex-wrap:wrap}
+.foot-link{font-size:12px;color:rgba(255,255,255,.25);text-decoration:none}
+.foot-link:hover{color:rgba(255,255,255,.5)}
+.foot-copy{font-size:12px;color:rgba(255,255,255,.18)}
+@media(max-width:768px){.nav-links{display:none}.page-h{font-size:30px}.foot-inner{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/epc-c-calculator" class="nav-cta">Check your property</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="page-eyebrow">Account</div>
+  <h1 class="page-h">Dashboard</h1>
+  <p class="page-sub">Your EPC2C account.</p>
+</div>
+
+<div class="content">
+  <div class="acct-card" id="acct-card">
+    <div class="loading" id="loading-state"><span class="spinner"></span><span>Loading your account&hellip;</span></div>
+    <div id="signed-in" style="display:none">
+      <div class="acct-label">Signed in as</div>
+      <div class="acct-email" id="user-email"></div>
+      <div class="coming-soon">
+        <strong>Coming soon</strong> &mdash; saved property searches and compliance report history will appear here.
+      </div>
+      <div class="btn-row">
+        <a href="/epc-c-calculator" class="btn-primary">Check a property &rarr;</a>
+        <button id="logout" class="btn-secondary">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-logo">EPC<span>2C</span> &middot; GoGreen Alliance Ltd</div>
+    <div class="foot-links">
+      <a href="/" class="foot-link">Home</a>
+      <a href="/about" class="foot-link">About</a>
+      <a href="/privacy" class="foot-link">Privacy</a>
+      <a href="/terms" class="foot-link">Terms</a>
+      <a href="/methodology" class="foot-link">Methodology</a>
+    </div>
+    <div class="foot-copy">&copy; 2025 EPC2C &middot; Powered by GoGreen Alliance Ltd</div>
+  </div>
+</footer>
+
+<script type="module">
+  import { supabase } from '/js/supabase-client.js';
+
+  // supabase-js auto-processes the magic-link tokens in the URL on load,
+  // then getUser() validates the session against Supabase.
+  const { data: { user } } = await supabase.auth.getUser();
+  const loadingEl = document.getElementById('loading-state');
+  const signedInEl = document.getElementById('signed-in');
+  const emailEl = document.getElementById('user-email');
+  const logoutBtn = document.getElementById('logout');
+
+  if (!user) {
+    window.location.href = '/login';
+  } else {
+    emailEl.textContent = user.email;
+    loadingEl.style.display = 'none';
+    signedInEl.style.display = 'block';
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = '/login';
+    });
+  }
+</script>
+</body>
+</html>

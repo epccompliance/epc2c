@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sign in &middot; EPC2C</title>
+<meta name="description" content="Sign in to EPC2C with a secure email link — no password required."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1e33;--navy2:#162843;--teal:#4ecba8;--teald:#2fa882;--tealp:rgba(78,203,168,.1);--tealbdr:rgba(78,203,168,.22);
+  --warm:#f5f2ec;--char:#1a2332;--body:#374151;--muted:#6b7280;--rule:#e8e4dc;--white:#ffffff;
+  --amber:#d97706;--amberp:#fffbeb;--green:#059669;--greenp:#ecfdf5;--red:#dc2626;--redp:#fef2f2;
+  --serif:'Fraunces',Georgia,serif;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--body);font-size:15px;line-height:1.6}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--white);text-decoration:none;letter-spacing:-.02em}
+.logo-num{color:var(--teal)}.logo-c{font-style:italic;font-weight:300}
+.nav-links{display:flex;align-items:center;gap:22px}
+.nav-link{font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--white)}
+.nav-cta{font-size:13px;font-weight:500;background:var(--teal);color:var(--navy);padding:7px 16px;border-radius:6px;text-decoration:none}
+
+.page-hero{background:var(--navy);padding:120px 2rem 64px;text-align:center}
+.page-eyebrow{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:14px}
+.page-h{font-family:var(--serif);font-size:44px;font-weight:300;color:var(--white);line-height:1.1;margin-bottom:16px}
+.page-sub{font-size:15px;color:rgba(255,255,255,.45);max-width:480px;margin:0 auto;line-height:1.7}
+
+.content{max-width:460px;margin:0 auto;padding:56px 2rem}
+.auth-card{background:var(--white);border:0.5px solid var(--rule);border-radius:14px;padding:32px}
+.field-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block}
+.email-input{width:100%;font-family:var(--sans);font-size:15px;background:var(--white);border:0.5px solid var(--rule);border-radius:8px;padding:12px 14px;color:var(--char);outline:none;transition:border-color .2s}
+.email-input:focus{border-color:var(--teal)}
+.submit-btn{width:100%;margin-top:14px;font-family:var(--sans);font-size:14px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:13px 22px;cursor:pointer;transition:background .2s}
+.submit-btn:hover{background:var(--teald)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{margin-top:14px;padding:11px 14px;border-radius:8px;font-size:13px;line-height:1.55;display:none}
+.msg.show{display:block}
+.msg.ok{background:var(--greenp);border:0.5px solid rgba(5,150,105,.3);color:var(--green)}
+.msg.err{background:var(--redp);border:0.5px solid rgba(220,38,38,.3);color:var(--red)}
+.msg.info{background:var(--tealp);border:0.5px solid var(--tealbdr);color:var(--teald)}
+.fine{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.6;text-align:center}
+.fine a{color:var(--teald);text-decoration:none}
+.fine a:hover{text-decoration:underline}
+
+footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:28px 2rem;margin-top:64px}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.foot-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:rgba(255,255,255,.32)}
+.foot-logo span{color:var(--teal)}
+.foot-links{display:flex;gap:14px;flex-wrap:wrap}
+.foot-link{font-size:12px;color:rgba(255,255,255,.25);text-decoration:none}
+.foot-link:hover{color:rgba(255,255,255,.5)}
+.foot-copy{font-size:12px;color:rgba(255,255,255,.18)}
+@media(max-width:768px){.nav-links{display:none}.page-h{font-size:30px}.foot-inner{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/epc-c-calculator" class="nav-cta">Check your property</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="page-eyebrow">Account</div>
+  <h1 class="page-h">Sign in to EPC2C</h1>
+  <p class="page-sub">Enter your email and we'll send you a secure sign-in link &mdash; no password needed.</p>
+</div>
+
+<div class="content">
+  <div class="auth-card">
+    <form id="login-form">
+      <label class="field-label" for="email">Email address</label>
+      <input id="email" class="email-input" type="email" required placeholder="you@example.com" autocomplete="email"/>
+      <button type="submit" id="submit-btn" class="submit-btn">Send sign-in link</button>
+    </form>
+    <p id="message" class="msg" role="status"></p>
+    <div class="fine">By signing in you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-logo">EPC<span>2C</span> &middot; GoGreen Alliance Ltd</div>
+    <div class="foot-links">
+      <a href="/" class="foot-link">Home</a>
+      <a href="/about" class="foot-link">About</a>
+      <a href="/privacy" class="foot-link">Privacy</a>
+      <a href="/terms" class="foot-link">Terms</a>
+      <a href="/methodology" class="foot-link">Methodology</a>
+    </div>
+    <div class="foot-copy">&copy; 2025 EPC2C &middot; Powered by GoGreen Alliance Ltd</div>
+  </div>
+</footer>
+
+<script type="module">
+  import { supabase } from '/js/supabase-client.js';
+
+  // Already signed in? Skip straight to the dashboard.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) window.location.href = '/dashboard';
+
+  const form = document.getElementById('login-form');
+  const message = document.getElementById('message');
+  const btn = document.getElementById('submit-btn');
+
+  function showMsg(text, kind) {
+    message.textContent = text;
+    message.className = 'msg show ' + kind;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    btn.disabled = true;
+    showMsg('Sending…', 'info');
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        shouldCreateUser: true
+      }
+    });
+
+    if (error) {
+      showMsg('Error: ' + error.message, 'err');
+      btn.disabled = false;
+    } else {
+      showMsg('Check your inbox for a sign-in link. You can close this tab.', 'ok');
+    }
+  });
+</script>
+</body>
+</html>
