@@ -529,7 +529,7 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
             <div class="fr-tags" id="fr-tags"></div>
           </div>
           <div id="ownership-q" style="display:none;padding:14px 16px;border-bottom:0.5px solid rgba(255,255,255,.07)">
-            <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:10px">Have you owned or been responsible for this property for more than 6 months?</div>
+            <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:10px">Have you owned this property for more than 6 months?</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button onclick="answerOwnership('yes')" style="flex:1;min-width:140px;background:var(--teal);border:none;border-radius:20px;padding:9px 16px;color:var(--navy);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer">Yes — more than 6 months</button>
               <button onclick="answerOwnership('no')" style="flex:1;min-width:140px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:9px 16px;color:rgba(255,255,255,.7);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer">No — less than 6 months</button>
@@ -1005,10 +1005,15 @@ function grantsByType(descr){
   return g;
 }
 async function fetchEpcProps(postcode){
+  // Tidy a name part: drop commas, collapse spaces, Title Case (postcode left as-is).
+  const fmt=s=>(s||'').replace(/,/g,' ').replace(/\s+/g,' ').trim().replace(/\b([a-z])(\w*)/gi,(m,a,b)=>a.toUpperCase()+b.toLowerCase());
   function mapRow(row,idx){
     return{
       _idx:idx,
-      addr:[row['address1'],row['address2'],row['posttown'],row['postcode']].filter(Boolean).join(', '),
+      addr:[fmt(row['address1']),fmt(row['address2']),fmt(row['posttown']),row['postcode']].filter(Boolean).join(', '),
+      address1:row['address1']||'',
+      postcode:row['postcode']||'',
+      lodgementDate:row['lodgement-date']||row['registration-date']||'',
       rating:row['current-energy-rating']||'E',
       type:row['property-type']||'Residential',
       era:row['construction-age-band']||'Unknown era',
@@ -1024,8 +1029,28 @@ async function fetchEpcProps(postcode){
   const r=await fetch(base+'&size=5000');
   const d=await r.json();
   if(!r.ok)throw new Error(d.error||'EPC API '+r.status);
-  const allRows=d.rows||[];
-  return allRows.map((row,i)=>mapRow(row,i));
+  let props=(d.rows||[]).map((row,i)=>mapRow(row,i));
+
+  // FIX 1 — keep only the most recent EPC per address.
+  // Sort by lodgement date (ISO yyyy-mm-dd) descending, then dedupe by address.
+  props.sort((a,b)=>(b.lodgementDate||'').localeCompare(a.lodgementDate||''));
+  // Normalise the key: lowercase, punctuation/casing-insensitive, single spaces —
+  // so "15 Prestwood Avenue", "15, Prestwood Avenue" and "15 PRESTWOOD AVENUE" match.
+  const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const seen=new Set();
+  props=props.filter(p=>{
+    const key=norm(p.address1)+'|'+norm(p.postcode);
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
+
+  // FIX 2 — natural ascending sort by house number/name (2 before 10 before 59).
+  props.sort((a,b)=>a.address1.localeCompare(b.address1,'en',{numeric:true,sensitivity:'base'}));
+
+  // Re-index so rendering ids and pickProp() lookups stay consistent.
+  props.forEach((p,i)=>{p._idx=i;});
+  return props;
 }
 // Returns { measures, detail } from the new EPC certificate endpoint
 // (measures may be null when none are returned; detail carries property attributes).
@@ -1118,13 +1143,13 @@ const EX_TMPL=[
   {id:'wall_insulation',type:'Wall insulation exemption',desc:'Available when wall insulation cannot be installed — typically solid walls where the only options are technically impractical or require planning consent that has been refused.',dur:'10 years',reqs:['Written confirmation from qualified installer','Photographs evidencing wall construction type','Planning refusal letter if applicable']},
   {id:'consent',type:'Third-party consent exemption',desc:'Available when a third party (freeholder, planning authority, tenant) refuses permission for required works and that consent cannot reasonably be obtained.',dur:'10 years',reqs:['Evidence of request for consent','Written refusal from the third party','Record of reasonable attempts to obtain consent']},
   {id:'devaluation',type:'Devaluation exemption',desc:'Available when a RICS-qualified surveyor confirms improvements would reduce the property\'s market value by more than 5%.',dur:'10 years',reqs:['RICS valuation report confirming devaluation >5%','Report from a RICS-regulated valuer']},
-  {id:'new_landlord',type:'New landlord exemption',desc:'Available if you recently became responsible for this property. Provides 6 months to register a permanent exemption or complete improvements.',dur:'6 months',reqs:['Evidence of when landlord responsibility commenced']},
+  {id:'new_landlord',type:'New landlord exemption',desc:'Available if you recently acquired this property — by purchase, inheritance or repossession. Provides 6 months to register a permanent exemption or complete improvements.',dur:'6 months',reqs:['Evidence of the date you acquired the property']},
   {id:'listed_building',type:'Listed building / conservation area',desc:'Available if the property is listed or in a conservation area and the required works would unacceptably alter its character or planning consent has been refused.',dur:'10 years',reqs:['Listed building or conservation area confirmation','Conservation officer statement or planning refusal']},
 ];
 
 // State
 let selProp=null, curTier=null, measures=[], sel=new Set(), selEx=null, filt='all';
-let xmlUploaded=false, xmlDimensions=null;
+let xmlUploaded=false, xmlDimensions=null, ownedOver6m=false;
 // Restore property after Stripe redirect
 // PRIMARY: localStorage.epc2c_prop (full property data — survives cross-origin navigation)
 // SECONDARY: epc2c_pending_session (sessionId) + server fetch
@@ -1268,6 +1293,7 @@ function showFree(p){
   setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
 function answerOwnership(answer){
+  ownedOver6m=(answer==='yes');   // Yes = owned >6m (exemption locked); No = recently acquired (available)
   document.getElementById('ownership-q').style.display='none';
   if(answer==='no') document.getElementById('ownership-note').style.display='block';
   document.getElementById('fr-body').style.display='block';
@@ -1529,7 +1555,10 @@ function evalEx(proj,atC,selMs,cost){
       case 'devaluation':
         if(selMs.length>0||hasWallBlocked){status='available';why='Commission a RICS valuation to confirm if improvements would reduce value by >5%.';}
         else{why='Select measures first, then assess whether works would devalue the property.';}break;
-      case 'new_landlord':status='available';why='Available if you recently became responsible for this property.';break;
+      case 'new_landlord':
+        if(ownedOver6m){status='locked';why='You have owned this property for more than 6 months — the new landlord exemption no longer applies.';}
+        else{status='available';why='You acquired this property less than 6 months ago — 6-month grace period to register a permanent exemption or complete improvements.';}
+        break;
       case 'listed_building':
         if(likelyListed){status='available';why='Pre-1919 or solid wall property — check with local planning authority re listed or conservation area status.';}
         else{status='locked';why='No listed building status identified. Check with LPA if uncertain.';}break;
@@ -2127,14 +2156,14 @@ document.getElementById('pc').addEventListener('keyup',function(){
 <div id="pay-auth-modal" style="display:none;position:fixed;inset:0;background:rgba(15,30,51,.7);backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <div style="font-family:var(--serif);font-size:22px;font-weight:400;color:var(--char);margin-bottom:8px">Enter your email to save your compliance plan</div>
-    <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">We&rsquo;ll email you a 6-digit code. Saving links this plan to your account so you can return to it anytime.</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">We&rsquo;ll email you a verification code. Saving links this plan to your account so you can return to it anytime.</div>
     <div id="pa-step-email">
       <input id="pay-auth-email" type="email" placeholder="you@example.com" autocomplete="email" class="pa-input"/>
       <button id="pay-auth-send" class="pa-btn">Send code</button>
     </div>
     <div id="pa-step-code" style="display:none">
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px">Enter the 6-digit code sent to <strong id="pa-email-echo"></strong>.</div>
-      <input id="pay-auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" class="pa-input" style="letter-spacing:.3em;text-align:center;font-family:var(--mono)"/>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px">Enter the verification code sent to <strong id="pa-email-echo"></strong>.</div>
+      <input id="pay-auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter code" class="pa-input" style="letter-spacing:.3em;text-align:center;font-family:var(--mono)"/>
       <button id="pay-auth-verify" class="pa-btn">Verify &amp; continue</button>
     </div>
     <div id="pay-auth-msg" class="pa-msg"></div>
@@ -2264,8 +2293,8 @@ document.getElementById('pc').addEventListener('keyup',function(){
   }
 
   async function _verifyCode() {
-    const token = ((_m.code && _m.code.value) || '').trim();
-    if (!/^\d{6}$/.test(token)) { _showMsg('Enter the 6-digit code from your email.', 'err'); return; }
+    const token = ((_m.code && _m.code.value) || '').replace(/\s/g, '');
+    if (!/^\d{6,10}$/.test(token)) { _showMsg('Enter the numeric code from your email.', 'err'); return; }
     if (_m.verify) _m.verify.disabled = true;
     _showMsg('Verifying…', 'info');
     const { error } = await supabase.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
