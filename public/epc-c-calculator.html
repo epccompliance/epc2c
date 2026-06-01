@@ -1027,39 +1027,58 @@ async function fetchEpcProps(postcode){
   const allRows=d.rows||[];
   return allRows.map((row,i)=>mapRow(row,i));
 }
+// Returns { measures, detail } from the new EPC certificate endpoint
+// (measures may be null when none are returned; detail carries property attributes).
 async function fetchRecs(lmkKey){
   if(!lmkKey)return null;
   const r=await fetch(PROXY_BASE+'/recommendations?lmkKey='+encodeURIComponent(lmkKey));
   if(!r.ok)return null;
   const d=await r.json();
+  const detail=d.detail||null;
   const recs=d.rows||[];
-  if(!recs.length)return null;
-  const BANDS_L=['G','F','E','D','C','B','A'];
-  let prevSAP=50;
-  return recs.map((rec,i)=>{
-    const recSAP=parseInt(rec['energy-performance-rating'])||prevSAP;
-    const prevBand=sapToBand(prevSAP);
-    const newBand=sapToBand(recSAP);
-    const bu=Math.max(0,BANDS_L.indexOf(newBand)-BANDS_L.indexOf(prevBand));
-    prevSAP=recSAP;
-    const costs=parseCostRange(rec['indicative-cost']);
-    const descr=rec['improvement-summary-text']||rec['improvement-descr']||'';
-    const seq=parseInt(rec['seq'])||99;
-    return{
-      id:'r'+i,
-      name:rec['improvement-id-text']||descr.split('.')[0]||'Improvement '+(i+1),
-      description:descr,
-      priority:seq<=2?'essential':seq<=4?'recommended':'optional',
-      blocked:false,
-      bu,
-      cMin:costs.min,cMax:costs.max,
-      conf:'Medium',
-      uTxt:bu>=2?'Major band uplift':bu===1?'Partial band uplift':'Minor uplift',
-      funding:grantsByType(descr),
-      detail:descr,
-      blockedReason:'',
-    };
-  });
+  let measures=null;
+  if(recs.length){
+    const BANDS_L=['G','F','E','D','C','B','A'];
+    let prevSAP=(detail&&parseInt(detail['current-energy-efficiency']))||50;
+    measures=recs.map((rec,i)=>{
+      const recSAP=parseInt(rec['energy-performance-rating'])||prevSAP;
+      const prevBand=sapToBand(prevSAP);
+      const newBand=sapToBand(recSAP);
+      const bu=Math.max(0,BANDS_L.indexOf(newBand)-BANDS_L.indexOf(prevBand));
+      prevSAP=recSAP;
+      const costs=parseCostRange(rec['indicative-cost']);
+      const descr=rec['improvement-summary-text']||rec['improvement-descr']||'';
+      const seq=parseInt(rec['seq'])||99;
+      return{
+        id:'r'+i,
+        name:rec['improvement-id-text']||descr.split('.')[0]||'Improvement '+(i+1),
+        description:descr,
+        priority:seq<=2?'essential':seq<=4?'recommended':'optional',
+        blocked:false,
+        bu,
+        cMin:costs.min,cMax:costs.max,
+        conf:'Medium',
+        uTxt:bu>=2?'Major band uplift':bu===1?'Partial band uplift':'Minor uplift',
+        funding:grantsByType(descr),
+        detail:descr,
+        blockedReason:'',
+      };
+    });
+  }
+  return { measures, detail };
+}
+// Enrich the selected property with reliable attributes from the certificate.
+function applyDetail(p,detail){
+  if(!detail)return;
+  if(detail['walls-description'])p.walls=detail['walls-description'];
+  if(detail['main-heating-description'])p.heat=detail['main-heating-description'];
+  if(detail['property-type'])p.type=detail['property-type'];
+  if(detail['current-energy-rating'])p.rating=detail['current-energy-rating'];
+  const cs=parseInt(detail['current-energy-efficiency']);if(cs)p.currentSAP=cs;
+  const ps=parseInt(detail['potential-energy-efficiency']);if(ps)p.potentialSAP=ps;
+  // fold detail into the stored EPC payload so Supabase epc_data_json is complete
+  p._raw=Object.assign({},p._raw||{},{certificate_detail:detail});
+  p._detail=detail;
 }
 
 const BANDS=['G','F','E','D','C','B','A'];
@@ -1227,8 +1246,11 @@ async function pickProp(i){
   selProp=window._props.find(p=>p._idx===i)||window._props[i];
   if(selProp.lmkKey){
     try{
-      const apiMs=await fetchRecs(selProp.lmkKey);
-      if(apiMs&&apiMs.length>0)selProp._apiMeasures=apiMs;
+      const res=await fetchRecs(selProp.lmkKey);
+      if(res){
+        if(res.detail)applyDetail(selProp,res.detail);
+        if(res.measures&&res.measures.length>0)selProp._apiMeasures=res.measures;
+      }
     }catch(e){/* fall through */}
   }
   setTimeout(()=>showFree(selProp),350);

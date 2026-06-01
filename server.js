@@ -30,16 +30,33 @@ app.use(session({
   cookie: { maxAge: 2 * 60 * 60 * 1000, sameSite: 'lax' }, // 2 hours
 }));
 
-// ── EPC API credentials ───────────────────────────────────────────────────────
-const EPC_EMAIL   = process.env.EPC_EMAIL   || '';
-const EPC_API_KEY = process.env.EPC_API_KEY || '';
-const EPC_BASE    = process.env.EPC_BASE    || 'https://epc.opendatacommunities.org/api/v1/domestic';
+// ── EPC API (new "Get Energy Performance of Buildings Data" service) ───────────
+const { fetchCertificate } = require('./api/epc/_certificate');
+const EPC_TOKEN    = process.env.EPC_API_TOKEN || process.env.EPC_BEARER_TOKEN || process.env.EPC_TOKEN || '';
+const EPC_API_BASE = (process.env.EPC_API_BASE_URL || 'https://api.get-energy-performance-data.communities.gov.uk').replace(/\/$/, '');
+const EPC_AUTH     = 'Bearer ' + EPC_TOKEN;
 
-if (!EPC_EMAIL || !EPC_API_KEY) {
-  console.warn('WARNING: EPC_EMAIL / EPC_API_KEY not set — EPC proxy routes will fail');
+if (!EPC_TOKEN) {
+  console.warn('WARNING: EPC_API_TOKEN / EPC_BEARER_TOKEN not set — EPC routes will fail');
 }
 
-const EPC_AUTH = 'Basic ' + Buffer.from(EPC_EMAIL + ':' + EPC_API_KEY).toString('base64');
+// Map a new-API search summary record to the hyphenated fields the front-end expects.
+function mapSearchRecord(rec) {
+  return {
+    'lmk-key':               rec.certificateNumber,
+    'certificate-number':    rec.certificateNumber,
+    address1:                rec.addressLine1 || '',
+    address2:                rec.addressLine2 || '',
+    address3:                [rec.addressLine3, rec.addressLine4].filter(Boolean).join(', '),
+    posttown:                rec.postTown || '',
+    postcode:                rec.postcode || '',
+    'current-energy-rating': rec.currentEnergyEfficiencyBand || '',
+    uprn:                    rec.uprn != null ? String(rec.uprn) : '',
+    'registration-date':     rec.registrationDate || '',
+    council:                 rec.council || '',
+    _new:                    rec,
+  };
+}
 
 // ── Property session store ────────────────────────────────────────────────────
 // Keyed by UUID returned to client and appended to Stripe URL as ?ref=<id>.
@@ -118,58 +135,72 @@ app.get('/get-property/:id', (req, res) => {
 
 // ── EPC API proxy routes ──────────────────────────────────────────────────────
 
-// GET /api/epc/search?postcode=WV11+3TY&size=10
+// GET /api/epc/search?postcode=WV11+3TY&size=5000
 app.get('/api/epc/search', async (req, res) => {
-  const { postcode, size = 10, from } = req.query;
+  const { postcode, size } = req.query;
   if (!postcode) return res.status(400).json({ error: 'postcode required', rows: [] });
 
-  let url = `${EPC_BASE}/search?postcode=${encodeURIComponent(postcode)}&size=${size}`;
-  if (from !== undefined) url += `&from=${from}`;
+  // Normalise '+'/spaces to one space, then encode (-> %20; a raw '+' would 400).
+  const pc = String(postcode).trim().replace(/[\s+]+/g, ' ');
+  let url = `${EPC_API_BASE}/api/domestic/search?postcode=${encodeURIComponent(pc)}`;
+  if (size) url += `&size=${encodeURIComponent(size)}`;
   console.log(`[EPC] GET ${url}`);
   try {
     const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
     const text = await r.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = { error: text.trim(), rows: [] }; }
-    console.log(`[EPC] ${r.status} — ${body.rows ? body.rows.length : 0} rows`);
-    res.status(r.status).json(body);
+    let body; try { body = JSON.parse(text); } catch { body = null; }
+    if (!r.ok || !body) {
+      return res.status(r.status).json({ error: (body && body.error) || text.slice(0, 200).trim(), rows: [] });
+    }
+    const rows = (Array.isArray(body.data) ? body.data : []).map(mapSearchRecord);
+    console.log(`[EPC] ${r.status} — ${rows.length} rows`);
+    res.status(200).json({ rows, pagination: body.pagination || null });
   } catch (err) {
     console.error('[EPC] fetch error:', err.message);
     res.status(502).json({ error: err.message, rows: [] });
   }
 });
 
-// GET /api/epc/:lmkKey/recommendations
-app.get('/api/epc/:lmkKey/recommendations', async (req, res) => {
-  const url = `${EPC_BASE}/${req.params.lmkKey}/recommendations`;
-  console.log(`[EPC] GET ${url}`);
+// GET /api/epc/recommendations?lmkKey=...  (query variant used by the calculator)
+app.get('/api/epc/recommendations', async (req, res) => {
+  const id = req.query.lmkKey || req.query.certificate_number;
+  if (!id) return res.status(400).json({ error: 'lmkKey required', rows: [] });
   try {
-    const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
-    const text = await r.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = { error: text.trim() }; }
-    res.status(r.status).json(body);
+    const out = await fetchCertificate(id);
+    if (out.status !== 200) return res.status(out.status).json({ error: out.error, rows: [] });
+    res.status(200).json({ rows: out.rows, detail: out.detail });
   } catch (err) {
     console.error('[EPC] fetch error:', err.message);
-    res.status(502).json({ error: err.message });
+    res.status(502).json({ error: err.message, rows: [] });
+  }
+});
+
+// GET /api/epc/:lmkKey/recommendations  (path variant; lmkKey = certificate number)
+app.get('/api/epc/:lmkKey/recommendations', async (req, res) => {
+  try {
+    const out = await fetchCertificate(req.params.lmkKey);
+    if (out.status !== 200) return res.status(out.status).json({ error: out.error, rows: [] });
+    res.status(200).json({ rows: out.rows, detail: out.detail });
+  } catch (err) {
+    console.error('[EPC] fetch error:', err.message);
+    res.status(502).json({ error: err.message, rows: [] });
   }
 });
 
 // GET /api/health — confirms server is up and EPC credentials work
 app.get('/api/health', async (req, res) => {
-  const url = `${EPC_BASE}/search?postcode=WV11+3TY&size=1`;
+  const url = `${EPC_API_BASE}/api/domestic/search?postcode=WV11+3TY&size=1`;
   try {
     const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
     const text = await r.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = { raw: text.trim() }; }
+    let body; try { body = JSON.parse(text); } catch { body = null; }
     res.json({
       server:                 'ok',
       epc_api_status:         r.status,
       epc_api_ok:             r.status === 200,
-      rows_returned:          body.rows ? body.rows.length : 0,
+      rows_returned:          body && Array.isArray(body.data) ? body.data.length : 0,
       property_sessions_live: propertyStore.size,
-      epc_email:              EPC_EMAIL || '(not set)',
+      epc_token_set:          !!EPC_TOKEN,
     });
   } catch (err) {
     res.status(502).json({ server: 'ok', epc_api_status: 'unreachable', error: err.message });
@@ -182,5 +213,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`EPC2C server  →  http://localhost:${PORT}/`);
   console.log(`              →  http://localhost:${PORT}/epc2e`);
   console.log(`Health check  →  http://localhost:${PORT}/api/health`);
-  if (EPC_EMAIL) console.log(`EPC email     →  ${EPC_EMAIL}`);
+  console.log(`EPC token     →  ${EPC_TOKEN ? 'set' : 'NOT SET'}  (base ${EPC_API_BASE})`);
 });

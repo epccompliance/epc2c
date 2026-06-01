@@ -1,25 +1,19 @@
-const fetch = require('node-fetch');
-
-const EPC_EMAIL   = process.env.EPC_EMAIL   || '';
-const EPC_API_KEY = process.env.EPC_API_KEY || '';
-const EPC_BASE    = process.env.EPC_BASE    || 'https://epc.opendatacommunities.org/api/v1/domestic';
-const EPC_AUTH    = 'Basic ' + Buffer.from(EPC_EMAIL + ':' + EPC_API_KEY).toString('base64');
+// GET /api/epc/<certificate-number>/recommendations  (path-param variant)
+// Returns { rows: [...recommendations...], detail: {...property attributes...} }
+const { fetchCertificate } = require('../_certificate');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  const { lmkKey } = req.query;
-  const url = `${EPC_BASE}/${lmkKey}/recommendations`;
-  console.log(`[EPC] GET ${url}`);
+  const id = req.query.lmkKey || req.query.certificate_number;
+  if (!id) { res.status(400).json({ error: 'lmkKey (certificate number) required', rows: [] }); return; }
 
   try {
-    const r    = await fetch(url, { headers: { Authorization: EPC_AUTH, Accept: 'application/json' } });
-    const text = await r.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = { error: text.trim() }; }
-    res.status(r.status).json(body);
+    const out = await fetchCertificate(id);
+    if (out.status !== 200) { res.status(out.status).json({ error: out.error, rows: [] }); return; }
+    res.status(200).json({ rows: out.rows, detail: out.detail });
   } catch (err) {
     console.error('[EPC] fetch error:', err.message);
-    res.status(502).json({ error: err.message });
+    res.status(502).json({ error: err.message, rows: [] });
   }
 };
