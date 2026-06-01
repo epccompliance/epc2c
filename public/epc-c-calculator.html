@@ -1155,6 +1155,9 @@ let xmlUploaded=false, xmlDimensions=null, ownedOver6m=false;
 // SECONDARY: epc2c_pending_session (sessionId) + server fetch
 (function(){
   const params=new URLSearchParams(window.location.search);
+  // Restore the ownership answer across reloads (survives the Stripe round-trip),
+  // so the paid tool gates the new-landlord exemption correctly.
+  ownedOver6m=localStorage.getItem('epc2c_owned6m')==='1';
   const fromStripe=document.referrer.includes('stripe.com')||document.referrer.includes('buy.stripe.com')||params.has('paid')||params.get('redirect_status')==='succeeded';
   if(!fromStripe){checkWelcomeBack();return;}
 
@@ -1282,10 +1285,11 @@ async function pickProp(i){
 }
 function showFree(p){
   document.getElementById('fr-addr').textContent=p.addr;
+  const eraKnown=p.era&&!/^unknown/i.test(p.era);   // new API doesn't return construction age band
   document.getElementById('fr-tags').innerHTML=`
     <span class="fr-tag" style="background:${EPC_COL[p.rating]};color:white">${p.rating}</span>
-    <span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.type}</span>
-    <span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.era}</span>`;
+    <span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.type}</span>`
+    +(eraKnown?`<span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.era}</span>`:'');
   document.getElementById('ownership-q').style.display='block';
   document.getElementById('ownership-note').style.display='none';
   document.getElementById('fr-body').style.display='none';
@@ -1294,6 +1298,7 @@ function showFree(p){
 }
 function answerOwnership(answer){
   ownedOver6m=(answer==='yes');   // Yes = owned >6m (exemption locked); No = recently acquired (available)
+  try{localStorage.setItem('epc2c_owned6m',ownedOver6m?'1':'0');}catch(e){}  // survive Stripe round-trip
   document.getElementById('ownership-q').style.display='none';
   if(answer==='no') document.getElementById('ownership-note').style.display='block';
   document.getElementById('fr-body').style.display='block';
@@ -1442,7 +1447,7 @@ window.epc2cResumeCheckout=function(tier){
 
 function loadTool(p){
   document.getElementById('tool-addr').textContent=p.addr;
-  document.getElementById('tool-meta').textContent=`${p.type} · ${p.era} · ${p.heat} · ${p.walls}`;
+  document.getElementById('tool-meta').textContent=[p.type,p.era,p.heat,p.walls].filter(x=>x&&!/^unknown/i.test(x)).join(' · ');
   let usedFallback=false;
   if(p._apiMeasures&&p._apiMeasures.length>0){
     console.log('Using API measures:', p._apiMeasures.length, 'measures from EPC API');

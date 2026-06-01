@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { val, str } = require('./_certificate');   // {value,language} unwrappers
 
 // New "Get Energy Performance of Buildings Data" API (Bearer auth).
 const EPC_TOKEN    = process.env.EPC_API_TOKEN || process.env.EPC_BEARER_TOKEN || process.env.EPC_TOKEN || '';
@@ -11,17 +12,17 @@ const EPC_API_BASE = (process.env.EPC_API_BASE_URL || 'https://api.get-energy-pe
 // /api/certificate?certificate_number= endpoint (wired separately).
 function mapRecord(rec) {
   return {
-    'lmk-key':               rec.certificateNumber,
-    'certificate-number':    rec.certificateNumber,
-    address1:                rec.addressLine1 || '',
-    address2:                rec.addressLine2 || '',
-    address3:                [rec.addressLine3, rec.addressLine4].filter(Boolean).join(', '),
-    posttown:                rec.postTown || '',
-    postcode:                rec.postcode || '',
-    'current-energy-rating': rec.currentEnergyEfficiencyBand || '',
-    uprn:                    rec.uprn != null ? String(rec.uprn) : '',
-    'registration-date':     rec.registrationDate || '',
-    council:                 rec.council || '',
+    'lmk-key':               str(rec.certificateNumber),
+    'certificate-number':    str(rec.certificateNumber),
+    address1:                str(rec.addressLine1),
+    address2:                str(rec.addressLine2),
+    address3:                [val(rec.addressLine3), val(rec.addressLine4)].filter(Boolean).join(', '),
+    posttown:                str(rec.postTown),
+    postcode:                str(rec.postcode),
+    'current-energy-rating': str(rec.currentEnergyEfficiencyBand),
+    uprn:                    rec.uprn != null ? String(val(rec.uprn)) : '',
+    'registration-date':     str(rec.registrationDate),
+    council:                 str(rec.council),
     _new:                    rec,   // original new-API record, preserved verbatim
   };
 }

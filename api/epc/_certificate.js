@@ -52,20 +52,25 @@ function mapImprovement(imp, i) {
   };
 }
 
+// The new API sometimes returns a field as a {value, language} object instead of
+// a plain string/number. Unwrap it so callers never receive an object.
+const val = v => (v && typeof v === 'object' && !Array.isArray(v) && 'value' in v) ? v.value : v;
+const str = v => { const x = val(v); return x == null ? '' : String(x); };
+
 function detailFrom(d) {
-  const first = a => (Array.isArray(a) && a[0] && a[0].description) || '';
+  const firstDesc = a => (Array.isArray(a) && a[0]) ? str(a[0].description) : '';
   return {
-    'property-type':               d.dwelling_type || '',
-    'walls-description':           first(d.walls),
-    'roof-description':            first(d.roofs),
-    'main-heating-description':    first(d.main_heating),
-    'windows-description':         (d.window && d.window.description) || '',
-    'current-energy-efficiency':   d.energy_rating_current,
-    'potential-energy-efficiency': d.energy_rating_potential,
-    'current-energy-rating':       d.current_energy_efficiency_band || '',
-    'potential-energy-rating':     d.potential_energy_efficiency_band || '',
-    'total-floor-area':            d.total_floor_area,
-    'registration-date':           d.registration_date || '',
+    'property-type':               str(d.dwelling_type),
+    'walls-description':           firstDesc(d.walls),
+    'roof-description':            firstDesc(d.roofs),
+    'main-heating-description':    firstDesc(d.main_heating),
+    'windows-description':         str(d.window && d.window.description),
+    'current-energy-efficiency':   val(d.energy_rating_current),
+    'potential-energy-efficiency': val(d.energy_rating_potential),
+    'current-energy-rating':       str(d.current_energy_efficiency_band),
+    'potential-energy-rating':     str(d.potential_energy_efficiency_band),
+    'total-floor-area':            val(d.total_floor_area),
+    'registration-date':           str(d.registration_date),
   };
 }
 
@@ -84,4 +89,4 @@ async function fetchCertificate(id) {
   return { status: 200, rows: imps.map(mapImprovement), detail: detailFrom(d) };
 }
 
-module.exports = { fetchCertificate, EPC_API_BASE, EPC_TOKEN };
+module.exports = { fetchCertificate, EPC_API_BASE, EPC_TOKEN, val, str };
