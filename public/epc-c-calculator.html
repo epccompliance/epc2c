@@ -1017,6 +1017,7 @@ async function fetchEpcProps(postcode){
       lmkKey:row['lmk-key'],
       currentSAP:parseInt(row['current-energy-efficiency'])||50,
       potentialSAP:parseInt(row['potential-energy-efficiency'])||70,
+      _raw:row,   // full EPC API response row — stored verbatim in epc_data_json
     };
   }
   const base=PROXY_BASE+'/search?postcode='+encodeURIComponent(postcode);
@@ -1289,38 +1290,77 @@ async function saveProperty(prop,tier){
   }
 }
 
+// ── Supabase persistence ──────────────────────────────────────────────────
+// Build the report JSON from the current tool state.
+function currentReportData(){
+  const proj=projBand();
+  const selMs=[...sel].map(id=>measures.find(m=>m.id===id)).filter(Boolean);
+  const cMin=selMs.reduce((a,m)=>a+(m.cMin||0),0);
+  const cMax=selMs.reduce((a,m)=>a+(m.cMax||0),0);
+  const atC=bi(proj)>=bi('C');
+  let ex=[];try{ex=evalEx(proj,atC,selMs,cMin);}catch(e){}
+  return {
+    selectedMeasures: selMs,   // full measure objects
+    pathwayResults: {
+      current_band: selProp.rating,
+      current_sap:  selProp.currentSAP,
+      projected_band: proj,
+      reaches_c: atC,
+      cost_min: cMin,
+      cost_max: cMax,
+      measure_count: selMs.length,
+    },
+    exemptionResults: { selected: selEx||null, evaluated: ex },
+  };
+}
+// Persist the selected property + a report for the signed-in user.
+// No-op when signed out or when the saver module hasn't loaded — never throws,
+// so it can sit safely in the payment redirect path.
+async function persistReport(tier,pdfUrl){
+  try{
+    if(!selProp||typeof window.saveReportToSupabase!=='function')return null;
+    const rd=currentReportData();
+    return await window.saveReportToSupabase({
+      prop:selProp, rawEpc:selProp._raw,
+      selectedMeasures:rd.selectedMeasures,
+      pathwayResults:rd.pathwayResults,
+      exemptionResults:rd.exemptionResults,
+      pdfUrl:pdfUrl||null, tier:tier||'free',
+    });
+  }catch(e){console.warn('[EPC2C] persistReport failed',e&&e.message);return null;}
+}
+
+// Auth gate: signed-in users go straight to checkout; signed-out users get a
+// magic-link prompt and resume automatically when they return (see auth module).
 async function payAndLoad(tier,price){
   if(!selProp){alert('Please select a property first.');scrollTo({top:0,behavior:'smooth'});return;}
-
-  // Show overlay immediately
+  if(await requireAuthForPayment(tier))return;   // signed out -> link sent, will resume
+  doPlanCheckout(tier,price,false);
+}
+async function doPlanCheckout(tier,price,skipPersist){
   showStripeOverlay();
-
-  // Save property and get sessionId
   const sessionId=await saveProperty(selProp,tier);
   console.log('Session ID:',sessionId);
-
-  // Store in localStorage as backup
+  // localStorage backup so the tool restores after the Stripe round-trip
   localStorage.setItem('epc2c_prop',JSON.stringify(selProp));
   localStorage.setItem('epc2c_tier',tier);
   localStorage.setItem('epc2c_session',sessionId);
-
-  // Wait 2 seconds minimum so user can read the overlay
-  await new Promise(r=>setTimeout(r,2000));
-
-  // Build Stripe URL
-  const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId||'unknown');
-  window.location.href=stripeUrl;
+  if(!skipPersist)await persistReport(tier,null);   // already saved on the resume path
+  await new Promise(r=>setTimeout(r,2000));          // let the user read the overlay
+  window.location.href=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId||'unknown');
 }
 async function orderSurvey(){
-  if(!selProp){window.location.href='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00';return;}
+  if(!selProp){window.location.href=LINKS.survey;return;}
+  if(await requireAuthForPayment('survey'))return;   // signed out -> link sent, will resume
+  doSurveyCheckout(false);
+}
+async function doSurveyCheckout(skipPersist){
   const address=[selProp.address1,selProp.address2,selProp.address3,selProp.posttown,selProp.postcode]
     .filter(Boolean).join(', ')||selProp.addr||'';
-  console.log('[EPC2C] orderSurvey: full address for Stripe =', address);
-  console.log('[EPC2C] orderSurvey: saving property to localStorage before Stripe redirect');
   localStorage.setItem('epc2c_prop',JSON.stringify(selProp));
   localStorage.setItem('epc2c_tier','survey');
-  console.log('[EPC2C] orderSurvey: localStorage saved =', localStorage.getItem('epc2c_prop') ? 'OK' : 'FAILED');
-  const surveyBase='https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00';
+  if(!skipPersist)await persistReport('survey',null);   // already saved on the resume path
+  const surveyBase=LINKS.survey;
   try{
     const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
     const {sessionId}=await r.json();
@@ -1330,6 +1370,27 @@ async function orderSurvey(){
     window.location.href=surveyBase+'?client_reference_id='+encodeURIComponent(selProp.addr||'')+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
   }
 }
+
+// Returns true if it paused for auth (signed out -> OTP modal shown);
+// false if the user is already signed in and checkout should proceed now.
+async function requireAuthForPayment(tier){
+  // If the auth module hasn't loaded, don't block payment — fall back to old behaviour.
+  if(typeof window.epc2cAuthUser!=='function'||typeof window.epc2cOpenAuth!=='function')return false;
+  let user=null;
+  try{user=await window.epc2cAuthUser();}catch(e){}
+  if(user)return false;            // signed in -> proceed to checkout
+  window.epc2cOpenAuth(tier);      // signed out -> OTP modal (verify, or skip), then resumes
+  return true;
+}
+
+// Called by the auth module once the user has verified their code (now signed in)
+// OR chosen to skip. Same page, so selProp + selections are intact; persistReport
+// saves the report when signed in and is a harmless no-op when skipped.
+window.epc2cResumeCheckout=function(tier){
+  curTier=tier==='survey'?'survey':'plan';
+  if(tier==='survey')doSurveyCheckout(false);
+  else doPlanCheckout('plan',19.99,false);
+};
 
 function loadTool(p){
   document.getElementById('tool-addr').textContent=p.addr;
@@ -1999,6 +2060,8 @@ function requestReport(){
 
   const safeName=(selProp.addr.split(',')[0]||'Property').trim().replace(/\s+/g,'-').replace(/[^a-zA-Z0-9-]/g,'');
   doc.save('EPC2C-Plan-'+safeName+'-'+ref+'.pdf');
+  // Persist property + report for signed-in users (no-op otherwise).
+  persistReport(curTier||'free',null);
 }
 
 document.getElementById('pc').addEventListener('keyup',function(){
@@ -2024,5 +2087,183 @@ document.getElementById('pc').addEventListener('keyup',function(){
   <div style="color:rgba(255,255,255,.6);font-size:13px;text-align:center;max-width:300px;line-height:1.6;margin-bottom:24px">Please enter your property address in the Site address field on the payment page</div>
   <div style="width:24px;height:24px;border:3px solid rgba(78,203,168,.3);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite"></div>
 </div>
+
+<!-- Inline OTP auth modal (shown when a signed-out user starts checkout) -->
+<style>
+.pa-msg{display:none;margin-top:12px;padding:11px 13px;border-radius:8px;font-size:13px;line-height:1.5}
+.pa-msg.ok,.pa-msg.err,.pa-msg.info{display:block}
+.pa-msg.ok{background:#ecfdf5;border:0.5px solid rgba(5,150,105,.3);color:#059669}
+.pa-msg.err{background:#fef2f2;border:0.5px solid rgba(220,38,38,.3);color:#dc2626}
+.pa-msg.info{background:rgba(78,203,168,.1);border:0.5px solid rgba(78,203,168,.22);color:#2fa882}
+.pa-input{width:100%;font-family:var(--sans);font-size:15px;border:0.5px solid var(--rule);border-radius:8px;padding:12px 14px;color:var(--char);outline:none}
+.pa-input:focus{border-color:var(--teal)}
+.pa-btn{width:100%;margin-top:12px;font-family:var(--sans);font-size:14px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:13px;cursor:pointer}
+.pa-btn:disabled{opacity:.5;cursor:not-allowed}
+.pa-skip{width:100%;margin-top:10px;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-size:13px;cursor:pointer;text-decoration:underline}
+.pa-skip:hover{color:var(--char)}
+</style>
+<div id="pay-auth-modal" style="display:none;position:fixed;inset:0;background:rgba(15,30,51,.7);backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="font-family:var(--serif);font-size:22px;font-weight:400;color:var(--char);margin-bottom:8px">Enter your email to save your compliance plan</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px">We&rsquo;ll email you a 6-digit code. Saving links this plan to your account so you can return to it anytime.</div>
+    <div id="pa-step-email">
+      <input id="pay-auth-email" type="email" placeholder="you@example.com" autocomplete="email" class="pa-input"/>
+      <button id="pay-auth-send" class="pa-btn">Send code</button>
+    </div>
+    <div id="pa-step-code" style="display:none">
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px">Enter the 6-digit code sent to <strong id="pa-email-echo"></strong>.</div>
+      <input id="pay-auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" class="pa-input" style="letter-spacing:.3em;text-align:center;font-family:var(--mono)"/>
+      <button id="pay-auth-verify" class="pa-btn">Verify &amp; continue</button>
+    </div>
+    <div id="pay-auth-msg" class="pa-msg"></div>
+    <button id="pay-auth-skip" class="pa-skip">Skip &mdash; continue without saving</button>
+  </div>
+</div>
+
+<!-- Supabase persistence: save selected property + report for signed-in users -->
+<script type="module">
+  import { supabase } from '/js/supabase-client.js';
+
+  // Persist the selected property and a report. Returns { propertyId, reportId }
+  // on success, or null if the user isn't signed in / on any failure. Designed to
+  // be safe to call from the payment redirect path — it never throws.
+  window.saveReportToSupabase = async function({ prop, rawEpc, selectedMeasures, pathwayResults, exemptionResults, pdfUrl } = {}) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !prop) return null; // not signed in — calculator works without an account
+
+      const epc = rawEpc || {};
+      const rrn = epc['lmk-key'] || epc['rrn'] || prop.lmkKey || null;
+
+      // Reuse an existing property row for this user + EPC (avoid duplicates).
+      let propertyId = null;
+      if (rrn) {
+        const { data: existing } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('epc_rrn', rrn)
+          .limit(1)
+          .maybeSingle();
+        if (existing) propertyId = existing.id;
+      }
+
+      if (!propertyId) {
+        const { data: inserted, error: pErr } = await supabase
+          .from('properties')
+          .insert({
+            user_id:       user.id,                          // RLS: must equal auth.uid()
+            address:       prop.addr || null,
+            postcode:      epc['postcode'] || null,
+            uprn:          epc['uprn'] || null,
+            epc_rrn:       rrn,
+            epc_data_json: epc,                              // full EPC API response
+          })
+          .select('id')
+          .single();
+        if (pErr) { console.warn('[EPC2C] save property failed:', pErr.message); return null; }
+        propertyId = inserted.id;
+      }
+
+      // Insert the report. payment_status starts 'unpaid'; a server-side Stripe
+      // webhook flips it to 'paid' later. RLS allows this only because the
+      // property belongs to the signed-in user.
+      const { data: report, error: rErr } = await supabase
+        .from('reports')
+        .insert({
+          property_id:            propertyId,
+          selected_measures_json: selectedMeasures ?? null,
+          pathway_results_json:   pathwayResults ?? null,
+          exemption_results_json: exemptionResults ?? null,
+          pdf_url:                pdfUrl ?? null,
+          payment_status:         'unpaid',
+        })
+        .select('id')
+        .single();
+      if (rErr) { console.warn('[EPC2C] save report failed:', rErr.message); return null; }
+
+      console.log('[EPC2C] saved report', report.id, 'for property', propertyId);
+      return { propertyId, reportId: report.id };
+    } catch (e) {
+      console.warn('[EPC2C] saveReportToSupabase error:', e && e.message);
+      return null;
+    }
+  };
+
+  // ── Inline 6-digit OTP auth on payment ──────────────────────────────────────
+  window.epc2cAuthUser = async () => {
+    try { return (await supabase.auth.getUser()).data.user; } catch (e) { return null; }
+  };
+
+  const _m = {
+    modal:     document.getElementById('pay-auth-modal'),
+    email:     document.getElementById('pay-auth-email'),
+    code:      document.getElementById('pay-auth-code'),
+    send:      document.getElementById('pay-auth-send'),
+    verify:    document.getElementById('pay-auth-verify'),
+    skip:      document.getElementById('pay-auth-skip'),
+    msg:       document.getElementById('pay-auth-msg'),
+    stepEmail: document.getElementById('pa-step-email'),
+    stepCode:  document.getElementById('pa-step-code'),
+    echo:      document.getElementById('pa-email-echo'),
+  };
+  let _pendingTier = null, _otpEmail = '';
+  const _showMsg = (t, k) => { if (_m.msg) { _m.msg.textContent = t; _m.msg.className = 'pa-msg ' + (k || ''); } };
+  const _close   = () => { if (_m.modal) _m.modal.style.display = 'none'; };
+
+  window.epc2cOpenAuth = (tier) => {
+    if (!_m.modal) return;
+    _pendingTier = tier; _otpEmail = '';
+    _showMsg('', '');
+    if (_m.stepEmail) _m.stepEmail.style.display = 'block';
+    if (_m.stepCode)  _m.stepCode.style.display  = 'none';
+    if (_m.send)   _m.send.disabled = false;
+    if (_m.verify) _m.verify.disabled = false;
+    if (_m.email)  _m.email.value = '';
+    if (_m.code)   _m.code.value = '';
+    _m.modal.style.display = 'flex';
+    if (_m.email) _m.email.focus();
+  };
+
+  async function _sendCode() {
+    const email = ((_m.email && _m.email.value) || '').trim();
+    if (!/.+@.+\..+/.test(email)) { _showMsg('Please enter a valid email address.', 'err'); return; }
+    if (_m.send) _m.send.disabled = true;
+    _showMsg('Sending your code…', 'info');
+    // No emailRedirectTo -> Supabase sends the 6-digit token (template must include {{ .Token }}).
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    if (error) { _showMsg('Error: ' + error.message, 'err'); if (_m.send) _m.send.disabled = false; return; }
+    _otpEmail = email;
+    if (_m.echo) _m.echo.textContent = email;
+    if (_m.stepEmail) _m.stepEmail.style.display = 'none';
+    if (_m.stepCode)  _m.stepCode.style.display  = 'block';
+    _showMsg('Code sent — check your inbox.', 'ok');
+    if (_m.code) _m.code.focus();
+  }
+
+  async function _verifyCode() {
+    const token = ((_m.code && _m.code.value) || '').trim();
+    if (!/^\d{6}$/.test(token)) { _showMsg('Enter the 6-digit code from your email.', 'err'); return; }
+    if (_m.verify) _m.verify.disabled = true;
+    _showMsg('Verifying…', 'info');
+    const { error } = await supabase.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
+    if (error) { _showMsg('Invalid or expired code. Please try again.', 'err'); if (_m.verify) _m.verify.disabled = false; return; }
+    _close();
+    // Now signed in — checkout will save the report under the new account.
+    if (typeof window.epc2cResumeCheckout === 'function') window.epc2cResumeCheckout(_pendingTier);
+  }
+
+  function _skip() {
+    // Continue without an account — payment is never blocked. Report won't persist.
+    _close();
+    if (typeof window.epc2cResumeCheckout === 'function') window.epc2cResumeCheckout(_pendingTier);
+  }
+
+  if (_m.send)   _m.send.addEventListener('click', _sendCode);
+  if (_m.verify) _m.verify.addEventListener('click', _verifyCode);
+  if (_m.skip)   _m.skip.addEventListener('click', _skip);
+  if (_m.email)  _m.email.addEventListener('keyup', e => { if (e.key === 'Enter') _sendCode(); });
+  if (_m.code)   _m.code.addEventListener('keyup', e => { if (e.key === 'Enter') _verifyCode(); });
+</script>
 </body>
 </html>

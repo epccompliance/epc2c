@@ -44,6 +44,10 @@
       "destination": "/dashboard.html"
     },
     {
+      "source": "/report/:id",
+      "destination": "/report.html"
+    },
+    {
       "source": "/epc2e",
       "destination": "/epc2e.html"
     },

@@ -46,6 +46,24 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96
 .btn-secondary:hover{background:var(--warm);color:var(--char)}
 .coming-soon{margin-top:18px;background:var(--warm);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--muted);line-height:1.6}
 .coming-soon strong{color:var(--char);font-weight:600}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:28px 0 12px}
+.prop-list{display:flex;flex-direction:column;gap:10px}
+.prop-card{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--white);border:0.5px solid var(--rule);border-radius:11px;padding:15px 17px;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
+.prop-card:hover{border-color:var(--teal);box-shadow:0 2px 10px rgba(15,30,51,.05)}
+.prop-main{min-width:0}
+.prop-addr{font-size:14.5px;font-weight:500;color:var(--char);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prop-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.prop-right{display:flex;align-items:center;gap:11px;flex-shrink:0}
+.band{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;font-weight:600;font-size:13px;color:#fff}
+.band-a{background:#0b8a3c}.band-b{background:#2fa343}.band-c{background:#8dce46;color:#274d00}.band-d{background:#f1c40f;color:#5a4b00}.band-e{background:#f39c12}.band-f{background:#e8702a}.band-g{background:#d0021b}.band-x{background:#9aa3ad}
+.status{font-size:11.5px;font-weight:500;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.status-paid{background:var(--greenp);color:var(--green)}
+.status-draft{background:var(--tealp);color:var(--teald)}
+.status-none{background:var(--warm);color:var(--muted)}
+.chev{color:var(--muted);font-size:18px;line-height:1;flex-shrink:0}
+.empty-state{text-align:center;padding:34px 18px;background:var(--warm);border-radius:12px}
+.empty-state p{font-size:14px;color:var(--body);margin-bottom:14px;line-height:1.6}
+.load-err{font-size:13px;color:var(--muted);padding:14px 0}
 
 footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:28px 2rem;margin-top:64px}
 .foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
@@ -82,12 +100,13 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     <div id="signed-in" style="display:none">
       <div class="acct-label">Signed in as</div>
       <div class="acct-email" id="user-email"></div>
-      <div class="coming-soon">
-        <strong>Coming soon</strong> &mdash; saved property searches and compliance report history will appear here.
-      </div>
       <div class="btn-row">
         <a href="/epc-c-calculator" class="btn-primary">Check a property &rarr;</a>
         <button id="logout" class="btn-secondary">Sign out</button>
+      </div>
+      <div class="section-label">Your properties</div>
+      <div id="prop-area">
+        <div class="loading"><span class="spinner"></span><span>Loading your properties&hellip;</span></div>
       </div>
     </div>
   </div>
@@ -117,6 +136,7 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
   const signedInEl = document.getElementById('signed-in');
   const emailEl = document.getElementById('user-email');
   const logoutBtn = document.getElementById('logout');
+  const propArea = document.getElementById('prop-area');
 
   if (!user) {
     window.location.href = '/login';
@@ -128,6 +148,80 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
       await supabase.auth.signOut();
       window.location.href = '/login';
     });
+    loadProperties();
+  }
+
+  // ── helpers ───────────────────────────────────────────────────────────────
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+  const fmtDate = d => {
+    try { return new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
+    catch { return ''; }
+  };
+
+  // EPC band lives inside the stored EPC API row; keys are hyphenated.
+  function bandOf(epc) {
+    if (!epc || typeof epc !== 'object') return null;
+    const v = epc['current-energy-rating'] ?? epc.currentEnergyRating
+            ?? epc.current_energy_rating ?? epc['current-energy-band'];
+    return v ? String(v).trim().toUpperCase().charAt(0) : null;
+  }
+
+  function bandChip(b) {
+    const cls = b && 'ABCDEFG'.includes(b) ? 'band-' + b.toLowerCase() : 'band-x';
+    return `<span class="band ${cls}" title="EPC band">${b || '?'}</span>`;
+  }
+
+  // ── load + render ───────────────────────────────────────────────────────────
+  async function loadProperties() {
+    // RLS restricts this to the signed-in user's own rows. Embedding reports()
+    // (reports.property_id -> properties.id) gives each property's report status.
+    const { data, error } = await supabase
+      .from('properties')
+      .select('id, address, postcode, created_at, epc_data_json, reports(id, payment_status, created_at)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      propArea.innerHTML = `<div class="load-err">Couldn't load your properties: ${esc(error.message)}</div>`;
+      return;
+    }
+
+    if (!data || !data.length) {
+      propArea.innerHTML =
+        `<div class="empty-state">
+           <p>No properties saved yet.</p>
+           <a href="/epc-c-calculator" class="btn-primary">Check your first property &rarr;</a>
+         </div>`;
+      return;
+    }
+
+    const cards = data.map(p => {
+      const reports = (p.reports || []).slice()
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const rep  = reports[0];
+      const band = bandOf(p.epc_data_json);
+      const href = rep ? `/report/${rep.id}` : '/epc-c-calculator';
+
+      let status, cls;
+      if (!rep)                              { status = 'No report yet'; cls = 'status-none';  }
+      else if (rep.payment_status === 'paid'){ status = 'Report ready';  cls = 'status-paid';  }
+      else                                   { status = 'Draft';         cls = 'status-draft'; }
+
+      return `<a class="prop-card" href="${href}">
+          <div class="prop-main">
+            <div class="prop-addr">${esc(p.address || 'Unknown address')}</div>
+            <div class="prop-meta">Saved ${fmtDate(p.created_at)}${p.postcode ? ' &middot; ' + esc(p.postcode) : ''}</div>
+          </div>
+          <div class="prop-right">
+            ${bandChip(band)}
+            <span class="status ${cls}">${status}</span>
+            <span class="chev">&rsaquo;</span>
+          </div>
+        </a>`;
+    }).join('');
+
+    propArea.innerHTML = `<div class="prop-list">${cards}</div>`;
   }
 </script>
 </body>
