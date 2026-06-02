@@ -522,6 +522,7 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
           <input id="pl-filter" type="text" placeholder="Filter by house number or name…" autocomplete="off" oninput="filterProps()" style="display:none;width:100%;font-family:var(--sans);font-size:13px;background:rgba(10,20,40,.7);border:0.5px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 12px;color:var(--white);outline:none;margin-bottom:8px;box-sizing:border-box"/>
           <div id="pl-count" style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px;display:none"></div>
           <div id="pl-items"></div>
+          <div style="font-size:11px;color:rgba(255,255,255,.32);line-height:1.5;margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,.06)">Results show properties with EPCs lodged from 2013 onwards. If your property doesn&rsquo;t appear, it may need a new EPC assessment.</div>
         </div>
         <div class="free-result" id="free-result">
           <div class="fr-head">
@@ -554,7 +555,6 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
                 <div class="bb-target" style="left:40%"></div>
               </div>
             </div>
-            <div class="bb-labs"><span>G</span><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span></div>
 
             <!-- Confidence bar -->
             <div class="conf-bar-wrap">
@@ -565,14 +565,17 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
             <!-- Verdict -->
             <div class="hero-verdict" id="hero-verdict"></div>
 
+            <!-- BUG 7 — property details, likelihood, EPC recommendations -->
+            <div id="fr-extra" style="margin-top:8px"></div>
+
             <!-- Improvements since EPC -->
             <div id="improvements-panel" style="display:none;margin:12px 0">
               <div style="border:0.5px solid rgba(78,203,168,.2);border-radius:10px;overflow:hidden">
                 <!-- Header - clickable to expand -->
                 <div id="imp-header" onclick="toggleImprovements()" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:rgba(78,203,168,.06);transition:background .15s" onmouseover="this.style.background='rgba(78,203,168,.1)'" onmouseout="this.style.background='rgba(78,203,168,.06)'">
                   <div>
-                    <div style="font-size:12px;font-weight:500;color:var(--teal);margin-bottom:2px">Have improvements been made since this EPC was lodged?</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.4">Tick any works already done — we'll update your estimated position</div>
+                    <div style="font-size:12px;font-weight:500;color:var(--teal);margin-bottom:2px">Declare completed works since this EPC</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.4">Declaring completed works helps us show a more accurate starting position</div>
                   </div>
                   <div id="imp-chevron" style="color:var(--teal);font-size:13px;flex-shrink:0;margin-left:10px;transition:transform .2s">▾</div>
                 </div>
@@ -590,6 +593,15 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
                       <div style="font-size:13px;color:rgba(255,255,255,.55)">With improvements: <span id="imp-new-band" style="font-family:var(--mono);font-weight:500;color:var(--teal)"></span></div>
                       <div style="font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.38)" id="imp-conf-note">Self-declared · Medium confidence</div>
                     </div>
+                  </div>
+                  <!-- BUG 6 — sign-in gate before revealing the updated position -->
+                  <div id="imp-gate" style="display:none;border-radius:8px;padding:11px 13px;background:rgba(78,203,168,.08);border:0.5px solid rgba(78,203,168,.2);margin-bottom:10px">
+                    <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:9px">Sign in to see your estimated updated position based on declared works.</div>
+                    <button onclick="declareWorksSignIn()" style="font-family:var(--sans);font-size:12px;font-weight:600;background:var(--teal);color:var(--navy);border:none;border-radius:7px;padding:9px 16px;cursor:pointer">Send me a sign-in code</button>
+                  </div>
+                  <!-- BUG 6 — full plan CTA once the updated position is shown -->
+                  <div id="imp-cta" style="display:none;margin-bottom:10px">
+                    <button onclick="payAndLoad('plan',19.99)" style="width:100%;font-family:var(--sans);font-size:13px;font-weight:600;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:11px;cursor:pointer">Get your full compliance plan — £19.99</button>
                   </div>
                   <!-- EPC caveat -->
                   <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.55;border-top:0.5px solid rgba(255,255,255,.08);padding-top:9px">
@@ -645,7 +657,8 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
       </div>
       <div style="display:flex;align-items:center;gap:9px">
         <span class="tool-tier-pill" id="tool-pill">Compliance Plan · £19.99</span>
-        <button class="tool-back" onclick="scrollTo({top:0,behavior:'smooth'})">← Back</button>
+        <a class="tool-back" id="tool-dash" href="/login" style="text-decoration:none;display:inline-flex;align-items:center">Sign in</a>
+        <button class="tool-back" onclick="startAgain()">↻ Start again</button>
       </div>
     </div>
   </div>
@@ -698,7 +711,6 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
             <div class="tool-target" style="left:40%"></div>
           </div>
         </div>
-        <div class="tbb-labs"><span>G</span><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span></div>
         <div class="c-achieved" id="c-achieved">✓ Estimated EPC C achieved with selected measures — lodge a new EPC to confirm</div>
         <div class="band-disclaimer" id="band-disclaimer">Band uplift estimates are planning-level indicators based on EPC register data (Medium confidence). A qualified DEA must lodge a new EPC to confirm any rating change. For High confidence estimates, upgrade to a Verified Compliance Survey.</div>
       </div>
@@ -777,33 +789,55 @@ function toggleImp(id) {
   updateImpResult();
 }
 
+// BUG 6 — ticking works no longer updates the band immediately; sign-in is required first.
 function updateImpResult() {
   if (!selProp) return;
   const sel = [...impSel].map(id => IMPROVEMENTS.find(m => m.id === id)).filter(Boolean);
-  const uplift = sel.reduce((a, m) => a + m.bu, 0);
-  const baseIdx = BANDS.indexOf(selProp.rating);
-  const newIdx = Math.min(BANDS.length - 1, baseIdx + uplift);
-  const newBand = BANDS[newIdx];
-  const result = document.getElementById('imp-result');
-  const needle = document.getElementById('hero-needle');
-
-  if (sel.length > 0) {
-    result.style.display = 'block';
-    document.getElementById('imp-orig-band').textContent = selProp.rating;
-    document.getElementById('imp-new-band').textContent = newBand;
-    // Move hero needle to reflect improvements
-    needle.style.left = NP[newBand] || NP[selProp.rating];
-    // Update confidence note
-    document.getElementById('imp-conf-note').textContent =
-      sel.length + ' improvement' + (sel.length !== 1 ? 's' : '') + ' declared · Medium confidence';
-    // Update the hero verdict text to reflect new position
-    updateHeroVerdictWithImprovements(newBand, selProp.rating);
-  } else {
-    result.style.display = 'none';
-    needle.style.left = NP[selProp.rating] || '19%';
-    // Reset verdict
+  const gate = document.getElementById('imp-gate');
+  const cta  = document.getElementById('imp-cta');
+  if (sel.length === 0) {
+    document.getElementById('imp-result').style.display = 'none';
+    if (gate) gate.style.display = 'none';
+    if (cta)  cta.style.display = 'none';
+    document.getElementById('hero-needle').style.left = NP[selProp.rating] || '19%';
     showFree(selProp);
+    return;
   }
+  if (window.epc2cSignedIn) {
+    if (gate) gate.style.display = 'none';
+    applyDeclaredWorks();
+  } else {
+    document.getElementById('imp-result').style.display = 'none';
+    if (cta) cta.style.display = 'none';
+    if (gate) gate.style.display = 'block';
+  }
+}
+
+// Reveal the updated position from declared works (signed-in users only) + save property.
+function applyDeclaredWorks() {
+  if (!selProp) return;
+  const sel = [...impSel].map(id => IMPROVEMENTS.find(m => m.id === id)).filter(Boolean);
+  const uplift = sel.reduce((a, m) => a + m.bu, 0);
+  const newBand = BANDS[Math.min(BANDS.length - 1, BANDS.indexOf(selProp.rating) + uplift)];
+  document.getElementById('imp-result').style.display = 'block';
+  document.getElementById('imp-orig-band').textContent = selProp.rating;
+  document.getElementById('imp-new-band').textContent = newBand;
+  document.getElementById('hero-needle').style.left = NP[newBand] || NP[selProp.rating];
+  document.getElementById('imp-conf-note').textContent =
+    sel.length + ' improvement' + (sel.length !== 1 ? 's' : '') + ' declared · Medium confidence';
+  updateHeroVerdictWithImprovements(newBand, selProp.rating);
+  const cta = document.getElementById('imp-cta'); if (cta) cta.style.display = 'block';
+  if (typeof persistReport === 'function') persistReport('free', null);   // save to the user's account
+}
+
+// "Send me a sign-in code" — OTP, then reveal the updated position.
+async function declareWorksSignIn() {
+  let user = null;
+  try { if (typeof window.epc2cAuthUser === 'function') user = await window.epc2cAuthUser(); } catch (e) {}
+  const done = () => { window.epc2cSignedIn = true; const g = document.getElementById('imp-gate'); if (g) g.style.display = 'none'; applyDeclaredWorks(); };
+  if (user) { done(); return; }
+  if (typeof window.epc2cOpenAuth === 'function') window.epc2cOpenAuth(done);
+  else done();   // module not ready — fail open
 }
 
 function updateHeroVerdictWithImprovements(newBand, origBand) {
@@ -1304,6 +1338,42 @@ function answerOwnership(answer){
   document.getElementById('fr-body').style.display='block';
   showFreeBody(selProp);
 }
+// BUG 7 helpers
+function fmtEpcDate(d){ if(!d)return '—'; try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return d;} }
+function epcStatus(d){
+  if(!d)return {txt:'Unknown',col:'rgba(255,255,255,.4)'};
+  try{ const exp=new Date(d); exp.setFullYear(exp.getFullYear()+10);
+    return exp.getTime()>=Date.now()?{txt:'Live',col:'var(--teal)'}:{txt:'Expired',col:'var(--amber)'};
+  }catch(e){ return {txt:'Unknown',col:'rgba(255,255,255,.4)'}; }
+}
+function likelihoodText(band){
+  if(['A','B','C'].includes(band))return 'Already compliant';
+  return ({D:'High likelihood — 1–2 measures typical',E:'Moderate — multiple measures likely needed',F:'Challenging — significant works or exemption likely required',G:'Very challenging — exemption likely required'})[band]||'—';
+}
+function renderVerdictExtras(p){
+  const el=document.getElementById('fr-extra'); if(!el)return;
+  const st=epcStatus(p.lodgementDate);
+  const fa=p._detail&&p._detail['total-floor-area'];
+  const la=(p._raw&&p._raw.council)||'';
+  const eraKnown=p.era&&!/^unknown/i.test(p.era);
+  const lbl='font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:14px 0 7px';
+  const rows=[
+    ['RRN',p.lmkKey||'—'],
+    ['EPC date',fmtEpcDate(p.lodgementDate)],
+    ['Status',`<span style="color:${st.col};font-weight:600">${st.txt}</span>`],
+    ['Property type',p.type||'—'],
+    fa?['Floor area',Math.round(fa)+' m²']:null,
+    eraKnown?['Construction era',p.era]:null,
+    la?['Local authority',la]:null,
+  ].filter(Boolean);
+  const kv=rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,.06)"><span style="color:rgba(255,255,255,.45)">${r[0]}</span><span style="color:var(--white);text-align:right">${r[1]}</span></div>`).join('');
+  const recs=p._apiMeasures||[];
+  const recsHtml=recs.length?(`<div style="${lbl}">EPC recommendations</div>`+recs.map(m=>{
+    const cost=(m.cMin||m.cMax)?('£'+(m.cMin||0).toLocaleString()+(m.cMax&&m.cMax!==m.cMin?'–£'+m.cMax.toLocaleString():'')):'';
+    return `<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:8px;padding:9px 11px;margin-bottom:6px"><div style="font-size:12.5px;font-weight:500;color:var(--white)">${m.name||'Improvement'}</div>${cost?`<div style="font-size:12px;color:var(--teal);margin-top:2px">${cost}</div>`:''}<div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:3px">Recommended by your EPC assessor</div></div>`;
+  }).join('')):'';
+  el.innerHTML=`<div style="${lbl}">Property details</div>${kv}<div style="${lbl}">Likelihood of achieving C</div><div style="font-size:13px;color:var(--white);line-height:1.5">${likelihoodText(p.rating)}</div>${recsHtml}`;
+}
 function showFreeBody(p){
   const ri=bi(p.rating),ci=bi('C'),gap=ci-ri;
   document.getElementById('hero-needle').style.left=NP[p.rating]||'5%';
@@ -1318,6 +1388,7 @@ function showFreeBody(p){
   const v=document.getElementById('hero-verdict');
   v.className='hero-verdict '+cls;
   v.innerHTML=`<div class="hv-label">${label}</div><div class="hv-title">${title}</div><div class="hv-body">${body}</div><div class="hv-conf">Confidence: Low–Medium · EPC register data only · <a href="#pricing" style="color:var(--teal);text-decoration:none">upgrade for higher confidence →</a></div>`;
+  renderVerdictExtras(p);
   impSel.clear();
   showImprovementsPanel();
 }
@@ -1330,6 +1401,11 @@ const LINKS={
 function showStripeOverlay(){
   const overlay=document.getElementById('stripe-overlay');
   if(overlay){overlay.style.display='flex';}
+}
+// BUG 1 — "Start again": clear app session state and return to the homepage.
+function startAgain(){
+  try{['epc2c_prop','epc2c_tier','epc2c_session','epc2c_pending_session','epc2c_session_saved','epc2c_owned6m','epc2c_pay_intent'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  window.location.href='/';
 }
 
 async function saveProperty(prop,tier){
@@ -1385,65 +1461,43 @@ async function persistReport(tier,pdfUrl){
 
 // Auth gate: signed-in users go straight to checkout; signed-out users get a
 // magic-link prompt and resume automatically when they return (see auth module).
+// BUG 4 — definitive payAndLoad: await save-property so client_reference_id is real, then redirect.
 async function payAndLoad(tier,price){
   if(!selProp){alert('Please select a property first.');scrollTo({top:0,behavior:'smooth'});return;}
-  if(await requireAuthForPayment(tier))return;   // signed out -> link sent, will resume
-  doPlanCheckout(tier,price,false);
-}
-async function doPlanCheckout(tier,price,skipPersist){
   showStripeOverlay();
-  const sessionId=await saveProperty(selProp,tier);
-  console.log('Session ID:',sessionId);
-  // localStorage backup so the tool restores after the Stripe round-trip
+  let sessionId='unknown';
+  try{
+    const res=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({property:selProp,tier:tier})});
+    const data=await res.json();
+    sessionId=data.sessionId||'unknown';
+    console.log('SessionId confirmed:',sessionId);
+  }catch(e){console.error('Save property failed:',e);}
   localStorage.setItem('epc2c_prop',JSON.stringify(selProp));
   localStorage.setItem('epc2c_tier',tier);
   localStorage.setItem('epc2c_session',sessionId);
-  if(!skipPersist)await persistReport(tier,null);   // already saved on the resume path
-  await new Promise(r=>setTimeout(r,2000));          // let the user read the overlay
-  window.location.href=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId||'unknown');
+  try{localStorage.setItem('epc2c_paid_addr',(selProp&&selProp.addr)||'');localStorage.removeItem('epc2c_thankyou_sent');}catch(e){}
+  persistReport(tier,null);                         // save report for signed-in users (no-op otherwise)
+  await new Promise(r=>setTimeout(r,2000));
+  const stripeUrl=LINKS[tier]+'?client_reference_id='+encodeURIComponent(sessionId);
+  console.log('Redirecting to:',stripeUrl);
+  window.location.href=stripeUrl;
 }
 async function orderSurvey(){
   if(!selProp){window.location.href=LINKS.survey;return;}
-  if(await requireAuthForPayment('survey'))return;   // signed out -> link sent, will resume
-  doSurveyCheckout(false);
-}
-async function doSurveyCheckout(skipPersist){
-  const address=[selProp.address1,selProp.address2,selProp.address3,selProp.posttown,selProp.postcode]
-    .filter(Boolean).join(', ')||selProp.addr||'';
+  const address=[selProp.address1,selProp.address2,selProp.address3,selProp.posttown,selProp.postcode].filter(Boolean).join(', ')||selProp.addr||'';
   localStorage.setItem('epc2c_prop',JSON.stringify(selProp));
   localStorage.setItem('epc2c_tier','survey');
-  if(!skipPersist)await persistReport('survey',null);   // already saved on the resume path
-  const surveyBase=LINKS.survey;
+  try{localStorage.setItem('epc2c_paid_addr',(selProp&&selProp.addr)||'');localStorage.removeItem('epc2c_thankyou_sent');}catch(e){}
+  persistReport('survey',null);
+  let sessionId='unknown';
   try{
-    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selProp)});
-    const {sessionId}=await r.json();
-    localStorage.setItem('epc2c_pending_session',sessionId);
-    window.location.href=surveyBase+'?client_reference_id='+encodeURIComponent(sessionId)+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
-  }catch(e){
-    window.location.href=surveyBase+'?client_reference_id='+encodeURIComponent(selProp.addr||'')+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
-  }
+    const r=await fetch('/api/save-property',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({property:selProp,tier:'survey'})});
+    const data=await r.json();
+    sessionId=data.sessionId||'unknown';
+  }catch(e){console.error('Save property failed:',e);}
+  localStorage.setItem('epc2c_pending_session',sessionId);
+  window.location.href=LINKS.survey+'?client_reference_id='+encodeURIComponent(sessionId)+'&prefilled_custom_field[site_address]='+encodeURIComponent(address);
 }
-
-// Returns true if it paused for auth (signed out -> OTP modal shown);
-// false if the user is already signed in and checkout should proceed now.
-async function requireAuthForPayment(tier){
-  // If the auth module hasn't loaded, don't block payment — fall back to old behaviour.
-  if(typeof window.epc2cAuthUser!=='function'||typeof window.epc2cOpenAuth!=='function')return false;
-  let user=null;
-  try{user=await window.epc2cAuthUser();}catch(e){}
-  if(user)return false;            // signed in -> proceed to checkout
-  window.epc2cOpenAuth(tier);      // signed out -> OTP modal (verify, or skip), then resumes
-  return true;
-}
-
-// Called by the auth module once the user has verified their code (now signed in)
-// OR chosen to skip. Same page, so selProp + selections are intact; persistReport
-// saves the report when signed in and is a harmless no-op when skipped.
-window.epc2cResumeCheckout=function(tier){
-  curTier=tier==='survey'?'survey':'plan';
-  if(tier==='survey')doSurveyCheckout(false);
-  else doPlanCheckout('plan',19.99,false);
-};
 
 function loadTool(p){
   document.getElementById('tool-addr').textContent=p.addr;
@@ -1557,9 +1611,13 @@ function evalEx(proj,atC,selMs,cost){
         if(hasEwiSel){status='available';why='External wall insulation selected — planning consent required. If consent is refused, document the refusal and register this exemption.';}
         else if(hasWallBlocked){status='available';why='A blocked measure may require third-party consent. Document refusal and register.';}
         else{why='No consent-blocked measures. If a freeholder or planning authority refuses a measure, return here.';}break;
-      case 'devaluation':
-        if(selMs.length>0||hasWallBlocked){status='available';why='Commission a RICS valuation to confirm if improvements would reduce value by >5%.';}
-        else{why='Select measures first, then assess whether works would devalue the property.';}break;
+      case 'devaluation':{
+        // Only specific measures can plausibly devalue: EWI, IWI, Solar PV, windows/glazing, ASHP.
+        const QUAL=/external wall|internal wall|solid wall|solar|photovoltaic|\bpv\b|glaz|window|air source|ground source|heat pump/i;
+        if(selMs.some(m=>QUAL.test(m.name||''))){status='available';why='Commission a RICS valuation to confirm if improvements would reduce value by >5%.';}
+        else{status='locked';why='Select EWI, IWI, Solar PV, windows or ASHP to unlock this exemption';}
+        break;
+      }
       case 'new_landlord':
         if(ownedOver6m){status='locked';why='You have owned this property for more than 6 months — the new landlord exemption no longer applies.';}
         else{status='available';why='You acquired this property less than 6 months ago — 6-month grace period to register a permanent exemption or complete improvements.';}
@@ -1599,8 +1657,6 @@ function renderEx(ex){
         <div class="ex-bd">
           <div class="ex-desc">${e.desc}</div>
           <div class="ex-why ${wCls}">${e.why}</div>
-          <div class="ex-rqs-lbl">Evidence required to register</div>
-          ${(e.reqs||[]).map(r=>`<div class="ex-rq">${r}</div>`).join('')}
           <div class="ex-dur">Duration: <strong>${e.dur}</strong></div>
           ${btn}${prs?`<br>${prs}`:''}
         </div>
@@ -2251,6 +2307,30 @@ document.getElementById('pc').addEventListener('keyup',function(){
     try { return (await supabase.auth.getUser()).data.user; } catch (e) { return null; }
   };
 
+  // BUG 1 — point the top-strip link at the dashboard once we know the user is signed in.
+  (async () => {
+    try {
+      const u = await window.epc2cAuthUser();
+      window.epc2cSignedIn = !!u;
+      const el = document.getElementById('tool-dash');
+      if (el && u) { el.textContent = 'My Dashboard'; el.href = '/dashboard'; }
+    } catch (e) {}
+  })();
+
+  // BUG 2 — send the post-purchase thank-you email once, on return from Stripe.
+  (async () => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const paid = params.has('paid') || params.get('redirect_status') === 'succeeded' || document.referrer.includes('stripe.com');
+      if (!paid || localStorage.getItem('epc2c_thankyou_sent')) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) return;
+      const address = localStorage.getItem('epc2c_paid_addr') || '';
+      const r = await fetch('/api/send-plan-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, address }) });
+      if (r.ok) { localStorage.setItem('epc2c_thankyou_sent', '1'); localStorage.removeItem('epc2c_paid_addr'); }
+    } catch (e) { console.warn('[EPC2C] thank-you email skipped:', e && e.message); }
+  })();
+
   const _m = {
     modal:     document.getElementById('pay-auth-modal'),
     email:     document.getElementById('pay-auth-email'),
@@ -2263,13 +2343,14 @@ document.getElementById('pc').addEventListener('keyup',function(){
     stepCode:  document.getElementById('pa-step-code'),
     echo:      document.getElementById('pa-email-echo'),
   };
-  let _pendingTier = null, _otpEmail = '';
+  let _onAuth = null, _otpEmail = '';
   const _showMsg = (t, k) => { if (_m.msg) { _m.msg.textContent = t; _m.msg.className = 'pa-msg ' + (k || ''); } };
   const _close   = () => { if (_m.modal) _m.modal.style.display = 'none'; };
 
-  window.epc2cOpenAuth = (tier) => {
+  // Open the OTP modal. onSuccess() runs once the user has verified (now signed in).
+  window.epc2cOpenAuth = (onSuccess) => {
     if (!_m.modal) return;
-    _pendingTier = tier; _otpEmail = '';
+    _onAuth = (typeof onSuccess === 'function') ? onSuccess : null; _otpEmail = '';
     _showMsg('', '');
     if (_m.stepEmail) _m.stepEmail.style.display = 'block';
     if (_m.stepCode)  _m.stepCode.style.display  = 'none';
@@ -2305,14 +2386,14 @@ document.getElementById('pc').addEventListener('keyup',function(){
     const { error } = await supabase.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
     if (error) { _showMsg('Invalid or expired code. Please try again.', 'err'); if (_m.verify) _m.verify.disabled = false; return; }
     _close();
-    // Now signed in — checkout will save the report under the new account.
-    if (typeof window.epc2cResumeCheckout === 'function') window.epc2cResumeCheckout(_pendingTier);
+    window.epc2cSignedIn = true;
+    // Now signed in — run the caller's completion callback (e.g. apply declared works).
+    const cb = _onAuth; _onAuth = null; if (cb) cb();
   }
 
   function _skip() {
-    // Continue without an account — payment is never blocked. Report won't persist.
-    _close();
-    if (typeof window.epc2cResumeCheckout === 'function') window.epc2cResumeCheckout(_pendingTier);
+    // User declined to sign in — just close; nothing is saved.
+    _close(); _onAuth = null;
   }
 
   if (_m.send)   _m.send.addEventListener('click', _sendCode);
