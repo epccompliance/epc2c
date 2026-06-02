@@ -657,6 +657,7 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
       </div>
       <div style="display:flex;align-items:center;gap:9px">
         <span class="tool-tier-pill" id="tool-pill">Compliance Plan · £19.99</span>
+        <button class="tool-back" onclick="startNewSearch()">← Start new search</button>
         <a class="tool-back" id="tool-dash" href="/login" style="text-decoration:none;display:inline-flex;align-items:center">Sign in</a>
         <button class="tool-back" onclick="startAgain()">↻ Start again</button>
       </div>
@@ -1528,9 +1529,24 @@ function loadTool(p){
   const oldXmlBanner=document.getElementById('xml-conf-banner');if(oldXmlBanner)oldXmlBanner.remove();
   document.getElementById('dea-result').textContent='';
   document.getElementById('band-disclaimer').textContent='Band uplift estimates are planning-level indicators based on EPC register data (Medium confidence). A qualified DEA must lodge a new EPC to confirm any rating change. For High confidence estimates, upgrade to a Verified Compliance Survey.';
+  // Tool mode — hide the entire search/list/verdict area; show only the tool, full width at top.
+  document.getElementById('hero').style.display='none';
   document.getElementById('tool-section').style.display='block';
-  setTimeout(()=>document.getElementById('tool-section').scrollIntoView({behavior:'smooth'}),100);
+  window.scrollTo({top:0,behavior:'auto'});
   renderM();update();
+}
+
+// Switch from tool back to a clean search state — never both on screen at once.
+function startNewSearch(){
+  document.getElementById('tool-section').style.display='none';
+  const hero=document.getElementById('hero'); if(hero)hero.style.display='';
+  const pl=document.getElementById('prop-list'); if(pl)pl.style.display='none';
+  const fr=document.getElementById('free-result'); if(fr)fr.style.display='none';
+  const items=document.getElementById('pl-items'); if(items)items.innerHTML='';
+  const pc=document.getElementById('pc'); if(pc)pc.value='';
+  window._props=[]; selProp=null;
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(pc)setTimeout(()=>pc.focus(),200);
 }
 
 function projBand(){
