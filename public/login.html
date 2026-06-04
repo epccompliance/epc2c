@@ -141,5 +141,29 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     }
   });
 </script>
+
+<!-- Cookie notice -->
+<div id="cookie-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#0f1e33;border-top:1px solid rgba(78,203,168,.25);box-shadow:0 -4px 24px rgba(0,0,0,.28)">
+  <div style="max-width:1100px;margin:0 auto;padding:14px 1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between">
+    <div style="font-family:'DM Sans',system-ui,sans-serif;font-size:13px;line-height:1.55;color:rgba(255,255,255,.72);flex:1;min-width:240px">
+      This site uses essential cookies to function. No tracking or advertising cookies are used.
+      <a href="/privacy" style="color:#4ecba8;text-decoration:none;white-space:nowrap">Privacy policy &rarr;</a>
+    </div>
+    <button id="cookie-accept" style="font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:600;background:#4ecba8;color:#0f1e33;border:none;border-radius:7px;padding:9px 22px;cursor:pointer;white-space:nowrap">Accept</button>
+  </div>
+</div>
+<script>
+(function(){
+  try{ if(localStorage.getItem('epc2c_cookie_ack')==='1') return; }catch(e){}
+  var b=document.getElementById('cookie-banner'); if(!b) return;
+  b.style.display='block';
+  var btn=document.getElementById('cookie-accept');
+  if(btn) btn.addEventListener('click',function(){
+    b.style.display='none';
+    try{ localStorage.setItem('epc2c_cookie_ack','1'); }catch(e){}
+  });
+})();
+</script>
+
 </body>
 </html>
