@@ -1,0 +1,186 @@
+Fix all bugs in one session. Do not commit 
+until all are complete.
+
+BUG 0 — Devaluation exemption logic:
+Only unlock when these measures selected:
+External wall insulation, Internal wall 
+insulation, Solar PV, Windows/secondary 
+glazing, Air source heat pump.
+All other measures = exemption stays locked.
+Locked reason: "Select EWI, IWI, Solar PV, 
+windows or ASHP to unlock this exemption"
+
+BUG 1 — Top strip changes:
+Replace "Back" button with "Start again"
+Start again: clears localStorage, clears 
+session, redirects to homepage (/)
+Add "My Dashboard" button next to it:
+- If logged in: links to /dashboard
+- If not logged in: links to /login
+  or shows "Sign in" text
+
+BUG 2 — Post-purchase thank you email:
+When Stripe redirects back with ?paid=1
+and user email is known (from OTP sign in):
+Send email via Supabase auth or SMTP:
+Subject: "Your EPC2C Compliance Plan is ready"
+Body:
+"Thank you for your purchase.
+Your compliance plan for [property address] 
+is ready to access.
+[Access your compliance plan →] 
+links to /dashboard
+GoGreen Alliance · hello@epc2c.co.uk"
+
+BUG 3 — Remove evidence required section:
+Delete "Evidence required to register" 
+and all requirement bullet points from 
+every exemption panel in the tool.
+Keep: exemption name, status, description, 
+why it applies, duration, PRS register link.
+
+BUG 4 — client_reference_id fix:
+The sessionId is undefined when Stripe 
+redirect fires because save-property 
+API call is not awaited properly.
+
+Fix payAndLoad() definitively:
+async function payAndLoad(tier, price) {
+  if(!selProp) return
+  
+  showStripeOverlay()
+  
+  let sessionId = 'unknown'
+  try {
+    const res = await fetch('/api/save-property', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        property: selProp, 
+        tier: tier
+      })
+    })
+    const data = await res.json()
+    sessionId = data.sessionId || 'unknown'
+    console.log('SessionId confirmed:', sessionId)
+  } catch(e) {
+    console.error('Save property failed:', e)
+  }
+  
+  localStorage.setItem('epc2c_prop', 
+    JSON.stringify(selProp))
+  localStorage.setItem('epc2c_tier', tier)
+  localStorage.setItem('epc2c_session', sessionId)
+  
+  await new Promise(r => setTimeout(r, 2000))
+  
+  const stripeUrl = LINKS[tier] + 
+    '?client_reference_id=' + 
+    encodeURIComponent(sessionId)
+  
+  console.log('Redirecting to:', stripeUrl)
+  window.location.href = stripeUrl
+}
+
+BUG 5 — Remove band labels below bar:
+Delete the G F E D C B A text labels 
+that appear below the EPC band bar.
+They are redundant — letters already 
+shown inside the coloured segments.
+
+BUG 6 — Reframe improvements panel:
+Change heading from:
+"Have improvements been made since 
+this EPC was lodged?"
+To:
+"Declare completed works since this EPC"
+
+Change subtext to:
+"Declaring completed works helps us show 
+a more accurate starting position"
+
+Require sign-in to see updated position:
+After user ticks any improvement:
+Do not update band bar immediately.
+Instead show:
+"Sign in to see your estimated updated 
+position based on declared works"
+[Send me a sign-in code] button
+→ triggers OTP email
+→ user enters code → signed in
+→ band bar updates with declared works
+→ property saved to their account
+→ "Get your full compliance plan — £19.99"
+  button appears
+
+If user already signed in:
+Update band bar immediately as before.
+
+BUG 7 — Free verdict panel content:
+Expand the verdict panel to include:
+
+PROPERTY DETAILS section:
+- RRN (from certificate data)
+- EPC Date (lodgement-date from API)
+- Status: "Live" or "Expired" 
+  (check expiry date vs today)
+- Property type (property-type field)
+- Total floor area (total-floor-area field)
+- Construction era (construction-age-band 
+  mapped to readable text)
+- Local authority (local-authority field)
+
+LIKELIHOOD OF ACHIEVING C:
+Based on current band:
+A/B/C = "Already compliant"
+D = "High likelihood — 1-2 measures typical"
+E = "Moderate — multiple measures likely needed"
+F = "Challenging — significant works or 
+     exemption likely required"
+G = "Very challenging — exemption likely 
+     required"
+
+EPC RECOMMENDATIONS section:
+List all recommendations from API:
+Each shows:
+- Improvement description
+- Indicative cost range
+- "Recommended by your EPC assessor" label
+
+Style as clean cards matching existing design.
+
+MISSING PROPERTIES FIX:
+Current API call excludes expired EPCs.
+Fix postcode search to include all EPCs:
+Check if new API has parameter to include 
+expired certificates.
+Test: GET /api/domestic/search?postcode=WV9+5RL
+with no status filter — should return 24 not 18.
+After fetching all results:
+Group by address, keep most recent per address
+regardless of expired/live status.
+Then sort by natural ascending house number.
+
+SORT FIX:
+After deduplication apply natural sort:
+results.sort((a, b) =>
+  (a['address1']||'').localeCompare(
+    b['address1']||'', 'en',
+    {numeric: true, sensitivity: 'base'}
+  )
+)
+
+NEW LANDLORD EXEMPTION FIX:
+Change question to:
+"Have you owned this property for 
+more than 6 months?"
+
+Fix inverted logic:
+Yes = exemption LOCKED
+No = exemption AVAILABLE
+
+When complete confirm each bug is fixed
+then:
+git add .
+git commit -m "Bug fixes — exemptions, verdict panel, sort, auth flow"
+git push origin main

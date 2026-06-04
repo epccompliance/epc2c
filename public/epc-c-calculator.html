@@ -488,7 +488,6 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
     <div class="nav-links">
       <a href="/" class="nav-link">&larr; Home</a>
-      <a href="#pricing" class="nav-link">Pricing</a>
       <button class="nav-cta" onclick="scrollTo({top:document.getElementById('hero').offsetTop,behavior:'smooth'})">Check your property</button>
     </div>
     <button class="nav-cta" id="mob-cta" style="display:none" onclick="scrollTo({top:document.getElementById('hero').offsetTop,behavior:'smooth'})">Check property</button>
@@ -514,139 +513,87 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
       <div class="search-card">
         <div class="sc-eyebrow">Start with your postcode — free, instant, no account needed</div>
         <div class="sc-row">
-          <input class="pc-input" id="pc" type="text" placeholder="e.g. WV11 3TY" maxlength="8" autocomplete="off" onkeydown="if(event.key==='Enter')lookup()"/>
-          <button class="find-btn" id="find-btn" onclick="lookup()">Find my property</button>
+          <input class="pc-input" id="house" type="text" placeholder="e.g. 76 or Rose Cottage" autocomplete="off" onkeydown="if(event.key==='Enter')lookup()" style="flex:0 0 42%"/>
+          <input class="pc-input" id="pc" type="text" placeholder="e.g. WV11 3TY" maxlength="8" autocomplete="off" oninput="onPcInput()" onkeydown="if(event.key==='Enter')lookup()"/>
         </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.32);margin-top:9px">Your postcode is not stored</div>
+        <button class="find-btn" id="find-btn" onclick="lookup()" disabled style="width:100%;margin-top:10px">Find my property →</button>
         <div class="prop-list" id="prop-list">
           <div class="prop-list-hdr" id="pl-hdr"></div>
           <input id="pl-filter" type="text" placeholder="Filter by house number or name…" autocomplete="off" oninput="filterProps()" style="display:none;width:100%;font-family:var(--sans);font-size:13px;background:rgba(10,20,40,.7);border:0.5px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 12px;color:var(--white);outline:none;margin-bottom:8px;box-sizing:border-box"/>
           <div id="pl-count" style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px;display:none"></div>
           <div id="pl-items"></div>
-          <div style="font-size:11px;color:rgba(255,255,255,.32);line-height:1.5;margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,.06)">Results show properties with EPCs lodged from 2013 onwards. If your property doesn&rsquo;t appear, it may need a new EPC assessment.</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.32);line-height:1.7;margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,.06)">
+            Results show EPCs lodged from 2013 onwards.<br>
+            Property not listed? <a href="https://find-energy-certificate.service.gov.uk" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none">Check the full EPC register &rarr;</a><br>
+            Or your property may need a new EPC assessment. <a href="mailto:hello@epc2c.co.uk?subject=Order%20new%20EPC%20assessment" style="color:var(--teal);text-decoration:none">Order new EPC from GoGreen Alliance &rarr;</a>
+          </div>
         </div>
-        <div class="free-result" id="free-result">
+        <!-- SECTION 3 — ABOUT PROPERTY BOX (appears when a property is selected) -->
+        <div class="free-result" id="about-box">
           <div class="fr-head">
-            <div class="fr-addr" id="fr-addr"></div>
-            <div class="fr-tags" id="fr-tags"></div>
+            <div class="fr-addr" id="ab-addr"></div>
+            <div id="ab-meta" style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px"></div>
+            <div id="ab-epc" style="font-size:12px;color:rgba(255,255,255,.55);margin-top:6px;line-height:1.7"></div>
           </div>
-          <div id="ownership-q" style="display:none;padding:14px 16px;border-bottom:0.5px solid rgba(255,255,255,.07)">
-            <div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:10px">Have you owned this property for more than 6 months?</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button onclick="answerOwnership('yes')" style="flex:1;min-width:140px;background:var(--teal);border:none;border-radius:20px;padding:9px 16px;color:var(--navy);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer">Yes — more than 6 months</button>
-              <button onclick="answerOwnership('no')" style="flex:1;min-width:140px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:9px 16px;color:rgba(255,255,255,.7);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer">No — less than 6 months</button>
-            </div>
-          </div>
-          <div id="ownership-note" style="display:none;padding:10px 16px;background:rgba(78,203,168,.06);border-bottom:0.5px solid rgba(78,203,168,.15)">
-            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.55">6-month grace period — MEES compliance is not yet required. We've shown your property's full position below so you can plan ahead.</div>
-          </div>
-          <div class="fr-body" id="fr-body" style="display:none">
-            <!-- Band bar -->
-            <div class="bb-label">Current EPC position</div>
-            <div style="position:relative;margin-bottom:3px">
-              <div class="bb" id="hero-bb">
-                <div class="bb-seg" style="width:7%;background:var(--epc-g)">G</div>
-                <div class="bb-seg" style="width:9%;background:var(--epc-f)">F</div>
-                <div class="bb-seg" style="width:11%;background:var(--epc-e)">E</div>
-                <div class="bb-seg" style="width:13%;background:var(--epc-d)">D</div>
-                <div class="bb-seg" style="width:15%;background:var(--epc-c)">C</div>
-                <div class="bb-seg" style="width:20%;background:var(--epc-b)">B</div>
-                <div class="bb-seg" style="width:25%;background:var(--epc-a)">A</div>
-                <div class="bb-needle" id="hero-needle" style="left:5%"></div>
-                <div class="bb-target" style="left:40%"></div>
-              </div>
-            </div>
-
-            <!-- Confidence bar -->
-            <div class="conf-bar-wrap">
-              <div class="conf-bar-label"><span>Data confidence</span><span id="conf-label" style="color:var(--amber)">Low–Medium · EPC register data</span></div>
-              <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:30%;background:var(--amber)"></div></div>
-            </div>
-
-            <!-- Verdict -->
-            <div class="hero-verdict" id="hero-verdict"></div>
-
-            <!-- BUG 7 — property details, likelihood, EPC recommendations -->
-            <div id="fr-extra" style="margin-top:8px"></div>
-
-            <!-- Improvements since EPC -->
-            <div id="improvements-panel" style="display:none;margin:12px 0">
-              <div style="border:0.5px solid rgba(78,203,168,.2);border-radius:10px;overflow:hidden">
-                <!-- Header - clickable to expand -->
-                <div id="imp-header" onclick="toggleImprovements()" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:rgba(78,203,168,.06);transition:background .15s" onmouseover="this.style.background='rgba(78,203,168,.1)'" onmouseout="this.style.background='rgba(78,203,168,.06)'">
-                  <div>
-                    <div style="font-size:12px;font-weight:500;color:var(--teal);margin-bottom:2px">Declare completed works since this EPC</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.4">Declaring completed works helps us show a more accurate starting position</div>
-                  </div>
-                  <div id="imp-chevron" style="color:var(--teal);font-size:13px;flex-shrink:0;margin-left:10px;transition:transform .2s">▾</div>
-                </div>
-                <!-- Expandable body -->
-                <div id="imp-body" style="display:none;padding:13px 14px;border-top:0.5px solid rgba(78,203,168,.15)">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px" id="imp-grid">
-                    <!-- Improvements injected by JS -->
-                  </div>
-                  <!-- Updated position -->
-                  <div id="imp-result" style="display:none;border-radius:8px;padding:10px 12px;background:rgba(78,203,168,.08);border:0.5px solid rgba(78,203,168,.2);margin-bottom:10px">
-                    <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:5px">Updated estimated position</div>
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                      <div style="font-size:13px;color:rgba(255,255,255,.55)">Original: <span id="imp-orig-band" style="font-family:var(--mono);font-weight:500;color:var(--white)"></span></div>
-                      <div style="color:var(--teal)">→</div>
-                      <div style="font-size:13px;color:rgba(255,255,255,.55)">With improvements: <span id="imp-new-band" style="font-family:var(--mono);font-weight:500;color:var(--teal)"></span></div>
-                      <div style="font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.38)" id="imp-conf-note">Self-declared · Medium confidence</div>
-                    </div>
-                  </div>
-                  <!-- BUG 6 — sign-in gate before revealing the updated position -->
-                  <div id="imp-gate" style="display:none;border-radius:8px;padding:11px 13px;background:rgba(78,203,168,.08);border:0.5px solid rgba(78,203,168,.2);margin-bottom:10px">
-                    <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:9px">Sign in to see your estimated updated position based on declared works.</div>
-                    <button onclick="declareWorksSignIn()" style="font-family:var(--sans);font-size:12px;font-weight:600;background:var(--teal);color:var(--navy);border:none;border-radius:7px;padding:9px 16px;cursor:pointer">Send me a sign-in code</button>
-                  </div>
-                  <!-- BUG 6 — full plan CTA once the updated position is shown -->
-                  <div id="imp-cta" style="display:none;margin-bottom:10px">
-                    <button onclick="payAndLoad('plan',19.99)" style="width:100%;font-family:var(--sans);font-size:13px;font-weight:600;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:11px;cursor:pointer">Get your full compliance plan — £19.99</button>
-                  </div>
-                  <!-- EPC caveat -->
-                  <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.55;border-top:0.5px solid rgba(255,255,255,.08);padding-top:9px">
-                    <strong style="color:rgba(255,255,255,.45)">Important:</strong> Self-declared improvements are not reflected in your lodged EPC. To confirm your updated rating for MEES compliance purposes, a new EPC assessment must be lodged by a qualified DEA. <span style="color:var(--teal);cursor:pointer" onclick="orderSurvey()">Order a verified survey →</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Unlock strip -->
-            <div class="unlock-strip">
-              <div class="unlock-label">What would you like to do?</div>
-              <div class="tier-btns">
-                <div class="tier-btn t-featured" onclick="payAndLoad('plan',19.99)">
-                  <div class="tbtn-price">£19.99</div>
-                  <div class="tbtn-body">
-                    <div class="tbtn-name">Compliance Plan — interactive measure tool</div>
-                    <div class="tbtn-desc">Toggle measures · projected EPC band · funding & grants · MEES exemptions · planning PDF · Medium confidence</div>
-                  </div>
-                  <div class="tbtn-arrow">→</div>
-                </div>
-                <div class="tier3-btn" onclick="orderSurvey()">
-                  <div class="t3-price">£149+</div>
-                  <div class="t3-body">
-                    <div class="t3-name">Verified Compliance Survey — DEA-backed report</div>
-                    <div class="t3-desc">New EPC · XML extraction · DEA notes · photos · Awaab review · professional PDF · High confidence</div>
-                  </div>
-                  <div style="color:rgba(255,255,255,.2);font-size:13px;flex-shrink:0">→</div>
-                </div>
-              </div>
-            </div>
+          <div class="fr-body">
+            <!-- DECLARATIONS -->
+            <div class="bb-label" style="margin-bottom:8px">Declarations</div>
+            <div id="ab-declarations"></div>
+            <div style="border-top:0.5px solid rgba(255,255,255,.08);margin:14px 0"></div>
+            <!-- COMPLETED WORKS -->
+            <div class="bb-label" style="margin-bottom:3px">Completed works since this EPC</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.38);margin-bottom:10px">Select all that apply</div>
+            <div id="ab-works" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+            <button onclick="getFreeReport()" style="width:100%;margin-top:16px;font-family:var(--sans);font-size:14px;font-weight:600;background:var(--teal);color:var(--navy);border:none;border-radius:9px;padding:13px;cursor:pointer">Get Free Report →</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="hero-stats">
-      <div class="hstat"><div class="hstat-val">2.5<span>M</span></div><div class="hstat-label">Properties below EPC C</div></div>
-      <div class="hstat"><div class="hstat-val">£30<span>k</span></div><div class="hstat-label">Max MEES penalty</div></div>
-      <div class="hstat"><div class="hstat-val">2030</div><div class="hstat-label">Compliance deadline</div></div>
-      <div class="hstat"><div class="hstat-val">7</div><div class="hstat-label">Exemption types</div></div>
-    </div>
   </div>
 </section>
 
+<!-- SECTION 4 — FREE REPORT -->
+<div id="free-report-section" style="display:none;background:var(--navy);min-height:100vh">
+  <div style="position:sticky;top:58px;z-index:50;background:var(--navy2);border-bottom:0.5px solid rgba(78,203,168,.14);padding:11px 2rem">
+    <div style="max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div id="fr-summary" style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.6"></div>
+      <button onclick="startAgain()" style="font-family:var(--sans);font-size:12px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);border:0.5px solid rgba(255,255,255,.12);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap">Start again ×</button>
+    </div>
+  </div>
+  <div style="max-width:760px;margin:0 auto;padding:24px 2rem 70px">
+    <div class="bb-label" style="margin-top:14px">Current EPC position</div>
+    <div style="position:relative;margin-bottom:6px">
+      <div class="bb">
+        <div class="bb-seg" style="width:7%;background:var(--epc-g)">G</div>
+        <div class="bb-seg" style="width:9%;background:var(--epc-f)">F</div>
+        <div class="bb-seg" style="width:11%;background:var(--epc-e)">E</div>
+        <div class="bb-seg" style="width:13%;background:var(--epc-d)">D</div>
+        <div class="bb-seg" style="width:15%;background:var(--epc-c)">C</div>
+        <div class="bb-seg" style="width:20%;background:var(--epc-b)">B</div>
+        <div class="bb-seg" style="width:25%;background:var(--epc-a)">A</div>
+        <div class="bb-needle" id="fr-needle" style="left:5%"></div>
+        <div class="bb-target" style="left:40%"></div>
+      </div>
+    </div>
+    <div style="text-align:right;font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.42);margin-bottom:24px">Low–Medium · Source: EPC Register</div>
+
+    <h2 style="font-family:var(--serif);font-size:26px;font-weight:300;color:var(--white);letter-spacing:-.02em;line-height:1.2;margin-bottom:16px">What your property needs to reach EPC&nbsp;C</h2>
+
+    <div id="fr-gap"></div>
+    <div id="fr-recs"></div>
+    <div id="fr-boxes" style="margin-top:8px"></div>
+    <div id="fr-exemptions" style="margin-top:20px"></div>
+    <div id="fr-summary-box" style="margin-top:20px"></div>
+    <div id="fr-penalty" style="margin-top:20px"></div>
+    <div id="fr-outcome" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<!-- DORMANT (reactivate in Section 5 — paid interactive tool). Kept in file but made
+     inert via a text/plain wrapper so it is preserved without rendering or executing. -->
+<script type="text/plain" data-dormant="tool-section">
 <!-- TOOL SECTION (Tier 2 — unlocked after payment) -->
 <div id="tool-section">
   <div class="tool-bar">
@@ -747,8 +694,11 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     </div>
   </div>
 </div>
+</script>
+<!-- /DORMANT tool-section -->
 
-<script>
+<!-- DORMANT (reactivate in Section 5) — declared-works grid + OTP helpers, kept inert. -->
+<script type="text/plain" data-dormant="improvements-otp">
 // ── Improvements since EPC ─────────────────────────────
 const IMPROVEMENTS = [
   { id:'i1', label:'New boiler installed',         bu:1, icon:'🔥' },
@@ -896,6 +846,9 @@ function showImprovementsPanel() {
 }
 
 </script>
+
+<!-- DORMANT (removed from active page per redesign) — pricing tiers + MEES timeline. -->
+<script type="text/plain" data-dormant="pricing-timeline">
 <!-- PRICING -->
 <section class="price-section" id="pricing">
   <div class="inner">
@@ -995,6 +948,8 @@ function showImprovementsPanel() {
     </div>
   </div>
 </section>
+</script>
+<!-- /DORMANT pricing-timeline -->
 
 <footer>
   <div class="foot-inner">
@@ -1116,7 +1071,9 @@ async function fetchRecs(lmkKey){
         priority:seq<=2?'essential':seq<=4?'recommended':'optional',
         blocked:false,
         bu,
+        epr:recSAP,                       // cumulative energy-performance-rating from the API (pathway engine reads this directly)
         cMin:costs.min,cMax:costs.max,
+        saving:parseInt(rec['typical-saving'])||0,
         conf:'Medium',
         uTxt:bu>=2?'Major band uplift':bu===1?'Partial band uplift':'Minor uplift',
         funding:grantsByType(descr),
@@ -1188,6 +1145,7 @@ let xmlUploaded=false, xmlDimensions=null, ownedOver6m=false;
 // Restore property after Stripe redirect
 // PRIMARY: localStorage.epc2c_prop (full property data — survives cross-origin navigation)
 // SECONDARY: epc2c_pending_session (sessionId) + server fetch
+/* DORMANT (reactivate in Section 5 — Stripe-return restore + welcome-back). Disabled so the paid tool is not auto-loaded.
 (function(){
   const params=new URLSearchParams(window.location.search);
   // Restore the ownership answer across reloads (survives the Stripe round-trip),
@@ -1245,8 +1203,14 @@ let xmlUploaded=false, xmlDimensions=null, ownedOver6m=false;
 
   setTimeout(showBanner,300);
 })();
+*/
 
 function bi(r){return BANDS.indexOf(r)}
+// SECTION 1 — postcode is mandatory; enable the search button only once it has 3+ chars.
+function onPcInput(){
+  const v=(document.getElementById('pc').value||'').replace(/\s/g,'');
+  const b=document.getElementById('find-btn'); if(b)b.disabled=v.length<3;
+}
 async function lookup(){
   const pc=document.getElementById('pc').value.trim().toUpperCase().replace(/\s/g,'');
   if(pc.length<3)return;
@@ -1260,48 +1224,67 @@ async function lookup(){
     console.error('EPC API error:',err.message);
     showApiError(err.message);
   }finally{
-    btn.disabled=false;btn.textContent='Find my property';
+    btn.disabled=false;btn.textContent='Find my property →';
   }
 }
 function showNoResults(){
   document.getElementById('pl-hdr').textContent='No properties found — please check your postcode and try again';
   document.getElementById('pl-items').innerHTML='<div style="padding:10px 12px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.6">No EPC records found for this postcode. The property may not have a lodged EPC, or the postcode may be incorrect.<br><br>If you believe an EPC exists, contact your DEA or check the government EPC register directly.</div>';
   document.getElementById('prop-list').style.display='block';
-  document.getElementById('free-result').style.display='none';
+  document.getElementById('about-box').style.display='none';
 }
 function showApiError(msg){
   document.getElementById('pl-hdr').textContent='Could not reach EPC register';
   document.getElementById('pl-items').innerHTML='<div style="padding:10px 12px;font-size:12px;color:rgba(220,38,38,.7);line-height:1.6">EPC lookup failed: '+msg+'<br><br>Make sure the proxy is running (<code>node proxy.js</code>) and your API credentials in <code>.env</code> are correct.</div>';
   document.getElementById('prop-list').style.display='block';
-  document.getElementById('free-result').style.display='none';
+  document.getElementById('about-box').style.display='none';
 }
+// SECTION 2 — each row: Address · EPC band · EPC date.
 function renderPropItems(list){
   document.getElementById('pl-items').innerHTML=list.map(p=>`
     <div class="prop-item" id="pi-${p._idx}" onclick="pickProp(${p._idx})">
       <div class="prop-addr">${p.addr}</div>
       <div class="epc-badge" style="background:${EPC_COL[p.rating]}">${p.rating}</div>
+      <div style="font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.4);flex-shrink:0">${fmtEpcDate(p.lodgementDate)}</div>
     </div>`).join('');
+}
+// Match a property against the optional house name/number from the hero field.
+function matchHouse(p,q){
+  const a1=(p.address1||'').toLowerCase().replace(/,/g,'');
+  const first=(a1.split(/\s+/)[0]||'');
+  return first===q || a1.startsWith(q) || a1.includes(' '+q+' ') || a1.includes(' '+q);
 }
 function filterProps(){
   const q=document.getElementById('pl-filter').value.trim().toLowerCase();
   const all=window._props||[];
   const list=q?all.filter(p=>p.addr.toLowerCase().includes(q)):all;
   const countEl=document.getElementById('pl-count');
-  if(q&&list.length!==all.length){countEl.textContent=list.length+' of '+all.length+' shown';countEl.style.display='block';}
+  if(q&&list.length!==all.length){countEl.textContent='Showing '+list.length+' of '+all.length+' properties';countEl.style.display='block';}
   else{countEl.style.display='none';}
   renderPropItems(list);
 }
 function showProps(props){
   window._props=props;
   const n=props.length;
-  document.getElementById('pl-hdr').textContent=n+' properties found — enter house number or name to find yours';
+  document.getElementById('pl-hdr').textContent=n+' propert'+(n!==1?'ies':'y')+' found';
   const filterEl=document.getElementById('pl-filter');
   filterEl.style.display=n>1?'block':'none';
   filterEl.value='';
-  document.getElementById('pl-count').style.display='none';
-  renderPropItems(props);
+  // Auto-filter by the optional house name/number entered in the hero.
+  const house=(document.getElementById('house').value||'').trim().toLowerCase();
+  const countEl=document.getElementById('pl-count');
+  let list=props;
+  if(house){
+    const matches=props.filter(p=>matchHouse(p,house));
+    if(matches.length){
+      list=matches;
+      countEl.textContent='Showing '+matches.length+' of '+n+' properties — showing closest matches first';
+      countEl.style.display='block';
+    }else{countEl.style.display='none';}
+  }else{countEl.style.display='none';}
+  renderPropItems(list);
   document.getElementById('prop-list').style.display='block';
-  document.getElementById('free-result').style.display='none';
+  document.getElementById('about-box').style.display='none';
 }
 async function pickProp(i){
   document.querySelectorAll('.prop-item').forEach(e=>e.classList.remove('sel'));
@@ -1316,87 +1299,354 @@ async function pickProp(i){
       }
     }catch(e){/* fall through */}
   }
-  setTimeout(()=>showFree(selProp),350);
+  setTimeout(()=>showAboutBox(selProp),350);
 }
-function showFree(p){
-  document.getElementById('fr-addr').textContent=p.addr;
-  const eraKnown=p.era&&!/^unknown/i.test(p.era);   // new API doesn't return construction age band
-  document.getElementById('fr-tags').innerHTML=`
-    <span class="fr-tag" style="background:${EPC_COL[p.rating]};color:white">${p.rating}</span>
-    <span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.type}</span>`
-    +(eraKnown?`<span class="fr-tag" style="background:rgba(255,255,255,.1);color:var(--white)">${p.era}</span>`:'');
-  document.getElementById('ownership-q').style.display='block';
-  document.getElementById('ownership-note').style.display='none';
-  document.getElementById('fr-body').style.display='none';
-  document.getElementById('free-result').style.display='block';
-  setTimeout(()=>document.getElementById('free-result').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
-}
-function answerOwnership(answer){
-  ownedOver6m=(answer==='yes');   // Yes = owned >6m (exemption locked); No = recently acquired (available)
-  try{localStorage.setItem('epc2c_owned6m',ownedOver6m?'1':'0');}catch(e){}  // survive Stripe round-trip
-  document.getElementById('ownership-q').style.display='none';
-  if(answer==='no') document.getElementById('ownership-note').style.display='block';
-  document.getElementById('fr-body').style.display='block';
-  showFreeBody(selProp);
-}
-// BUG 7 helpers
+// ── Date / status helpers ──────────────────────────────────────────
 function fmtEpcDate(d){ if(!d)return '—'; try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return d;} }
 function epcStatus(d){
   if(!d)return {txt:'Unknown',col:'rgba(255,255,255,.4)'};
   try{ const exp=new Date(d); exp.setFullYear(exp.getFullYear()+10);
-    return exp.getTime()>=Date.now()?{txt:'Live',col:'var(--teal)'}:{txt:'Expired',col:'var(--amber)'};
+    return exp.getTime()>=Date.now()?{txt:'Live',col:'var(--teal)'}:{txt:'Expired',col:'var(--red)'};
   }catch(e){ return {txt:'Unknown',col:'rgba(255,255,255,.4)'}; }
 }
-function likelihoodText(band){
-  if(['A','B','C'].includes(band))return 'Already compliant';
-  return ({D:'High likelihood — 1–2 measures typical',E:'Moderate — multiple measures likely needed',F:'Challenging — significant works or exemption likely required',G:'Very challenging — exemption likely required'})[band]||'—';
-}
-function renderVerdictExtras(p){
-  const el=document.getElementById('fr-extra'); if(!el)return;
-  const st=epcStatus(p.lodgementDate);
-  const fa=p._detail&&p._detail['total-floor-area'];
+
+// ── SECTION 3 — ABOUT PROPERTY BOX ──────────────────────────────────
+const DECLARATIONS=[
+  {id:'conservation',q:'In a conservation area?',note:{txt:'Not sure? Check the national map →',url:'https://magic.defra.gov.uk'}},
+  {id:'listed',q:'A listed building?'},
+  {id:'owned6',q:'Owned less than 6 months?'},
+];
+const WORKS=[
+  {id:'loft',label:'Loft insulation'},{id:'cavity',label:'Cavity wall insulation'},
+  {id:'iwi',label:'Internal wall ins'},{id:'ewi',label:'External wall ins'},
+  {id:'boiler',label:'Boiler upgrade'},{id:'controls',label:'Heating controls'},
+  {id:'solar',label:'Solar panels'},{id:'heatpump',label:'Heat pump'},
+  {id:'double',label:'Double glazing'},{id:'secondary',label:'Secondary glazing'},
+  {id:'draught',label:'Draught proofing'},{id:'floor',label:'Floor insulation'},
+];
+let declState={conservation:false,listed:false,owned6:false};
+const worksSel=new Set();
+
+function showAboutBox(p){
+  document.getElementById('prop-list').style.display='none';
+  document.getElementById('ab-addr').textContent=p.addr;
+  const d=p._detail||{};
+  const fa=d['total-floor-area'];
   const la=(p._raw&&p._raw.council)||'';
-  const eraKnown=p.era&&!/^unknown/i.test(p.era);
-  const lbl='font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:14px 0 7px';
-  const rows=[
-    ['RRN',p.lmkKey||'—'],
-    ['EPC date',fmtEpcDate(p.lodgementDate)],
-    ['Status',`<span style="color:${st.col};font-weight:600">${st.txt}</span>`],
-    ['Property type',p.type||'—'],
-    fa?['Floor area',Math.round(fa)+' m²']:null,
-    eraKnown?['Construction era',p.era]:null,
-    la?['Local authority',la]:null,
-  ].filter(Boolean);
-  const kv=rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,.06)"><span style="color:rgba(255,255,255,.45)">${r[0]}</span><span style="color:var(--white);text-align:right">${r[1]}</span></div>`).join('');
-  const recs=p._apiMeasures||[];
-  const recsHtml=recs.length?(`<div style="${lbl}">EPC recommendations</div>`+recs.map(m=>{
-    const cost=(m.cMin||m.cMax)?('£'+(m.cMin||0).toLocaleString()+(m.cMax&&m.cMax!==m.cMin?'–£'+m.cMax.toLocaleString():'')):'';
-    return `<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:8px;padding:9px 11px;margin-bottom:6px"><div style="font-size:12.5px;font-weight:500;color:var(--white)">${m.name||'Improvement'}</div>${cost?`<div style="font-size:12px;color:var(--teal);margin-top:2px">${cost}</div>`:''}<div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:3px">Recommended by your EPC assessor</div></div>`;
-  }).join('')):'';
-  el.innerHTML=`<div style="${lbl}">Property details</div>${kv}<div style="${lbl}">Likelihood of achieving C</div><div style="font-size:13px;color:var(--white);line-height:1.5">${likelihoodText(p.rating)}</div>${recsHtml}`;
+  document.getElementById('ab-meta').textContent=[p.type,fa?Math.round(fa)+' m²':null,la].filter(Boolean).join(' · ');
+  const score=p.currentSAP||parseInt(d['current-energy-efficiency'])||'';
+  const st=epcStatus(p.lodgementDate);
+  document.getElementById('ab-epc').innerHTML=
+    `EPC <strong style="color:var(--white)">${p.rating}</strong>${score?` (${score})`:''} &middot; RRN: ${p.lmkKey||'—'} &middot; Assessed: ${fmtEpcDate(p.lodgementDate)} &middot; Status: <span style="color:${st.col};font-weight:600">${st.txt}</span>`;
+  declState={conservation:false,listed:false,owned6:false};
+  worksSel.clear();
+  renderDeclarations();
+  renderWorks();
+  const ab=document.getElementById('about-box');
+  ab.style.display='block';
+  setTimeout(()=>ab.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
-function showFreeBody(p){
-  const ri=bi(p.rating),ci=bi('C'),gap=ci-ri;
-  document.getElementById('hero-needle').style.left=NP[p.rating]||'5%';
-  document.getElementById('conf-label').textContent='Low–Medium · EPC register data only';
-  document.getElementById('conf-fill').style.width='30%';
-  document.getElementById('conf-fill').style.background='var(--amber)';
-  let cls,label,title,body;
-  if(ri>=ci){cls='hv-ok';label='Already compliant';title='This property currently meets EPC C';body='No action required for the 2030 standard. Review again at next EPC renewal.';}
-  else if(gap===1){cls='hv-works';label='Works likely sufficient';title='EPC C is likely achievable with targeted improvements';body=`EPC ${p.rating}: one band improvement needed. Likely achievable with 1–2 measures. Upgrade to the Compliance Plan for specific costs and an interactive tool.`;}
-  else if(gap===2){cls='hv-works';label='Works required';title='EPC C is achievable — multiple measures needed';body=`EPC ${p.rating}: two bands of improvement needed. Multiple measures required. Estimated range: £2,000–£8,000. The Compliance Plan will show the exact path for this property.`;}
-  else{cls='hv-exemption';label='Exemption likely needed';title='EPC C is unlikely to be achievable through works alone';body=`EPC ${p.rating}: ${gap} bands needed. Based on the property type and construction era, a MEES exemption is likely required. The Compliance Plan identifies which exemption applies and how to register it.`;}
-  const v=document.getElementById('hero-verdict');
-  v.className='hero-verdict '+cls;
-  v.innerHTML=`<div class="hv-label">${label}</div><div class="hv-title">${title}</div><div class="hv-body">${body}</div><div class="hv-conf">Confidence: Low–Medium · EPC register data only · <a href="#pricing" style="color:var(--teal);text-decoration:none">upgrade for higher confidence →</a></div>`;
-  renderVerdictExtras(p);
-  impSel.clear();
-  showImprovementsPanel();
+function renderDeclarations(){
+  document.getElementById('ab-declarations').innerHTML=DECLARATIONS.map(dq=>{
+    const yes=declState[dq.id]===true;
+    const chip=(val,lbl)=>{const on=(val&&yes)||(!val&&!yes);
+      return `<button onclick="setDecl('${dq.id}',${val})" style="min-width:54px;padding:6px 14px;border-radius:18px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${on?'var(--teal)':'rgba(255,255,255,.15)'};background:${on?'var(--teal)':'transparent'};color:${on?'var(--navy)':'rgba(255,255,255,.6)'}">${lbl}</button>`;};
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;flex-wrap:wrap">
+      <div style="font-size:13px;color:var(--white)">${dq.q}</div>
+      <div style="display:flex;gap:6px">${chip(true,'Yes')}${chip(false,'No')}</div>
+      ${dq.note?`<div style="flex-basis:100%;font-size:11px;margin-top:1px"><a href="${dq.note.url}" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none">${dq.note.txt}</a></div>`:''}
+    </div>`;
+  }).join('');
+}
+function setDecl(id,val){declState[id]=val;renderDeclarations();}
+function renderWorks(){
+  document.getElementById('ab-works').innerHTML=WORKS.map(w=>{
+    const on=worksSel.has(w.id);
+    return `<button onclick="toggleWork('${w.id}')" style="padding:9px 11px;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;text-align:left;border:1px solid ${on?'rgba(78,203,168,.5)':'rgba(255,255,255,.12)'};background:${on?'rgba(78,203,168,.12)':'transparent'};color:${on?'var(--white)':'rgba(255,255,255,.55)'}">${on?'✓ ':''}${w.label}</button>`;
+  }).join('');
+}
+function toggleWork(id){if(worksSel.has(id))worksSel.delete(id);else worksSel.add(id);renderWorks();}
+
+// ── SECTION 4 — FREE REPORT ENGINE ──────────────────────────────────
+const TARGET_SAP=69;
+// Supplementary low-disruption measures used as a fallback when the API
+// returns fewer than 3 recommendations.
+const SUPP=[
+  {key:'draught',  name:'Draught proofing',  uplift:1, cMin:200, cMax:300, difficulty:1},
+  {key:'controls', name:'Heating controls',  uplift:2, cMin:300, cMax:500, difficulty:1},
+  {key:'cylinder', name:'Cylinder insulation',uplift:1, cMin:50,  cMax:150, difficulty:1},
+];
+// Declared-work → API-recommendation text matcher (for the amber "declared" cards).
+const WORK_MATCH={
+  loft:/loft/, cavity:/cavity/, iwi:/internal wall/, ewi:/external wall/,
+  boiler:/boiler|condensing/, controls:/heating control/,
+  solar:/solar photovoltaic|solar pv|photovoltaic|solar panel/, heatpump:/heat pump|air or ground source/,
+  double:/double glaz/, secondary:/secondary glaz/, draught:/draught/, floor:/floor insulation/,
+};
+// Assumed SAP uplift per declared work (used only to estimate Outcome 1).
+const WORK_UPLIFT={loft:1,cavity:2,iwi:2,ewi:2,boiler:1,controls:2,solar:5,heatpump:2,double:1,secondary:1,draught:1,floor:1};
+
+function measureDifficulty(name){
+  const t=(name||'').toLowerCase();
+  if(/heating control|draught|cylinder|low energy lighting|hot water/.test(t))return 1;
+  if(/internal wall|external wall|solid wall|air or ground source|heat pump|floor insulation|first time central|central heating/.test(t))return 3;
+  if(/loft|cavity|secondary glaz|solar|photovoltaic|\bpv\b/.test(t))return 2;
+  return 2;
+}
+function difficultyWord(d){return d>=3?'High':d===2?'Medium':'Low';}
+function costBandFactor(cMax){return cMax>7000?3:cMax>=2000?2:1;}
+function costBandWord(f){return f===3?'High':f===2?'Mid':'Low';}
+function achievability(score){
+  if(score<=4)return{label:'Straightforward',desc:'Low cost / Low disruption'};
+  if(score<=6)return{label:'Achievable',desc:'Low cost / Some disruption'};
+  if(score<=8)return{label:'Challenging',desc:'Mid cost / Disruption involved'};
+  return{label:'Difficult',desc:'High cost / Significant complexities'};
+}
+function recMatchesDeclaredWork(name){
+  const t=(name||'').toLowerCase();
+  for(const id of worksSel){const re=WORK_MATCH[id]; if(re&&re.test(t))return true;}
+  return false;
+}
+function supKey(name){const t=(name||'').toLowerCase();if(/draught/.test(t))return'draught';if(/heating control/.test(t))return'controls';if(/cylinder|hot water/.test(t))return'cylinder';return t;}
+function estimateUplift(name){const t=(name||'').toLowerCase();if(/heating control/.test(t))return 2;return 1;}
+
+// Build the measure set with a per-measure standalone uplift estimate.
+// The API only gives a cumulative energy-performance-rating, so the per-measure
+// uplift is the marginal gain (EPRᵢ − EPRᵢ₋₁) — order-dependent, hence indicative.
+// Listed/conservation: only low-disruption measures are permitted.
+function buildMeasures(apiMeasures,currentSAP,listedOrCons){
+  let prev=currentSAP;
+  let ms=apiMeasures.map(m=>{
+    const epr=parseInt(m.epr)||prev;
+    const uplift=Math.max(0,epr-prev); prev=epr;
+    return {name:m.name,uplift,cMin:m.cMin||0,cMax:m.cMax||0,cost:Math.round(((m.cMin||0)+(m.cMax||0))/2),difficulty:measureDifficulty(m.name)};
+  });
+  if(listedOrCons) ms=ms.filter(m=>m.difficulty===1);
+  if(ms.length<3){
+    const present=new Set(ms.map(s=>supKey(s.name)));
+    for(const s of SUPP){if(ms.length>=3)break;if(present.has(s.key))continue;ms.push({name:s.name,uplift:s.uplift,cMin:s.cMin,cMax:s.cMax,cost:Math.round((s.cMin+s.cMax)/2),difficulty:s.difficulty});}
+  }
+  return ms.slice(0,14);   // cap for the 2^n combination enumeration
+}
+function comboScore(size,cost,maxDiff){
+  const f1=Math.min(3,size);
+  const f2=cost>7000?3:cost>=2000?2:1;
+  return {score:f1+f2+maxDiff,f1,f2,diff:maxDiff,cost};
+}
+// Enumerate every measure combination; count those reaching C by size-bucket
+// (1, 2, 3+), and track the CHEAPEST qualifying combination per bucket and overall.
+function evalCombos(ms,currentSAP){
+  const n=ms.length; let box1=0,box2=0,box3=0;
+  const cheapest={1:null,2:null,3:null}; let cheapestOverall=null;
+  for(let mask=1;mask<(1<<n);mask++){
+    let up=0,cost=0,cMin=0,cMax=0,size=0,maxDiff=0;
+    for(let i=0;i<n;i++) if(mask&(1<<i)){const m=ms[i];up+=m.uplift;cost+=m.cost;cMin+=m.cMin;cMax+=m.cMax;size++;if(m.difficulty>maxDiff)maxDiff=m.difficulty;}
+    if(currentSAP+up<TARGET_SAP) continue;
+    const bucket=size>=3?3:size;
+    if(bucket===1)box1++;else if(bucket===2)box2++;else box3++;
+    const sc=comboScore(size,cost,maxDiff);
+    const rec={size,cost,cMin,cMax,score:sc.score,f1:sc.f1,f2:sc.f2,diff:maxDiff};
+    if(!cheapest[bucket]||cost<cheapest[bucket].cost)cheapest[bucket]=rec;
+    if(!cheapestOverall||cost<cheapestOverall.cost)cheapestOverall=rec;
+  }
+  return {box1,box2,box3,cheapest,best:cheapestOverall};
+}
+function evalReport(apiMeasures,currentSAP){
+  const listedOrCons=declState.listed||declState.conservation;
+  const ms=buildMeasures(apiMeasures,currentSAP,listedOrCons);
+  const c=evalCombos(ms,currentSAP);
+  const anyReachesC=(c.box1+c.box2+c.box3)>0;
+  const noViable=!anyReachesC;
+  const best=c.best;
+  const declUplift=[...worksSel].reduce((a,id)=>a+(WORK_UPLIFT[id]||0),0);
+  const alreadyC=currentSAP>=TARGET_SAP;
+  const declaredReachesC=!alreadyC&&worksSel.size>0&&(currentSAP+declUplift)>=TARGET_SAP;
+  const bestCostMax=best?best.cMax:apiMeasures.reduce((a,m)=>a+(m.cMax||0),0);
+  let exCount=0;
+  if(declState.listed)exCount++;
+  if(declState.conservation)exCount++;
+  if(declState.owned6)exCount++;
+  if(noViable)exCount++;
+  if(bestCostMax>10000)exCount++;
+  const exShown=Math.min(5,3+exCount);
+  // Outcome is driven by HOW MANY measures are needed, not by cost alone:
+  // achievable with 1–2 measures → sell the £24.99 plan; only 3+ → consultation;
+  // nothing reaches C (or 3+ are very difficult) → exemption/specialist route.
+  let outcome;
+  if(alreadyC||declaredReachesC)outcome=1;
+  else if(noViable)outcome=4;
+  else if(c.box1>0||c.box2>0)outcome=2;
+  else outcome=(best.score>=9)?4:3;
+  return {listedOrCons,box1:c.box1,box2:c.box2,box3:c.box3,cheapest:c.cheapest,best,anyReachesC,noViable,exShown,outcome,alreadyC,declaredReachesC};
+}
+
+function getFreeReport(){
+  if(!selProp)return;
+  document.getElementById('hero').style.display='none';
+  document.getElementById('free-report-section').style.display='block';
+  window.scrollTo({top:0,behavior:'auto'});
+  buildFreeReport(selProp);
+}
+function buildFreeReport(p){
+  const d=p._detail||{};
+  const currentSAP=p.currentSAP||parseInt(d['current-energy-efficiency'])||50;
+  const apiMeasures=p._apiMeasures||[];
+  const listedOrCons=declState.listed||declState.conservation;
+
+  const declTxt='Listed: '+(declState.listed?'Yes':'No')+' · Conservation: '+(declState.conservation?'Yes':'No')+' · Owned <6m: '+(declState.owned6?'Yes':'No');
+  document.getElementById('fr-summary').innerHTML=`<strong style="color:var(--white)">${p.addr}</strong> · EPC ${p.rating} (${currentSAP})<br><span style="color:rgba(255,255,255,.45)">${declTxt}</span>`;
+  document.getElementById('fr-needle').style.left=NP[p.rating]||'5%';
+
+  renderFrGap(p.rating,currentSAP);
+  renderFrRecs(apiMeasures);
+  const r=evalReport(apiMeasures,currentSAP);
+  const a=r.best?achievability(r.best.score):null;
+  window._frEstimate='EPC '+p.rating+' ('+currentSAP+'). '+(r.outcome===1?'Declared works may reach EPC C.':r.noViable?'Standard measures unlikely to reach EPC C — exemption likely.':a?('EPC C '+a.label.toLowerCase()+' ('+a.desc+').'):'');
+
+  renderFrBoxes(r);
+  renderFrExemptions(r);
+  renderFrSummaryBox(r);
+  renderFrPenalty();
+  renderFrOutcome(r);
+}
+// Bold current-band → points-needed → target-C summary, below the heading.
+function renderFrGap(rating,currentSAP){
+  const el=document.getElementById('fr-gap'); if(!el)return;
+  const points=Math.max(0,TARGET_SAP-currentSAP);
+  if(points<=0){
+    el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:9px;background:var(--epc-c);border-radius:11px;padding:12px 18px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.22)">
+      <span style="font-size:18px;font-weight:800;color:#fff">✓</span>
+      <span style="font-size:16px;font-weight:800;color:#fff">Already meets EPC C</span></div>`;
+    return;
+  }
+  const box=(letter,score,col)=>`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:64px;padding:9px 14px;border-radius:11px;background:${col};box-shadow:0 2px 10px rgba(0,0,0,.22)">
+      <div style="font-size:30px;font-weight:800;color:#fff;line-height:1">${letter}</div>
+      <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.92);font-family:var(--mono);margin-top:3px">${score}</div></div>`;
+  const mid=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><div style="font-size:24px;font-weight:800;color:var(--teal);line-height:1">&rarr;</div><div style="font-size:13.5px;font-weight:800;color:var(--white);white-space:nowrap">${points} point${points!==1?'s':''} to C</div></div>`;
+  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-bottom:20px">${box(rating,currentSAP,EPC_COL[rating]||'var(--epc-e)')}${mid}${box('C',TARGET_SAP,'var(--epc-c)')}</div>`;
+}
+function renderFrRecs(ms){
+  const el=document.getElementById('fr-recs');
+  const head='<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:3px">Recommendations from your EPC</div>'+
+    '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:11px">Source: Official EPC Register — data specific to this property</div>';
+  if(!ms.length){el.innerHTML=head+'<div style="font-size:14px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:14px">Your EPC did not return specific recommendations for this property.</div>';return;}
+  el.innerHTML=head+ms.map(m=>{
+    const declared=recMatchesDeclaredWork(m.name);
+    const bg=declared?'var(--amberp)':'var(--white)';
+    const bd=declared?'rgba(217,119,6,.4)':'var(--rule)';
+    const cost=(m.cMin||m.cMax)?('£'+(m.cMin||0).toLocaleString()+(m.cMax&&m.cMax!==m.cMin?'–£'+m.cMax.toLocaleString():'')):'';
+    const costEl=cost?`<div style="flex-shrink:0;font-size:13px;font-family:var(--mono);color:var(--teald)">${cost}</div>`:'';
+    const tag=declared?'<span style="flex-shrink:0;font-size:10.5px;font-weight:600;color:var(--amber);background:rgba(217,119,6,.15);border-radius:5px;padding:2px 8px;white-space:nowrap">Declared to be completed</span>':'';
+    return `<div style="display:flex;align-items:center;gap:10px;background:${bg};border:0.5px solid ${bd};border-radius:9px;padding:11px 13px;margin-bottom:6px">
+      <div style="flex:1;min-width:0;font-size:14.5px;font-weight:500;color:var(--char);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(m.name||'').replace(/"/g,'&quot;')}">${m.name||'Improvement'}</div>${costEl}${tag}
+    </div>`;
+  }).join('');
+}
+function renderFrBoxes(r){
+  const el=document.getElementById('fr-boxes');
+  if(r.alreadyC){
+    el.innerHTML=`<div style="background:rgba(5,150,105,.1);border:0.5px solid rgba(5,150,105,.35);border-radius:9px;padding:14px;font-size:13px;color:var(--white);line-height:1.6">This property is already at EPC C or above — no improvement pathway is required to meet the standard.</div>`;
+    return;
+  }
+  if(r.listedOrCons&&r.noViable){
+    el.innerHTML=`<div style="background:rgba(217,119,6,.1);border:0.5px solid rgba(217,119,6,.4);border-radius:9px;padding:14px;font-size:13px;color:var(--white);line-height:1.6">This property's listed / conservation status limits standard improvement options. Only low-disruption internal measures are likely to be permitted.</div>`;
+    return;
+  }
+  // Count of qualifying combinations per box; the actual measures are revealed in the paid tool.
+  const bestBucket=r.best?(r.best.size>=3?3:r.best.size):0;
+  const card=(count,text,bucket)=>{
+    let ach='';
+    if(count>0&&bucket===bestBucket&&r.best){const a=achievability(r.best.score);
+      ach=`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+        <span class="tag" style="background:rgba(78,203,168,.12);color:var(--teal)">Achievability: ${a.label}</span>
+        <span class="tag" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">Est. cost: ${costBandWord(r.best.f2)}</span>
+        <span class="tag" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">Disruption: ${difficultyWord(r.best.diff)}</span></div>`;}
+    const col=count>0?'var(--teal)':'rgba(255,255,255,.18)';
+    return `<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-left:3px solid ${col};border-radius:9px;padding:12px 14px;margin-bottom:7px"><div style="font-size:13px;color:var(--white);line-height:1.5">${count>0?'✓ ':''}${text}</div>${ach}</div>`;
+  };
+  const cap=n=>n>10?'10+':String(n);
+  const b1=r.box1>0?(r.box1===1?'1 single measure could achieve EPC C on its own':`${r.box1} single measures could each achieve EPC C on their own`):'No single measure alone achieves EPC C';
+  const b2=r.box2>0?`${r.box2} combination${r.box2!==1?'s':''} of 2 measures could achieve EPC C`:'No 2-measure combination achieves EPC C';
+  const b3=r.box3>0?`${cap(r.box3)} combination${(r.box3!==1||r.box3>10)?'s':''} of 3 or more measures could achieve EPC C`:'3 or more measures required';
+  let html='<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:4px 0 9px">Pathways to EPC C</div>';
+  html+=card(r.box1,b1,1)+card(r.box2,b2,2)+card(r.box3,b3,3);
+  if(r.noViable)html+=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-left:3px solid rgba(255,255,255,.18);border-radius:9px;padding:12px 14px;margin-bottom:7px"><div style="font-size:13px;color:var(--white);line-height:1.5">No combination of recommended measures is estimated to reach EPC C</div></div>`;
+  html+=`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:4px">Pathway estimates are based on EPC register recommendations. Uplifts are indicative — a new EPC must be lodged to confirm any rating change.</div>`;
+  el.innerHTML=html;
+}
+function renderFrExemptions(r){
+  document.getElementById('fr-exemptions').innerHTML=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:13px 14px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">MEES exemptions</div><div style="font-size:13px;color:var(--white);line-height:1.6">Based on your property details, up to <strong>${r.exShown}</strong> exemption${r.exShown!==1?'s':''} may potentially apply.</div></div>`;
+}
+function renderFrSummaryBox(r){
+  let txt;
+  if(r.alreadyC)txt='This property already meets EPC C. No further works are required for the standard — a new EPC confirms your position if the current one has expired.';
+  else if(r.noViable)txt='Standard improvement measures are unlikely to achieve EPC C for this property without specialist assessment.';
+  else{const s=r.best.score;
+    if(s<=4)txt='EPC C appears straightforward to achieve for this property — low cost, low disruption.';
+    else if(s<=6)txt='EPC C is estimated to be achievable for this property with some works involved.';
+    else if(s<=8)txt='EPC C may be achievable but requires significant works and investment.';
+    else txt='Standard improvement measures are unlikely to achieve EPC C for this property without specialist assessment.';}
+  document.getElementById('fr-summary-box').innerHTML=`<div style="background:rgba(78,203,168,.06);border:0.5px solid rgba(78,203,168,.2);border-radius:9px;padding:14px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">Achievability</div><div style="font-size:14px;color:var(--white);line-height:1.6">${txt}</div></div>`;
+}
+function renderFrPenalty(){
+  document.getElementById('fr-penalty').innerHTML=`<div style="background:rgba(220,38,38,.08);border:0.5px solid rgba(220,38,38,.25);border-radius:9px;padding:14px">
+    <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:9px">The cost of ignoring this</div>
+    <div style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.95">
+      Non-compliance penalty: <strong style="color:var(--white)">up to £30,000</strong><br>
+      Loss of rental income: <strong style="color:var(--white)">potentially £1,000s/month</strong><br>
+      Difficulty re-letting: <strong style="color:var(--white)">non-compliant properties cannot be let on new tenancies</strong>
+    </div>
+    <div style="font-size:13px;color:var(--teal);margin-top:11px;font-weight:600">Your full compliance plan: £24.99</div></div>`;
+}
+function renderFrOutcome(r){
+  const el=document.getElementById('fr-outcome');
+  const wrap=(title,body,btns)=>`<div style="background:var(--navy2);border:0.5px solid rgba(78,203,168,.2);border-radius:11px;padding:18px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:8px">Your next step</div><div style="font-size:15px;font-weight:500;color:var(--white);margin-bottom:6px">${title}</div><div style="font-size:13px;color:rgba(255,255,255,.62);line-height:1.65;margin-bottom:14px">${body}</div>${btns}</div>`;
+  const btn=(label,onclick,primary)=>`<button onclick="${onclick}" style="display:block;width:100%;margin-top:8px;font-family:var(--sans);font-size:13px;font-weight:600;padding:12px;border-radius:8px;cursor:pointer;${primary?'background:var(--teal);color:var(--navy);border:none':'background:rgba(255,255,255,.08);color:var(--white);border:0.5px solid rgba(255,255,255,.15)'}">${label}</button>`;
+  if(r.outcome===1){
+    const title=(r.alreadyC&&!r.declaredReachesC)?'This property already appears to meet EPC C':'Your declared improvements suggest this property may already meet EPC C';
+    el.innerHTML=wrap(title,'⚠ This is not confirmed compliance. Only a newly lodged EPC certificate confirms your legal position for MEES, lettings and mortgage purposes.',btn('Receive email assessment','openEmailAssessment()',false)+btn('Order new EPC — £99 →','orderNewEpc()',true));
+  }else if(r.outcome===2){
+    el.innerHTML=wrap('We believe you can achieve EPC C','Let us show you exactly which measures, what they cost and what to do next.',btn('Get my compliance plan — £24.99 →','goPlan()',true));
+  }else if(r.outcome===3){
+    el.innerHTML=wrap('Achieving EPC C requires significant works for this property','Expert guidance is recommended before committing to works.',btn('Book a compliance consultation — from £149 →','goConsult()',true));
+  }else{
+    el.innerHTML=wrap('Standard improvement measures are unlikely to achieve EPC C for this property','A specialist assessment is recommended to confirm exemption eligibility.',btn('Book a specialist consultation — from £149 →','goConsult()',true));
+  }
+}
+function goPlan(){window.location.href=LINKS.plan;}
+function goConsult(){window.location.href=LINKS.consult;}
+function orderNewEpc(){window.location.href='mailto:hello@epc2c.co.uk?subject='+encodeURIComponent('New EPC Order')+'&body='+encodeURIComponent('Property address: '+((selProp&&selProp.addr)||''));}
+function openEmailAssessment(){
+  if(document.getElementById('ea-box'))return;
+  document.getElementById('fr-outcome').insertAdjacentHTML('beforeend',
+    `<div id="ea-box" style="margin-top:12px;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.12);border-radius:9px;padding:13px">
+      <div style="font-size:12.5px;color:rgba(255,255,255,.7);margin-bottom:8px">Enter your email and we'll send your assessment.</div>
+      <input id="ea-email" type="email" placeholder="you@example.com" autocomplete="email" style="width:100%;font-family:var(--sans);font-size:14px;background:rgba(10,20,40,.7);border:0.5px solid rgba(255,255,255,.15);border-radius:7px;padding:10px 12px;color:var(--white);outline:none;box-sizing:border-box"/>
+      <button onclick="sendEmailAssessment()" style="width:100%;margin-top:8px;font-family:var(--sans);font-size:13px;font-weight:600;background:var(--teal);color:var(--navy);border:none;border-radius:7px;padding:11px;cursor:pointer">Send my assessment →</button>
+      <div id="ea-msg" style="font-size:12px;margin-top:8px"></div>
+    </div>`);
+  const f=document.getElementById('ea-email');if(f)f.focus();
+}
+async function sendEmailAssessment(){
+  const email=(document.getElementById('ea-email').value||'').trim();
+  const msg=document.getElementById('ea-msg');
+  if(!/.+@.+\..+/.test(email)){msg.textContent='Please enter a valid email address.';msg.style.color='var(--amber)';return;}
+  msg.textContent='Sending…';msg.style.color='rgba(255,255,255,.5)';
+  try{
+    const works=[...worksSel].map(id=>(WORKS.find(w=>w.id===id)||{}).label).filter(Boolean);
+    const r=await fetch('/api/email-assessment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      email,address:selProp.addr,postcode:selProp.postcode,rrn:selProp.lmkKey,band:selProp.rating,sap:selProp.currentSAP,
+      declarations:declState,completedWorks:works,estimatedPosition:window._frEstimate||''})});
+    if(r.ok){msg.textContent='✓ Sent — check your inbox. We\'ll be in touch shortly.';msg.style.color='var(--teal)';}
+    else{const e=await r.json().catch(()=>({}));msg.textContent='Could not send: '+(e.error||('error '+r.status));msg.style.color='var(--amber)';}
+  }catch(e){msg.textContent='Could not send — please try again.';msg.style.color='var(--amber)';}
 }
 
 const LINKS={
-  plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',
-  survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00'
+  plan:'__REPLACE_WITH_2499_STRIPE_URL__',                        // £24.99 compliance plan — swap in real Stripe link
+  consult:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',       // £149 consultation (confirmed £149)
+  survey:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',        // £149 survey
+  // old £19.99 plan link (dormant): https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00
 };
 
 function showStripeOverlay(){
@@ -1541,7 +1791,7 @@ function startNewSearch(){
   document.getElementById('tool-section').style.display='none';
   const hero=document.getElementById('hero'); if(hero)hero.style.display='';
   const pl=document.getElementById('prop-list'); if(pl)pl.style.display='none';
-  const fr=document.getElementById('free-result'); if(fr)fr.style.display='none';
+  const fr=document.getElementById('about-box'); if(fr)fr.style.display='none';
   const items=document.getElementById('pl-items'); if(items)items.innerHTML='';
   const pc=document.getElementById('pc'); if(pc)pc.value='';
   window._props=[]; selProp=null;
@@ -2193,7 +2443,7 @@ function requestReport(){
 }
 
 document.getElementById('pc').addEventListener('keyup',function(){
-  if(!this.value){document.getElementById('prop-list').style.display='none';document.getElementById('free-result').style.display='none';}
+  if(!this.value){document.getElementById('prop-list').style.display='none';document.getElementById('about-box').style.display='none';}
 });
 
 // Auto-populate postcode from URL ?postcode= param
@@ -2208,6 +2458,8 @@ document.getElementById('pc').addEventListener('keyup',function(){
 })();
 </script>
 
+<!-- DORMANT (reactivate in Section 5) — Stripe redirect overlay + OTP sign-in modal, kept inert. -->
+<script type="text/plain" data-dormant="otp-stripe-overlay">
 <!-- Stripe redirect overlay -->
 <div id="stripe-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,30,51,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
   <div style="font-family:var(--serif);font-size:28px;color:white;margin-bottom:16px">EPC<span style="color:var(--teal)">2</span><em style="font-style:italic">C</em></div>
@@ -2247,9 +2499,11 @@ document.getElementById('pc').addEventListener('keyup',function(){
     <button id="pay-auth-skip" class="pa-skip">Skip &mdash; continue without saving</button>
   </div>
 </div>
+</script>
+<!-- /DORMANT otp-stripe-overlay -->
 
-<!-- Supabase persistence: save selected property + report for signed-in users -->
-<script type="module">
+<!-- DORMANT (reactivate in Section 5) — Supabase persistence + OTP handlers, kept inert. -->
+<script type="text/plain" data-dormant="supabase">
   import { supabase } from '/js/supabase-client.js';
 
   // Persist the selected property and a report. Returns { propertyId, reportId }

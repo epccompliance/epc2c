@@ -1,0 +1,423 @@
+Complete redesign of epc-c-calculator.html.
+Do not commit until all sections confirmed working.
+
+═══════════════════════════════════════
+SECTION 1 — HERO
+═══════════════════════════════════════
+
+Two input fields side by side:
+
+Field 1: House name/number (optional)
+Placeholder: "e.g. 76 or Rose Cottage"
+
+Field 2: Postcode (mandatory *)
+Placeholder: "e.g. WV11 3TY"
+
+Below both fields:
+"Your postcode is not stored"
+Style: small grey text, subtle
+
+Button: [Find my property →]
+
+Logic:
+- Postcode mandatory — button disabled until filled
+- House name/number optional
+- If house name/number filled → filter results 
+  automatically to matching properties
+- If empty → show all results for postcode
+- Always show list for confirmation 
+  even if only one result
+
+═══════════════════════════════════════
+SECTION 2 — PROP LIST
+═══════════════════════════════════════
+
+Appears after search button clicked.
+Natural ascending sort by house number
+(numeric sort not alphabetical)
+
+Header: "X properties found"
+
+If house number entered and filtered:
+"Showing X of Y properties — 
+showing closest matches first"
+
+Each property row shows:
+Address · EPC band badge · EPC date
+
+Note below list:
+"Results show EPCs lodged from 2013 onwards.
+Property not listed? 
+Check the full EPC register →
+[link: find-energy-certificate.service.gov.uk]
+Or your property may need a new EPC assessment.
+[Order new EPC from GoGreen Alliance →]"
+
+When property selected:
+- prop-list disappears completely
+- About Property box appears
+
+═══════════════════════════════════════
+SECTION 3 — ABOUT PROPERTY BOX
+═══════════════════════════════════════
+
+Appears when property selected.
+
+ROW 1:
+Full address
+Postcode on same line
+
+ROW 2:
+Property type · Floor area m² · Local authority
+
+ROW 3:
+EPC [Band] ([Score]) · RRN: XXXX-XXXX-XXXX
+Assessed: DD MMM YYYY · Status: Live/Expired
+
+Status logic:
+EPC date + 10 years vs today
+If expired: show "Expired" in red
+If live: show "Live" in green
+
+DIVIDER
+
+DECLARATIONS
+Default: No for all three
+Two button options each: [Yes] [No]
+
+In a conservation area?     [Yes] [No]
+A listed building?          [Yes] [No]
+Owned less than 6 months?   [Yes] [No]
+
+Below conservation area question:
+"Not sure? Check the national map →"
+Link: https://magic.defra.gov.uk
+
+DIVIDER
+
+COMPLETED WORKS SINCE THIS EPC
+"Select all that apply"
+Toggle buttons — tap to select/deselect
+Selected = highlighted teal
+Deselected = navy outline
+
+[Loft insulation]         [Cavity wall insulation]
+[Internal wall ins]       [External wall ins]
+[Boiler upgrade]          [Heating controls]
+[Solar panels]            [Heat pump]
+[Double glazing]          [Secondary glazing]
+[Draught proofing]        [Floor insulation]
+
+BUTTON:
+[Get Free Report →]
+Full width, teal, prominent
+
+═══════════════════════════════════════
+SECTION 4 — FREE REPORT
+═══════════════════════════════════════
+
+When Get Free Report clicked:
+1. Everything above collapses completely
+   (hero, prop list, about property box)
+2. Slim summary bar appears at very top:
+
+┌────────────────────────────────────────────┐
+│ 76 Prestwood Avenue, WV11 3TY · EPC E (52) │
+│ Listed: No · Conservation: No · Owned >6m  │
+│                              [Start again ×]│
+└────────────────────────────────────────────┘
+
+3. Free report appears below summary bar
+
+─────────────────────────────────────────────
+BAND BAR
+Current EPC position — visual band bar only
+No labels below bar
+Needle showing current position
+
+DATA CONFIDENCE LINE
+Low-Medium · Source: EPC Register
+(single line, right aligned)
+
+─────────────────────────────────────────────
+HEADING:
+"What your property needs to reach EPC C"
+
+EPC RECOMMENDATIONS LIST
+CRITICAL: Use actual description text from API
+Do NOT use hardcoded labels
+Field to use: check API response and use
+the actual recommendation text field
+
+Each recommendation shown as a card:
+[Actual description from API]
+[Indicative cost from API — actual range]
+
+If measure matches declared completed work:
+→ Card turns AMBER
+→ Label: "Declared completed — not yet 
+  reflected in your lodged EPC"
+
+─────────────────────────────────────────────
+PATHWAY ENGINE
+─────────────────────────────────────────────
+
+DATA SOURCE:
+Use Energy-Performance-Rating from each 
+improvement in API recommendations.
+Sequential SAP subtraction:
+Measure 1 uplift = Measure1.EPR - currentSAP
+Measure 2 uplift = Measure2.EPR - Measure1.EPR
+Measure 3 uplift = Measure3.EPR - Measure2.EPR
+
+Current SAP from API.
+Target SAP: 69 (band C threshold).
+Gap = 69 - currentSAP
+
+SUPPLEMENTARY MEASURES (fallback only):
+If API returns fewer than 3 measures add:
+- Draught proofing (uplift: +1, cost: £200-£300, 
+  difficulty: low)
+- Heating controls (uplift: +2, cost: £300-£500,
+  difficulty: low)
+- Cylinder insulation (uplift: +1, cost: £50-£150,
+  difficulty: low)
+
+SOLAR PV SPECIAL RULE:
+If not in API recommendations but adding it
+would achieve C → include in pathway boxes
+with caveat:
+"Solar PV not on your EPC recommendations
+but could contribute toward EPC C —
+subject to planning permission and roof survey"
+
+ASHP SPECIAL RULE:
+Only show for off-gas properties
+Flag: "ASHP suitability requires survey —
+contact GoGreen Alliance for free assessment"
+
+LISTED/CONSERVATION OVERRIDE:
+If listed = Yes OR conservation = Yes:
+Filter measures to low difficulty only:
+heating controls, draught proofing,
+cylinder insulation, low energy lighting
+
+If filtered measures reach C → show normal boxes
+If filtered measures don't reach C:
+→ Skip boxes 1/2/3
+→ Show message:
+"This property's listed/conservation status 
+limits standard improvement options. 
+Only low-disruption internal measures 
+are likely to be permitted."
+→ Go straight to Outcome 4
+
+SCORING SYSTEM:
+Factor 1 — Measures:
+Single = 1, Dual = 2, Three+ = 3
+
+Factor 2 — Cost band:
+Under £2,000 = 1 (Low)
+£2,000-£7,000 = 2 (Medium)
+Over £7,000 = 3 (High)
+
+Factor 3 — Difficulty:
+Low (1): heating controls, draught proofing,
+         cylinder insulation, low energy lighting
+Medium (2): loft insulation, cavity wall,
+            secondary glazing, solar PV
+High (3): internal wall insulation, 
+          external wall insulation,
+          ASHP, floor insulation,
+          first time central heating
+
+Combined score = Factor1 + Factor2 + Factor3
+
+ACHIEVABILITY LABELS:
+Score 3-4: Straightforward
+           "Low cost / Low disruption"
+Score 5-6: Achievable  
+           "Low cost / Some disruption"
+Score 7-8: Challenging
+           "Mid cost / Disruption involved"
+Score 9:   Difficult
+           "High cost / Significant complexities"
+
+─────────────────────────────────────────────
+BOX 1 — SINGLE MEASURE
+─────────────────────────────────────────────
+"[X] single measure installation could 
+achieve EPC C for this property"
+OR
+"No single measure alone achieves EPC C"
+
+If single measure exists show achievability:
+Achievability: [label]
+Estimated cost: [band]
+Disruption: [level]
+
+─────────────────────────────────────────────
+BOX 2 — DUAL MEASURES
+─────────────────────────────────────────────
+"[X] combinations of 2 measures could 
+achieve EPC C for this property"
+OR
+"No 2-measure combination achieves EPC C"
+
+Show achievability for best combination only
+(lowest score = best option)
+
+─────────────────────────────────────────────
+BOX 3 — MULTIPLE MEASURES
+─────────────────────────────────────────────
+"[X] combinations of 3+ measures could 
+achieve EPC C for this property"
+OR
+"3 or more measures required"
+
+─────────────────────────────────────────────
+EXEMPTIONS
+─────────────────────────────────────────────
+"Based on your property details, up to 
+[X] exemptions may potentially apply"
+
+Count logic:
+Listed = Yes → +1 (listed building exemption)
+Conservation = Yes → +1 (consent exemption)
+Owned <6 months = Yes → +1 (new landlord)
+No pathway found → +1 (all improvements made)
+Cost >£10,000 → +1 (cost cap exemption)
+Maximum shown: "up to 5"
+Default (all No): "up to 3 may apply"
+
+─────────────────────────────────────────────
+ACHIEVABILITY SUMMARY
+─────────────────────────────────────────────
+Based on best pathway score found:
+
+Score 3-4:
+"EPC C appears straightforward to achieve
+for this property — low cost, low disruption."
+
+Score 5-6:
+"EPC C is estimated to be achievable
+for this property with some works involved."
+
+Score 7-8:
+"EPC C may be achievable but requires
+significant works and investment."
+
+Score 9 or no pathway or listed/conservation:
+"Standard improvement measures are unlikely
+to achieve EPC C for this property without
+specialist assessment."
+
+─────────────────────────────────────────────
+PENALTY FRAMING
+─────────────────────────────────────────────
+"The cost of ignoring this:
+Non-compliance penalty:   up to £30,000
+Loss of rental income:    potentially £1,000s/month
+Difficulty re-letting:    after 2028 new tenancies
+
+Your full compliance plan: £24.99"
+
+─────────────────────────────────────────────
+YOUR NEXT STEP
+─────────────────────────────────────────────
+ONE of four outcomes shown based on results:
+
+OUTCOME 1 — Declared works likely achieve C:
+Trigger: declared works push estimated SAP to 69+
+
+"Your declared improvements suggest this 
+property may already meet EPC C.
+
+⚠ This is not confirmed compliance.
+Only a newly lodged EPC certificate confirms 
+your legal position for MEES, lettings 
+and mortgage purposes."
+
+[Receive email assessment]
+[Order new EPC — £99 →]
+
+─────────────────────────────────────────────
+OUTCOME 2 — Single or dual measure achieves C:
+Trigger: Box 1 or Box 2 has results
+AND achievability score 3-6
+
+"We believe you can achieve EPC C.
+Let us show you exactly which measures,
+what they cost and what to do next."
+
+[Get my compliance plan — £24.99 →]
+
+─────────────────────────────────────────────
+OUTCOME 3 — 3+ measures required:
+Trigger: Only Box 3 has results
+OR achievability score 7-8
+
+"Achieving EPC C requires significant works
+for this property. Expert guidance is
+recommended before committing to works."
+
+[Book a compliance consultation →]
+Price shown: from £149
+
+─────────────────────────────────────────────
+OUTCOME 4 — Exemption likely:
+Trigger: No pathway found
+OR listed/conservation with no viable measures
+OR achievability score 9
+
+"Standard improvement measures are unlikely
+to achieve EPC C for this property.
+A specialist assessment is recommended
+to confirm exemption eligibility."
+
+[Book a specialist consultation →]
+Price shown: from £149
+
+═══════════════════════════════════════
+THINGS TO REMOVE FROM CALCULATOR PAGE
+═══════════════════════════════════════
+- Pricing tier cards section
+- MEES timeline section
+- Stats strip (2.5M / £30k / 2030 / 7)
+- DEA XML upload panel (hide completely)
+- OTP/magic link sign-in flow
+- Evidence required from exemption panels
+- Band labels below band bar
+- "Works required" box
+- 2028 deadline reference (not confirmed)
+- £19.99 pricing (update to £24.99)
+
+═══════════════════════════════════════
+FIXES INCLUDED IN THIS BUILD
+═══════════════════════════════════════
+- EPC recommendation labels: use actual 
+  API description text not hardcoded labels
+  Console.log raw recommendations response
+  to confirm exact field names before mapping
+- client_reference_id passing to Stripe
+- Natural sort ascending by house number
+- Expired EPC status detection
+- Local authority display
+- Floor area display
+- Construction era display
+
+═══════════════════════════════════════
+DO NOT BUILD YET
+═══════════════════════════════════════
+- Section 5 (tool — new page, separate session)
+- Section 6 (PDF — separate session)
+- Supabase token flow (separate session)
+- Dashboard (separate session)
+
+When complete:
+Confirm each section works before committing.
+Do not commit until all sections confirmed.
+Then:
+git add .
+git commit -m "Calculator redesign — pathway engine, free report, about property box"
+git push origin main

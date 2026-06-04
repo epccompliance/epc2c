@@ -187,6 +187,11 @@ app.get('/api/epc/:lmkKey/recommendations', async (req, res) => {
   }
 });
 
+// POST /api/email-assessment — free-report "email assessment" request (SMTP)
+// On Vercel this is served by api/email-assessment.js; mounted here for local dev.
+const emailAssessment = require('./api/email-assessment');
+app.post('/api/email-assessment', (req, res) => emailAssessment(req, res));
+
 // GET /api/health — confirms server is up and EPC credentials work
 app.get('/api/health', async (req, res) => {
   const url = `${EPC_API_BASE}/api/domestic/search?postcode=WV11+3TY&size=1`;
