@@ -123,8 +123,10 @@ a.accred-badge:hover{color:var(--navy);background:var(--teal);border-color:var(-
 /* TRUST STRIP */
 .trust-strip{background:var(--navy);padding:40px 2rem;border-top:0.5px solid rgba(255,255,255,.06)}
 .trust-inner{max-width:1100px;margin:0 auto}
-.trust-logos{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:20px 40px;margin-top:20px}
+.trust-logos{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:32px;margin-top:20px}
 .trust-logo{font-family:var(--mono);font-size:12px;font-weight:500;color:rgba(255,255,255,.35);letter-spacing:.04em;white-space:nowrap}
+.trust-logo-img{height:40px;width:auto;opacity:.75;filter:grayscale(100%);transition:all .2s ease}
+.trust-logo-img:hover{opacity:1;filter:grayscale(0%)}
 .trust-text{text-align:center;font-size:12px;color:rgba(255,255,255,.28);margin-top:20px;line-height:1.6}
 
 /* TIMELINE */
@@ -444,12 +446,12 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 <section class="trust-strip">
   <div class="trust-inner">
     <div class="trust-logos">
-      <span class="trust-logo">Elmhurst Energy</span>
-      <span class="trust-logo">TrustMark</span>
-      <span class="trust-logo">MCS</span>
-      <span class="trust-logo">PAS 2030</span>
-      <span class="trust-logo">Gas Safe 629994</span>
-      <span class="trust-logo">NICEIC</span>
+      <img class="trust-logo-img" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register" loading="lazy"/>
+      <img class="trust-logo-img" src="/images/elmhurst-logo.jpg" alt="Elmhurst Energy" loading="lazy"/>
+      <img class="trust-logo-img" src="/images/trustmark.png" alt="TrustMark" loading="lazy"/>
+      <img class="trust-logo-img" src="/images/MCS.png" alt="MCS Certified" loading="lazy"/>
+      <img class="trust-logo-img" src="/images/NICEIC.png" alt="NICEIC" loading="lazy"/>
+      <img class="trust-logo-img" src="/images/PAS.png" alt="PAS 2030" loading="lazy"/>
     </div>
     <div class="trust-text">DEA-informed &middot; Built by retrofit installers &middot; Based on official EPC data</div>
   </div>
