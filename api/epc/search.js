@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { val, str } = require('./_certificate');   // {value,language} unwrappers
+const { verifyTurnstile } = require('../_turnstile');
 
 // New "Get Energy Performance of Buildings Data" API (Bearer auth).
 const EPC_TOKEN    = process.env.EPC_API_TOKEN || process.env.EPC_BEARER_TOKEN || process.env.EPC_TOKEN || '';
@@ -30,8 +31,15 @@ function mapRecord(rec) {
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  const { postcode, size } = req.query;
+  const { postcode, size, cf_token } = req.query;
   if (!postcode) { res.status(400).json({ error: 'postcode required', rows: [] }); return; }
+
+  // Cloudflare Turnstile — reject the search unless the visitor passed the check.
+  const ip = (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || '').toString().split(',')[0].trim();
+  if (!(await verifyTurnstile(cf_token, ip))) {
+    res.status(403).json({ error: 'Security check failed — please complete the verification and try again.', rows: [] });
+    return;
+  }
 
   // Normalise: a literal '+' or any spacing collapses to one space, then encode
   // (-> %20, which the API accepts; a raw '+' would be sent as %2B and 400).

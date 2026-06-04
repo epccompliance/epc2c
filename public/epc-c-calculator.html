@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -61,6 +62,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96
 .pc-input:focus{border-color:var(--teal)}
 .find-btn{font-family:var(--sans);font-size:14px;font-weight:500;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:12px 22px;cursor:pointer;transition:background .2s;white-space:nowrap}
 .find-btn:hover{background:var(--teald)}.find-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Turnstile + T&C gate */
+.cf-turnstile{margin-top:12px}
+.terms-row{display:flex;align-items:flex-start;gap:9px;margin-top:12px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.62);line-height:1.5;user-select:none}
+.terms-cb{flex-shrink:0;width:16px;height:16px;margin-top:1px;accent-color:var(--teal);cursor:pointer}
+.terms-row a{color:var(--teal);text-decoration:none}
+.terms-row a:hover{text-decoration:underline}
 
 /* PROP LIST */
 .prop-list{display:none;margin-top:12px;border-top:0.5px solid rgba(255,255,255,.07);padding-top:12px}
@@ -517,6 +524,31 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
           <input class="pc-input" id="pc" type="text" placeholder="e.g. WV11 3TY" maxlength="8" autocomplete="off" oninput="onPcInput()" onkeydown="if(event.key==='Enter')lookup()"/>
         </div>
         <div style="font-size:11px;color:rgba(255,255,255,.32);margin-top:9px">Your postcode is not stored</div>
+
+        <!-- Cloudflare Turnstile -->
+        <div class="cf-turnstile" id="cf-widget"
+             data-sitekey="0x4AAAAAADe0Q0oml8YL8mSM"
+             data-callback="onTurnstileSuccess"
+             data-expired-callback="onTurnstileExpired"
+             data-error-callback="onTurnstileExpired"
+             data-theme="dark"></div>
+        <script>
+          /* Local dev only: Cloudflare's always-pass TEST sitekey lets the widget run on
+             localhost/127.0.0.1 without those hosts being on the live widget's hostname
+             list. Every other host uses the real epc2c.co.uk sitekey above. Runs during
+             parse, before the async Turnstile api.js auto-renders the widget. */
+          if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+            var _w=document.getElementById('cf-widget');
+            if(_w)_w.setAttribute('data-sitekey','1x00000000000000000000AA');
+          }
+        </script>
+
+        <!-- Terms & conditions gate -->
+        <label class="terms-row" for="terms-agree">
+          <input type="checkbox" id="terms-agree" class="terms-cb" onchange="updateFindBtn()"/>
+          <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms &amp; Conditions</a> and consent to my postcode being used to search the EPC register.</span>
+        </label>
+
         <button class="find-btn" id="find-btn" onclick="lookup()" disabled style="width:100%;margin-top:10px">Find my property →</button>
         <div class="prop-list" id="prop-list">
           <div class="prop-list-hdr" id="pl-hdr"></div>
@@ -1017,7 +1049,8 @@ async function fetchEpcProps(postcode){
     };
   }
   const base=PROXY_BASE+'/search?postcode='+encodeURIComponent(postcode);
-  const r=await fetch(base+'&size=5000');
+  const tok=window.turnstileToken?'&cf_token='+encodeURIComponent(window.turnstileToken):'';
+  const r=await fetch(base+'&size=5000'+tok);
   const d=await r.json();
   if(!r.ok)throw new Error(d.error||'EPC API '+r.status);
   let props=(d.rows||[]).map((row,i)=>mapRow(row,i));
@@ -1207,14 +1240,27 @@ let xmlUploaded=false, xmlDimensions=null, ownedOver6m=false;
 */
 
 function bi(r){return BANDS.indexOf(r)}
-// SECTION 1 — postcode is mandatory; enable the search button only once it has 3+ chars.
-function onPcInput(){
+
+// ── Cloudflare Turnstile ───────────────────────────────────────────────────────
+// The widget calls onTurnstileSuccess with a single-use token once the visitor
+// passes. We stash it and send it with the EPC search for server-side verification.
+window.turnstileToken=null;
+function onTurnstileSuccess(token){window.turnstileToken=token;}
+function onTurnstileExpired(){window.turnstileToken=null;}
+
+// SECTION 1 — postcode is mandatory AND the T&C box must be ticked before searching.
+function onPcInput(){updateFindBtn();}
+function updateFindBtn(){
   const v=(document.getElementById('pc').value||'').replace(/\s/g,'');
-  const b=document.getElementById('find-btn'); if(b)b.disabled=v.length<3;
+  const cb=document.getElementById('terms-agree');
+  const agreed=cb?cb.checked:true;
+  const b=document.getElementById('find-btn'); if(b)b.disabled=(v.length<3)||!agreed;
 }
 async function lookup(){
   const pc=document.getElementById('pc').value.trim().toUpperCase().replace(/\s/g,'');
   if(pc.length<3)return;
+  const _terms=document.getElementById('terms-agree');   // enforce T&C on the Enter-key path too
+  if(_terms&&!_terms.checked)return;
   const btn=document.getElementById('find-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Searching…';
   try{
@@ -1226,6 +1272,8 @@ async function lookup(){
     showApiError(err.message);
   }finally{
     btn.disabled=false;btn.textContent='Find my property →';
+    // Turnstile tokens are single-use — reset so the next search gets a fresh one.
+    try{if(window.turnstile){window.turnstileToken=null;turnstile.reset();}}catch(e){}
   }
 }
 function showNoResults(){

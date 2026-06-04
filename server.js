@@ -16,6 +16,7 @@ const cors    = require('cors');
 const crypto  = require('crypto');
 const path    = require('path');
 const fs      = require('fs');
+const { verifyTurnstile } = require('./api/_turnstile');
 
 const app = express();
 const DIR = __dirname;
@@ -137,8 +138,14 @@ app.get('/get-property/:id', (req, res) => {
 
 // GET /api/epc/search?postcode=WV11+3TY&size=5000
 app.get('/api/epc/search', async (req, res) => {
-  const { postcode, size } = req.query;
+  const { postcode, size, cf_token } = req.query;
   if (!postcode) return res.status(400).json({ error: 'postcode required', rows: [] });
+
+  // Cloudflare Turnstile — reject the search unless the visitor passed the check.
+  const ip = (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').toString().split(',')[0].trim();
+  if (!(await verifyTurnstile(cf_token, ip))) {
+    return res.status(403).json({ error: 'Security check failed — please complete the verification and try again.', rows: [] });
+  }
 
   // Normalise '+'/spaces to one space, then encode (-> %20; a raw '+' would 400).
   const pc = String(postcode).trim().replace(/[\s+]+/g, ' ');
