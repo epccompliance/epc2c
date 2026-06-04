@@ -536,7 +536,8 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
             <div id="ab-meta" style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px"></div>
             <div id="ab-epc" style="font-size:12px;color:rgba(255,255,255,.55);margin-top:6px;line-height:1.7"></div>
           </div>
-          <div class="fr-body">
+          <div id="ab-badge" style="display:none;padding:0 16px 16px"></div>
+          <div class="fr-body" id="ab-body">
             <!-- DECLARATIONS -->
             <div class="bb-label" style="margin-bottom:8px">Declarations</div>
             <div id="ab-declarations"></div>
@@ -1340,8 +1341,21 @@ function showAboutBox(p){
     `EPC <strong style="color:var(--white)">${p.rating}</strong>${score?` (${score})`:''} &middot; RRN: ${p.lmkKey||'—'} &middot; Assessed: ${fmtEpcDate(p.lodgementDate)} &middot; Status: <span style="color:${st.col};font-weight:600">${st.txt}</span>`;
   declState={conservation:false,listed:false,owned6:false};
   worksSel.clear();
-  renderDeclarations();
-  renderWorks();
+  // Already EPC C or above → just a green badge; collapse declarations + completed works.
+  const sap=p.currentSAP||parseInt(d['current-energy-efficiency'])||0;
+  const alreadyC=sap>=69||['A','B','C'].includes(p.rating);
+  const badge=document.getElementById('ab-badge');
+  const body=document.getElementById('ab-body');
+  if(alreadyC){
+    badge.style.display='block';
+    badge.innerHTML='<div style="display:flex;align-items:center;gap:9px;background:var(--epc-c);border-radius:10px;padding:13px 16px"><span style="font-size:18px;font-weight:800;color:#fff">✓</span><span style="font-size:15px;font-weight:700;color:#fff">Already meets EPC C — no action required</span></div>';
+    body.style.display='none';
+  }else{
+    badge.style.display='none';
+    body.style.display='block';
+    renderDeclarations();
+    renderWorks();
+  }
   const ab=document.getElementById('about-box');
   ab.style.display='block';
   setTimeout(()=>ab.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
