@@ -54,8 +54,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96
 .hero-accred{margin-top:36px;animation:fadeUp .5s .3s ease both}
 .accred-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
 .accred-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:28px}
-.accred-logo{height:36px;width:auto;opacity:.75;filter:grayscale(100%);transition:all .2s ease}
-.accred-logo:hover{opacity:1;filter:grayscale(0%)}
+.accred-logo{height:48px;width:auto;max-width:130px;object-fit:contain;opacity:.85;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transition:all .2s ease}
+.accred-logo:hover{opacity:1}
 
 /* SPLIT SECTION */
 .split{background:var(--navy);padding:0 0 72px}
@@ -125,8 +125,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96
 .trust-inner{max-width:1100px;margin:0 auto}
 .trust-logos{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:32px;margin-top:20px}
 .trust-logo{font-family:var(--mono);font-size:12px;font-weight:500;color:rgba(255,255,255,.35);letter-spacing:.04em;white-space:nowrap}
-.trust-logo-img{height:40px;width:auto;opacity:.75;filter:grayscale(100%);transition:all .2s ease}
-.trust-logo-img:hover{opacity:1;filter:grayscale(0%)}
+.trust-logo-img{height:48px;width:auto;max-width:130px;object-fit:contain;opacity:.85;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transition:all .2s ease}
+.trust-logo-img:hover{opacity:1}
 .trust-text{text-align:center;font-size:12px;color:rgba(255,255,255,.28);margin-top:20px;line-height:1.6}
 
 /* TIMELINE */
@@ -235,12 +235,11 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     <div class="hero-accred">
       <div class="accred-label">Accredited &amp; certified</div>
       <div class="accred-row">
-        <a href="https://www.gassaferegister.co.uk/checkbusinessresults?cp=8dbTCMJeQPJDla%252btm2cGo71Ps4f7leERBZL58Pwb7VUoiI43sOv%252f39a8u4l3%252f3rQ" target="_blank" rel="noopener"><img class="accred-logo" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register" loading="lazy"/></a>
-        <img class="accred-logo" src="/images/elmhurst-logo.jpg" alt="Elmhurst Energy" loading="lazy"/>
-        <a href="https://www.trustmark.org.uk/homeowner/find-a-tradesperson?business-name=GoGreen%20Alliance%20Ltd&amp;search=true" target="_blank" rel="noopener"><img class="accred-logo" src="/images/trustmark.png" alt="TrustMark" loading="lazy"/></a>
-        <a href="https://mcscertified.com/find-an-installer/gogreen-alliance-ltd/" target="_blank" rel="noopener"><img class="accred-logo" src="/images/MCS.png" alt="MCS Certified" loading="lazy"/></a>
-        <img class="accred-logo" src="/images/NICEIC.png" alt="NICEIC" loading="lazy"/>
-        <img class="accred-logo" src="/images/PAS.png" alt="PAS 2030" loading="lazy"/>
+        <a href="https://www.trustmark.org.uk/homeowner/find-a-tradesperson?business-name=GoGreen%20Alliance%20Ltd&amp;search=true" target="_blank" rel="noopener"><img class="accred-logo" src="/images/trustmark.png" alt="TrustMark"/></a>
+        <img class="accred-logo" src="/images/Elmhurst.png" alt="Elmhurst Energy"/>
+        <img class="accred-logo" src="/images/PAS.png" alt="BBA"/>
+        <a href="https://www.gassaferegister.co.uk/checkbusinessresults?cp=8dbTCMJeQPJDla%252btm2cGo71Ps4f7leERBZL58Pwb7VUoiI43sOv%252f39a8u4l3%252f3rQ" target="_blank" rel="noopener"><img class="accred-logo" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register"/></a>
+        <a href="https://mcscertified.com/find-an-installer/gogreen-alliance-ltd/" target="_blank" rel="noopener"><img class="accred-logo" src="/images/MCS.png" alt="MCS Certified"/></a>
       </div>
     </div>
   </div>
@@ -446,12 +445,11 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 <section class="trust-strip">
   <div class="trust-inner">
     <div class="trust-logos">
-      <img class="trust-logo-img" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register" loading="lazy"/>
-      <img class="trust-logo-img" src="/images/elmhurst-logo.jpg" alt="Elmhurst Energy" loading="lazy"/>
-      <img class="trust-logo-img" src="/images/trustmark.png" alt="TrustMark" loading="lazy"/>
-      <img class="trust-logo-img" src="/images/MCS.png" alt="MCS Certified" loading="lazy"/>
-      <img class="trust-logo-img" src="/images/NICEIC.png" alt="NICEIC" loading="lazy"/>
-      <img class="trust-logo-img" src="/images/PAS.png" alt="PAS 2030" loading="lazy"/>
+      <img class="trust-logo-img" src="/images/trustmark.png" alt="TrustMark"/>
+      <img class="trust-logo-img" src="/images/Elmhurst.png" alt="Elmhurst Energy"/>
+      <img class="trust-logo-img" src="/images/PAS.png" alt="BBA"/>
+      <img class="trust-logo-img" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register"/>
+      <img class="trust-logo-img" src="/images/MCS.png" alt="MCS Certified"/>
     </div>
     <div class="trust-text">DEA-informed &middot; Built by retrofit installers &middot; Based on official EPC data</div>
   </div>
