@@ -1451,7 +1451,7 @@ const WORK_UPLIFT={loft:1,cavity:2,iwi:2,ewi:2,boiler:1,controls:2,solar:5,heatp
 function measureDifficulty(name){
   const t=(name||'').toLowerCase();
   if(/heating control|draught|cylinder|low energy lighting|hot water/.test(t))return 1;
-  if(/internal wall|external wall|solid wall|air or ground source|heat pump|floor insulation|first time central|central heating/.test(t))return 3;
+  if(/internal wall|external wall|solid wall|air or ground source|heat pump|floor insulation|room.?in.?roof|flat roof|sloping ceiling|first time central|central heating/.test(t))return 3;
   if(/loft|cavity|secondary glaz|solar|photovoltaic|\bpv\b/.test(t))return 2;
   return 2;
 }
@@ -1472,6 +1472,78 @@ function recMatchesDeclaredWork(name){
 function supKey(name){const t=(name||'').toLowerCase();if(/draught/.test(t))return'draught';if(/heating control/.test(t))return'controls';if(/cylinder|hot water/.test(t))return'cylinder';return t;}
 function estimateUplift(name){const t=(name||'').toLowerCase();if(/heating control/.test(t))return 2;return 1;}
 
+/* Plain-English EPC descriptor interpreter.
+   interpret(type, rawDescription) -> { plain, tone, assumed }   tone: 'bad'|'mid'|'good' */
+function interpret(type, raw){
+  const d=(raw||'').toLowerCase();
+  const assumed=/assumed/.test(d);
+  const mm=(d.match(/(\d+)\s*mm/)||[])[1];
+  const A = assumed ? ' (assumed during the assessment, not measured)' : '';
+  let plain='', tone='mid';
+  switch(type){
+    case 'roof':
+      if(/room/.test(d)){ if(/no insulation/.test(d)){plain='Your loft rooms appear to have no insulation'+A+'.';tone='bad';} else {plain='Your loft rooms are insulated'+A+'.';tone='good';} }
+      else if(/flat/.test(d)){ plain=/no insulation/.test(d)?'You have a flat roof with no insulation'+A+'.':'You have an insulated flat roof'+A+'.'; tone=/no insulation/.test(d)?'bad':'good'; }
+      else if(mm){ const n=+mm; plain=n>=270?'You have about '+n+'mm of loft insulation'+A+' — that already meets the modern standard.':'You have about '+n+'mm of loft insulation'+A+'. Today’s standard is around 270mm, so there’s room to top it up.'; tone=n>=270?'good':(n>=100?'mid':'bad'); }
+      else if(/no insulation/.test(d)){plain='Your roof has no insulation'+A+'.';tone='bad';}
+      else {plain='Your roof is insulated'+A+'.';tone='good';}
+      break;
+    case 'walls': {
+      const kind=/cavity/.test(d)?'cavity':/timber frame/.test(d)?'timber-frame':/(sandstone|limestone|granite|stone)/.test(d)?'stone':/system/.test(d)?'system-built':/solid brick|solid/.test(d)?'solid brick':'';
+      if(/filled cavity|filled/.test(d)){plain='Your '+(kind||'cavity')+' walls are already insulated.';tone='good';}
+      else if(/partial/.test(d)){plain='Your '+(kind||'')+' walls are only partly insulated'+A+'.';tone='mid';}
+      else if(/no insulation/.test(d)){ if(kind==='cavity'){plain='You have cavity walls with no insulation'+A+' — these can usually be filled quickly and cheaply.';tone='bad';} else if(kind==='solid brick'||kind==='stone'){plain='You have '+kind+' walls with no insulation'+A+'. Insulating solid walls is more involved and costly.';tone='bad';} else {plain='Your walls have no insulation'+A+'.';tone='bad';} }
+      else if(/insulated/.test(d)){plain='Your '+(kind||'')+' walls are insulated'+A+'.';tone='good';}
+      else {plain='Wall construction: '+(kind||'recorded')+A+'.';tone='mid';}
+      break; }
+    case 'floor': {
+      const ftype=/suspended/.test(d)?'suspended timber':/solid/.test(d)?'solid':'';
+      if(/no insulation/.test(d)){plain='You have a '+(ftype||'')+' floor with no insulation'+A+'.'+(ftype==='solid'?' Insulating a solid floor is one of the more disruptive jobs.':'');tone='bad';}
+      else if(/insulated/.test(d)){plain='Your floor is insulated'+A+'.';tone='good';}
+      else {plain='Floor: '+(ftype||'recorded')+A+'.';tone='mid';}
+      break; }
+    case 'windows':
+      if(/single/.test(d)&&!/double/.test(d)){plain='Your windows are single glazed — the least efficient type.';tone='bad';}
+      else if(/partial|some/.test(d)){plain='Your windows are partly double glazed.';tone='mid';}
+      else if(/secondary/.test(d)){plain='You have secondary glazing fitted.';tone='mid';}
+      else if(/high performance|triple/.test(d)){plain='You have high-performance glazing.';tone='good';}
+      else if(/double/.test(d)){plain='Your windows are '+(/mostly/.test(d)?'mostly ':'fully ')+'double glazed.';tone='good';}
+      else {plain='Glazing recorded as: '+raw+'.';tone='mid';}
+      break;
+    case 'heating': {
+      const fuel=/mains gas|natural gas/.test(d)?'mains gas':/lpg/.test(d)?'LPG':/oil/.test(d)?'oil':/electric/.test(d)?'electric':/community/.test(d)?'a community scheme':'';
+      if(/heat pump/.test(d)){plain='Heating is a heat pump'+(fuel?' ('+fuel+')':'')+'.';tone='good';}
+      else if(/storage heater/.test(d)){plain='You have electric storage heaters — typically expensive to run.';tone='bad';}
+      else if(/room heater/.test(d)){plain='Heating is from individual room heaters'+(fuel?' ('+fuel+')':'')+'.';tone='mid';}
+      else if(/boiler/.test(d)){plain='Heating is a '+(fuel||'')+' boiler with radiators.';tone='mid';}
+      else {plain='Main heating: '+raw+'.';tone='mid';}
+      break; }
+    case 'lighting': {
+      const pc=(d.match(/(\d+)\s*%/)||[])[1];
+      if(/no low energy/.test(d)||pc==='0'){plain='None of your light fittings are low-energy.';tone='bad';}
+      else if(pc){plain=pc+'% of your light fittings are low-energy.';tone=+pc>=70?'good':'mid';}
+      else {plain='Lighting: '+raw+'.';tone='mid';}
+      break; }
+    default: plain=raw; tone='mid';
+  }
+  return { plain, tone, assumed };
+}
+
+/* which descriptor field interprets a given recommendation name */
+function fieldFor(rec){
+  const t=(rec||'').toLowerCase();
+  if(/roof|loft|sloping|room.?in.?roof/.test(t))return 'roof';
+  if(/floor/.test(t))return 'floor';
+  if(/wall|cavity/.test(t))return 'walls';
+  if(/glaz|window/.test(t))return 'windows';
+  if(/heat pump|boiler|heating|storage/.test(t))return 'heating';
+  if(/light/.test(t))return 'lighting';
+  return null;
+}
+
+/* descriptor type → parsed certificate field */
+const fieldMap={roof:'roof-description',walls:'walls-description',floor:'floor-description',windows:'windows-description',heating:'main-heating-description',lighting:'lighting-description'};
+
 // Build the measure set with a per-measure standalone uplift estimate.
 // The API only gives a cumulative energy-performance-rating, so the per-measure
 // uplift is the marginal gain (EPRᵢ − EPRᵢ₋₁) — order-dependent, hence indicative.
@@ -1490,56 +1562,141 @@ function buildMeasures(apiMeasures,currentSAP,listedOrCons){
   }
   return ms.slice(0,14);   // cap for the 2^n combination enumeration
 }
-function comboScore(size,cost,maxDiff){
-  const f1=Math.min(3,size);
-  const f2=cost>7000?3:cost>=2000?2:1;
-  return {score:f1+f2+maxDiff,f1,f2,diff:maxDiff,cost};
+// ============================================================================
+// v1 DIFFICULTY ENGINE — ported VERBATIM from engine/engine-v1.js (the spec).
+//   • ONE engine, ONE cost source (EPC indicative via parseCostRange), computed ONCE.
+//   • freeReport() is paidReport() with detail rows REDACTED. Verdict is FROZEN
+//     at generation; the renderers READ these reports, they never recompute.
+//   ⚠ Do NOT change the weights (0.40/0.35/0.25) or the band thresholds
+//     (2.0/3.0/4.0) — pending Marcus's sign-off. Identical to engine-v1.js.
+//   (sapToBand and TARGET_SAP are reused from the definitions above.)
+// ============================================================================
+const COST_CAP=10000;                          // £10,000 cost cap (Warm Homes Plan, Jan 2026)
+const costMid=m=>Math.round((m.cMin+m.cMax)/2);
+function costScore(c){return c<2000?1:c<5000?2:c<7500?3:c<10000?4:5;}
+function disruptionScore(name){
+  const t=(name||'').toLowerCase();
+  if(/first time central|solid floor/.test(t))return 5;
+  if(/internal wall|external wall|heat pump|air or ground|room.?in.?roof|flat roof|sloping/.test(t))return 4;
+  if(/floor insulation/.test(t))return /suspended/.test(t)?3:4;
+  if(/solar|photovolt|\bpv\b|double glaz|secondary glaz/.test(t))return 3;
+  if(/loft|cavity/.test(t))return 2;
+  if(/heating control|draught|cylinder|low energy|hot water/.test(t))return 1;
+  return 2;
 }
-// Enumerate every measure combination; count those reaching C by size-bucket
-// (1, 2, 3+), and track the CHEAPEST qualifying combination per bucket and overall.
-function evalCombos(ms,currentSAP){
-  const n=ms.length; let box1=0,box2=0,box3=0;
-  const cheapest={1:null,2:null,3:null}; let cheapestOverall=null;
-  for(let mask=1;mask<(1<<n);mask++){
-    let up=0,cost=0,cMin=0,cMax=0,size=0,maxDiff=0;
-    for(let i=0;i<n;i++) if(mask&(1<<i)){const m=ms[i];up+=m.uplift;cost+=m.cost;cMin+=m.cMin;cMax+=m.cMax;size++;if(m.difficulty>maxDiff)maxDiff=m.difficulty;}
-    if(currentSAP+up<TARGET_SAP) continue;
-    const bucket=size>=3?3:size;
-    if(bucket===1)box1++;else if(bucket===2)box2++;else box3++;
-    const sc=comboScore(size,cost,maxDiff);
-    const rec={size,cost,cMin,cMax,score:sc.score,f1:sc.f1,f2:sc.f2,diff:maxDiff};
-    if(!cheapest[bucket]||cost<cheapest[bucket].cost)cheapest[bucket]=rec;
-    if(!cheapestOverall||cost<cheapestOverall.cost)cheapestOverall=rec;
+const difficultyIndex=(C,D,X)=>0.40*C+0.35*D+0.25*X;
+function verdictFromIndex(index,C,D,X){
+  let b=index<=2.0?1:index<=3.0?2:index<=4.0?3:4;
+  if(Math.max(C,D,X)>=4)b=Math.max(b,3);       // any single axis >=4 forces >= Challenging
+  return ['','Straightforward','Achievable','Challenging','Major Project'][b];
+}
+// Every non-empty subset of the available measures, with its totals.
+function enumerateCombos(measures,baseSAP){
+  const n=measures.length,out=[];
+  for(let k=1;k<(1<<n);k++){
+    let uplift=0,cost=0,cMin=0,cMax=0;const sub=[];
+    for(let i=0;i<n;i++)if(k&(1<<i)){
+      const m=measures[i];
+      uplift+=m.uplift;cost+=costMid(m);cMin+=m.cMin;cMax+=m.cMax;sub.push(m);
+    }
+    out.push({uplift,cost,cMin,cMax,size:sub.length,measures:sub,finalSAP:baseSAP+uplift});
   }
-  return {box1,box2,box3,cheapest,best:cheapestOverall};
+  return out;
 }
+// Best improvement achievable within the cap (max uplift; tie-break cheapest).
+function bestWithinCap(combos,cap){
+  return combos.filter(c=>c.cost<=cap).sort((a,b)=>b.uplift-a.uplift||a.cost-b.cost)[0]||null;
+}
+// THE SINGLE COMPUTATION — call once per property.
+function evaluate(property){
+  const {currentSAP,measures}=property;
+  if(currentSAP>=TARGET_SAP)                    // gate: already at C -> no engine run
+    return {kind:'already',currentSAP,band:sapToBand(currentSAP)};
+  const all=enumerateCombos(measures,currentSAP);
+  const toC=all.filter(c=>c.finalSAP>=TARGET_SAP&&c.cost<=COST_CAP).sort((a,b)=>a.cost-b.cost);
+  if(toC.length){
+    const route=toC[0];                          // cheapest route to C within cap
+    const C=costScore(route.cost);
+    const D=Math.max(...route.measures.map(m=>disruptionScore(m.name)));
+    const X=Math.min(4,route.size);
+    const index=difficultyIndex(C,D,X);
+    return {kind:'reach',route,C,D,X,index,verdict:verdictFromIndex(index,C,D,X),
+      minMeasures:Math.min(...toC.map(c=>c.size)),routeCount:toC.length};
+  }
+  const cheapestToC=all.filter(c=>c.finalSAP>=TARGET_SAP).sort((a,b)=>a.cost-b.cost)[0]||null;
+  const within=bestWithinCap(all,COST_CAP);
+  return {kind:'exempt',verdict:'Exemption Candidate',
+    cheapestToCCost:cheapestToC?cheapestToC.cost:null,within,withinBand:sapToBand(within.finalSAP)};
+}
+// FREE REPORT — REDACTED view of the one computation (diagnosis only; no measures).
+function freeReport(r){
+  if(r.kind==='already')return {verdict:'Likely compliant',band:r.band,cta:'Order a new EPC — £99'};
+  if(r.kind==='reach')return {
+    verdict:r.verdict,outlookMin:r.route.cMin,outlookMax:r.route.cMax,
+    disruption:['','Minimal','Low','Moderate','High','Major'][r.D],
+    flexibility:`as few as ${r.minMeasures} measure${r.minMeasures>1?'s':''} · ${r.routeCount} route${r.routeCount>1?'s':''}`,
+    exemption:'No',
+    cta:r.verdict==='Major Project'?'Book a consultation — £149':'Get my plan — £24.99'};
+  return {verdict:r.verdict,bestReachableBand:r.withinBand,bestReachableSAP:r.within.finalSAP,
+    outlookMin:r.within.cMin,outlookMax:r.within.cMax,exemption:'Likely',cta:'Book a specialist — £149'};
+}
+// PAID REPORT — FULL view of the SAME computation (prescription). No recomputation.
+function paidReport(r){
+  if(r.kind==='already')return {verdict:'Likely compliant',note:'Already meets C — lodge a new EPC (£99).'};
+  if(r.kind==='reach')return {verdict:r.verdict,
+    measures:r.route.measures.map(m=>({name:m.name,cost:costMid(m)})),
+    total:r.route.cost,projectedSAP:r.route.finalSAP,projectedBand:sapToBand(r.route.finalSAP)};
+  return {verdict:r.verdict,withinCapMeasures:r.within.measures.map(m=>({name:m.name,cost:costMid(m)})),
+    withinCapSpend:r.within.cost,reaches:`${r.withinBand} (${r.within.finalSAP}) — short of C`,
+    next:'register cost-cap exemption',cheapestToCCost:r.cheapestToCCost};
+}
+
+// Dev-build integrity canary — the GOVERNING RULE, checked on every render.
+const ENGINE_DEV=/^(localhost|127\.|0\.0\.0\.0|\[?::1)/.test(location.hostname)||location.protocol==='file:';
+function assertIntegrity(R,free,paid){
+  if(!free||!paid)return;
+  if(free.verdict!==paid.verdict)
+    console.error('[integrity] verdict deviates — free:',free.verdict,'paid:',paid.verdict);
+  if(R.kind==='reach'&&!(paid.total>=free.outlookMin&&paid.total<=free.outlookMax))
+    console.error('[integrity] paid total £'+paid.total+' outside free outlook £'+free.outlookMin+'–£'+free.outlookMax);
+  if(R.kind==='exempt'&&!(paid.withinCapSpend>=free.outlookMin&&paid.withinCapSpend<=free.outlookMax))
+    console.error('[integrity] within-cap spend £'+paid.withinCapSpend+' outside free outlook £'+free.outlookMin+'–£'+free.outlookMax);
+}
+// Shown wherever costs appear (free & paid). v1 cost source = EPC indicative figures.
+const COST_DISCLAIMER='Cost estimates are indicative, based on the official EPC register’s figures, and are a guide only. Actual installer quotes may be higher. Get quotes before committing to works.';
+
+// One run of the engine, wrapped with the app's funnel flags. The renderers READ
+// the returned free/paid reports — they do not re-run any scoring.
 function evalReport(apiMeasures,currentSAP){
   const listedOrCons=declState.listed||declState.conservation;
   const ms=buildMeasures(apiMeasures,currentSAP,listedOrCons);
-  const c=evalCombos(ms,currentSAP);
-  const anyReachesC=(c.box1+c.box2+c.box3)>0;
-  const noViable=!anyReachesC;
-  const best=c.best;
-  const declUplift=[...worksSel].reduce((a,id)=>a+(WORK_UPLIFT[id]||0),0);
+  const R=evaluate({currentSAP,measures:ms});
+  const free=freeReport(R);
+  const paid=paidReport(R);
+  if(ENGINE_DEV)assertIntegrity(R,free,paid);
+
   const alreadyC=currentSAP>=TARGET_SAP;
+  const declUplift=[...worksSel].reduce((a,id)=>a+(WORK_UPLIFT[id]||0),0);
   const declaredReachesC=!alreadyC&&worksSel.size>0&&(currentSAP+declUplift)>=TARGET_SAP;
-  const bestCostMax=best?best.cMax:apiMeasures.reduce((a,m)=>a+(m.cMax||0),0);
+
+  // Verdict → funnel outcome / CTA (per brief):
+  //  Likely compliant → 1 (£99 EPC) · Straightforward/Achievable/Challenging → 2 (£24.99 plan)
+  //  Major Project → 3 (£149 consultation) · Exemption Candidate → 4 (£149 specialist)
+  let outcome;
+  if(alreadyC||declaredReachesC)outcome=1;
+  else if(R.kind==='exempt')outcome=4;
+  else if(free.verdict==='Major Project')outcome=3;
+  else outcome=2;
+
   let exCount=0;
   if(declState.listed)exCount++;
   if(declState.conservation)exCount++;
   if(declState.owned6)exCount++;
-  if(noViable)exCount++;
-  if(bestCostMax>10000)exCount++;
+  if(R.kind==='exempt')exCount++;
   const exShown=Math.min(5,3+exCount);
-  // Outcome is driven by HOW MANY measures are needed, not by cost alone:
-  // achievable with 1–2 measures → sell the £24.99 plan; only 3+ → consultation;
-  // nothing reaches C (or 3+ are very difficult) → exemption/specialist route.
-  let outcome;
-  if(alreadyC||declaredReachesC)outcome=1;
-  else if(noViable)outcome=4;
-  else if(c.box1>0||c.box2>0)outcome=2;
-  else outcome=(best.score>=9)?4:3;
-  return {listedOrCons,box1:c.box1,box2:c.box2,box3:c.box3,cheapest:c.cheapest,best,anyReachesC,noViable,exShown,outcome,alreadyC,declaredReachesC};
+
+  return {R,free,paid,ms,listedOrCons,alreadyC,declaredReachesC,outcome,exShown,
+    verdict:free.verdict,noViable:R.kind==='exempt'};
 }
 
 function getFreeReport(){
@@ -1560,10 +1717,12 @@ function buildFreeReport(p){
   document.getElementById('fr-needle').style.left=NP[p.rating]||'5%';
 
   renderFrGap(p.rating,currentSAP);
-  renderFrRecs(apiMeasures);
+  renderFrRecs(apiMeasures,d);
   const r=evalReport(apiMeasures,currentSAP);
-  const a=r.best?achievability(r.best.score):null;
-  window._frEstimate='EPC '+p.rating+' ('+currentSAP+'). '+(r.outcome===1?'Declared works may reach EPC C.':r.noViable?'Standard measures unlikely to reach EPC C — exemption likely.':a?('EPC C '+a.label.toLowerCase()+' ('+a.desc+').'):'');
+  window._frEstimate='EPC '+p.rating+' ('+currentSAP+'). '+(
+    r.outcome===1?'Declared works may reach EPC C.':
+    r.R.kind==='exempt'?'Standard measures unlikely to reach EPC C within the £10k cap — exemption likely.':
+    ('EPC C verdict: '+r.free.verdict+'.'));
 
   renderFrBoxes(r);
   renderFrExemptions(r);
@@ -1587,11 +1746,14 @@ function renderFrGap(rating,currentSAP){
   const mid=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px"><div style="font-size:24px;font-weight:800;color:var(--teal);line-height:1">&rarr;</div><div style="font-size:13.5px;font-weight:800;color:var(--white);white-space:nowrap">${points} point${points!==1?'s':''} to C</div></div>`;
   el.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-bottom:20px">${box(rating,currentSAP,EPC_COL[rating]||'var(--epc-e)')}${mid}${box('C',TARGET_SAP,'var(--epc-c)')}</div>`;
 }
-function renderFrRecs(ms){
+function renderFrRecs(ms,cert){
+  cert=cert||{};
   const el=document.getElementById('fr-recs');
   const head='<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:3px">Recommendations from your EPC</div>'+
     '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:11px">Source: Official EPC Register — data specific to this property</div>';
   if(!ms.length){el.innerHTML=head+'<div style="font-size:14px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:14px">Your EPC did not return specific recommendations for this property.</div>';return;}
+  const TONE={bad:'var(--red)',mid:'var(--amber)',good:'var(--green)'};
+  const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   el.innerHTML=head+ms.map(m=>{
     const declared=recMatchesDeclaredWork(m.name);
     const bg=declared?'var(--amberp)':'var(--white)';
@@ -1599,10 +1761,24 @@ function renderFrRecs(ms){
     const cost=(m.cMin||m.cMax)?('£'+(m.cMin||0).toLocaleString()+(m.cMax&&m.cMax!==m.cMin?'–£'+m.cMax.toLocaleString():'')):'';
     const costEl=cost?`<div style="flex-shrink:0;font-size:13px;font-family:var(--mono);color:var(--teald)">${cost}</div>`:'';
     const tag=declared?'<span style="flex-shrink:0;font-size:10.5px;font-weight:600;color:var(--amber);background:rgba(217,119,6,.15);border-radius:5px;padding:2px 8px;white-space:nowrap">Declared to be completed</span>':'';
-    return `<div style="display:flex;align-items:center;gap:10px;background:${bg};border:0.5px solid ${bd};border-radius:9px;padding:11px 13px;margin-bottom:6px">
-      <div style="flex:1;min-width:0;font-size:14.5px;font-weight:500;color:var(--char);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(m.name||'').replace(/"/g,'&quot;')}">${m.name||'Improvement'}</div>${costEl}${tag}
+    // Plain-English descriptor interpretation, beneath the measure name.
+    const f=fieldFor(m.name);
+    const raw=f?(cert[fieldMap[f]]||''):'';
+    const {plain,tone,assumed}=interpret(f,raw);
+    let plainEl='';
+    if(f&&plain){
+      const assumedTag=assumed?'<span style="flex-shrink:0;font-size:9.5px;font-weight:600;color:var(--muted);background:rgba(0,0,0,.05);border-radius:4px;padding:1px 6px;white-space:nowrap">assumed</span>':'';
+      plainEl=`<div style="display:flex;align-items:flex-start;gap:7px;margin-top:5px">
+        <span style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:${TONE[tone]||'var(--amber)'};margin-top:5px"></span>
+        <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--muted)">${esc(plain)}</span>${assumedTag}
+      </div>`;
+    }
+    return `<div style="background:${bg};border:0.5px solid ${bd};border-radius:9px;padding:11px 13px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0;font-size:14.5px;font-weight:500;color:var(--char);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(m.name)}">${esc(m.name)||'Improvement'}</div>${costEl}${tag}
+      </div>${plainEl}
     </div>`;
-  }).join('');
+  }).join('')+`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:8px">${COST_DISCLAIMER}</div>`;
 }
 function renderFrBoxes(r){
   const el=document.getElementById('fr-boxes');
@@ -1614,40 +1790,46 @@ function renderFrBoxes(r){
     el.innerHTML=`<div style="background:rgba(217,119,6,.1);border:0.5px solid rgba(217,119,6,.4);border-radius:9px;padding:14px;font-size:13px;color:var(--white);line-height:1.6">This property's listed / conservation status limits standard improvement options. Only low-disruption internal measures are likely to be permitted.</div>`;
     return;
   }
-  // Count of qualifying combinations per box; the actual measures are revealed in the paid tool.
-  const bestBucket=r.best?(r.best.size>=3?3:r.best.size):0;
-  const card=(count,text,bucket)=>{
-    let ach='';
-    if(count>0&&bucket===bestBucket&&r.best){const a=achievability(r.best.score);
-      ach=`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
-        <span class="tag" style="background:rgba(78,203,168,.12);color:var(--teal)">Achievability: ${a.label}</span>
-        <span class="tag" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">Est. cost: ${costBandWord(r.best.f2)}</span>
-        <span class="tag" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)">Disruption: ${difficultyWord(r.best.diff)}</span></div>`;}
-    const col=count>0?'var(--teal)':'rgba(255,255,255,.18)';
-    return `<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-left:3px solid ${col};border-radius:9px;padding:12px 14px;margin-bottom:7px"><div style="font-size:13px;color:var(--white);line-height:1.5">${count>0?'✓ ':''}${text}</div>${ach}</div>`;
-  };
-  const cap=n=>n>10?'10+':String(n);
-  const b1=r.box1>0?(r.box1===1?'1 single measure could achieve EPC C on its own':`${r.box1} single measures could each achieve EPC C on their own`):'No single measure alone achieves EPC C';
-  const b2=r.box2>0?`${r.box2} combination${r.box2!==1?'s':''} of 2 measures could achieve EPC C`:'No 2-measure combination achieves EPC C';
-  const b3=r.box3>0?`${cap(r.box3)} combination${(r.box3!==1||r.box3>10)?'s':''} of 3 or more measures could achieve EPC C`:'3 or more measures required';
-  let html='<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:4px 0 9px">Pathways to EPC C</div>';
-  html+=card(r.box1,b1,1)+card(r.box2,b2,2)+card(r.box3,b3,3);
-  if(r.noViable)html+=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-left:3px solid rgba(255,255,255,.18);border-radius:9px;padding:12px 14px;margin-bottom:7px"><div style="font-size:13px;color:var(--white);line-height:1.5">No combination of recommended measures is estimated to reach EPC C</div></div>`;
-  html+=`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:4px">Pathway estimates are based on EPC register recommendations. Uplifts are indicative — a new EPC must be lodged to confirm any rating change.</div>`;
+  // Diagnosis — READ straight from the frozen free report. The specific measures
+  // stay redacted (they are revealed only in the paid prescription).
+  const free=r.free;
+  const money=n=>'£'+(n||0).toLocaleString();
+  const row=(label,value)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;border-bottom:0.5px solid rgba(255,255,255,.07)">
+      <span style="font-size:12px;color:rgba(255,255,255,.55)">${label}</span>
+      <span style="font-size:13.5px;font-weight:600;color:var(--white);text-align:right">${value}</span></div>`;
+  const verdictColour=r.R.kind==='exempt'?'var(--amber)':'var(--teal)';
+  let html='<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:4px 0 9px">Pathway to EPC C</div>';
+  html+=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-left:3px solid ${verdictColour};border-radius:9px;padding:6px 14px 12px;margin-bottom:7px">`;
+  html+=row('Verdict',`<span style="color:${verdictColour}">${free.verdict}</span>`);
+  if(r.R.kind==='reach'){
+    html+=row('Cost outlook',`${money(free.outlookMin)} – ${money(free.outlookMax)}`);
+    html+=row('Disruption',free.disruption);
+    html+=row('Route flexibility',free.flexibility);
+    html+=row('Exemption likely',free.exemption);
+  }else{ // exemption candidate
+    html+=row('Best reachable band',`${free.bestReachableBand} (${free.bestReachableSAP})`);
+    html+=row('Within-cap outlook',`${money(free.outlookMin)} – ${money(free.outlookMax)}`);
+    html+=row('Cost-cap exemption',free.exemption);
+  }
+  html+='</div>';
+  html+=`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:4px">The specific measures and their costs are revealed in your compliance plan. ${COST_DISCLAIMER}</div>`;
   el.innerHTML=html;
 }
 function renderFrExemptions(r){
   document.getElementById('fr-exemptions').innerHTML=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:13px 14px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">MEES exemptions</div><div style="font-size:13px;color:var(--white);line-height:1.6">Based on your property details, up to <strong>${r.exShown}</strong> exemption${r.exShown!==1?'s':''} may potentially apply.</div></div>`;
 }
 function renderFrSummaryBox(r){
+  // Plain-English line, keyed off the FROZEN verdict (no recomputation).
+  const VERDICT_TXT={
+    'Straightforward':'EPC C appears straightforward to achieve for this property — low cost, low disruption.',
+    'Achievable':'EPC C is estimated to be achievable for this property with some works involved.',
+    'Challenging':'EPC C may be achievable but requires significant works and investment.',
+    'Major Project':'Reaching EPC C is a major project for this property — significant works and cost are involved.',
+    'Exemption Candidate':'Standard measures are unlikely to reach EPC C within the £10,000 cap — a cost-cap exemption is the likely route.',
+  };
   let txt;
   if(r.alreadyC)txt='This property already meets EPC C. No further works are required for the standard — a new EPC confirms your position if the current one has expired.';
-  else if(r.noViable)txt='Standard improvement measures are unlikely to achieve EPC C for this property without specialist assessment.';
-  else{const s=r.best.score;
-    if(s<=4)txt='EPC C appears straightforward to achieve for this property — low cost, low disruption.';
-    else if(s<=6)txt='EPC C is estimated to be achievable for this property with some works involved.';
-    else if(s<=8)txt='EPC C may be achievable but requires significant works and investment.';
-    else txt='Standard improvement measures are unlikely to achieve EPC C for this property without specialist assessment.';}
+  else txt=VERDICT_TXT[r.free.verdict]||'Standard improvement measures are unlikely to achieve EPC C for this property without specialist assessment.';
   document.getElementById('fr-summary-box').innerHTML=`<div style="background:rgba(78,203,168,.06);border:0.5px solid rgba(78,203,168,.2);border-radius:9px;padding:14px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">Achievability</div><div style="font-size:14px;color:var(--white);line-height:1.6">${txt}</div></div>`;
 }
 function renderFrPenalty(){
