@@ -1840,7 +1840,7 @@ function renderFrPenalty(){
       Loss of rental income: <strong style="color:var(--white)">potentially £1,000s/month</strong><br>
       Difficulty re-letting: <strong style="color:var(--white)">non-compliant properties cannot be let on new tenancies</strong>
     </div>
-    <div style="font-size:13px;color:var(--teal);margin-top:11px;font-weight:600">Your full compliance plan: £24.99</div></div>`;
+    <div style="font-size:13px;color:var(--teal);margin-top:11px;font-weight:600">Your full compliance plan: £19.99</div></div>`;
 }
 function renderFrOutcome(r){
   const el=document.getElementById('fr-outcome');
@@ -1850,7 +1850,7 @@ function renderFrOutcome(r){
     const title=(r.alreadyC&&!r.declaredReachesC)?'This property already appears to meet EPC C':'Your declared improvements suggest this property may already meet EPC C';
     el.innerHTML=wrap(title,'⚠ This is not confirmed compliance. Only a newly lodged EPC certificate confirms your legal position for MEES, lettings and mortgage purposes.',btn('Receive email assessment','openEmailAssessment()',false)+btn('Order new EPC — £99 →','orderNewEpc()',true));
   }else if(r.outcome===2){
-    el.innerHTML=wrap('We believe you can achieve EPC C','Let us show you exactly which measures, what they cost and what to do next.',btn('Get my compliance plan — £24.99 →','goPlan()',true));
+    el.innerHTML=wrap('We believe you can achieve EPC C','Let us show you exactly which measures, what they cost and what to do next.',btn('Get my compliance plan — £19.99 →','goPlan()',true));
   }else if(r.outcome===3){
     el.innerHTML=wrap('Achieving EPC C requires significant works for this property','Expert guidance is recommended before committing to works.',btn('Book a compliance consultation — from £149 →','goConsult()',true));
   }else{
@@ -1887,7 +1887,7 @@ async function sendEmailAssessment(){
 }
 
 const LINKS={
-  plan:'__REPLACE_WITH_2499_STRIPE_URL__',                        // £24.99 compliance plan — swap in real Stripe link
+  plan:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',          // £19.99 compliance plan
   consult:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',       // £149 consultation (confirmed £149)
   survey:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',        // £149 survey
   // old £19.99 plan link (dormant): https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00
