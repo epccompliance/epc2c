@@ -1695,7 +1695,12 @@ function evalReport(apiMeasures,currentSAP){
   if(R.kind==='exempt')exCount++;
   const exShown=Math.min(5,3+exCount);
 
-  return {R,free,paid,ms,listedOrCons,alreadyC,declaredReachesC,outcome,exShown,
+  // recommendedCta — drives the two-button free-report footer (and is emitted with
+  // the report). already-C -> 'epc'; Straightforward/Achievable/Challenging ->
+  // 'plan'; Major Project / Exemption Candidate -> 'visit'. Mirrors `outcome`.
+  const recommendedCta = outcome===1 ? 'epc' : (outcome===2 ? 'plan' : 'visit');
+
+  return {R,free,paid,ms,listedOrCons,alreadyC,declaredReachesC,outcome,exShown,recommendedCta,
     verdict:free.verdict,noViable:R.kind==='exempt'};
 }
 
@@ -1886,12 +1891,15 @@ async function sendEmailAssessment(){
   }catch(e){msg.textContent='Could not send — please try again.';msg.style.color='var(--amber)';}
 }
 
-// Stripe live payment links — prices confirmed by Marcus 2026-06-11:
-//   8x200ja1KgISd071i3eEo01 = £19.99 (plan) · 3cIeVd6Py8cme4b6CneEo00 = £149 (consult/survey)
+// Stripe live payment links — prices confirmed by Marcus:
+//   8x200ja1KgISd071i3eEo01 = £19.99 (plan)  · 3cIeVd6Py8cme4b6CneEo00 = £149 (site visit)
+//   aFa8wPb5Oaku8JRbWHeEo02 = £99 (fresh EPC) — NEW, price not yet independently verified
 const LINKS={
   plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',          // £19.99 compliance plan
-  consult:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',       // £149 consultation
-  survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',        // £149 survey
+  visit:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',         // £149 site visit
+  epc:'https://buy.stripe.com/aFa8wPb5Oaku8JRbWHeEo02',           // £99 fresh EPC
+  consult:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',       // £149 (alias of visit)
+  survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',        // £149 (alias of visit)
 };
 
 function showStripeOverlay(){
