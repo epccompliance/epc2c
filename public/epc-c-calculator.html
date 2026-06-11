@@ -1636,7 +1636,7 @@ function freeReport(r){
     disruption:['','Minimal','Low','Moderate','High','Major'][r.D],
     flexibility:`as few as ${r.minMeasures} measure${r.minMeasures>1?'s':''} · ${r.routeCount} route${r.routeCount>1?'s':''}`,
     exemption:'No',
-    cta:r.verdict==='Major Project'?'Book a consultation — £149':'Get my plan — £24.99'};
+    cta:r.verdict==='Major Project'?'Book a consultation — £149':'Get my plan — £19.99'};
   return {verdict:r.verdict,bestReachableBand:r.withinBand,bestReachableSAP:r.within.finalSAP,
     outlookMin:r.within.cMin,outlookMax:r.within.cMax,exemption:'Likely',cta:'Book a specialist — £149'};
 }
@@ -1886,11 +1886,12 @@ async function sendEmailAssessment(){
   }catch(e){msg.textContent='Could not send — please try again.';msg.style.color='var(--amber)';}
 }
 
+// Stripe live payment links — prices confirmed by Marcus 2026-06-11:
+//   8x200ja1KgISd071i3eEo01 = £19.99 (plan) · 3cIeVd6Py8cme4b6CneEo00 = £149 (consult/survey)
 const LINKS={
-  plan:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',          // £19.99 compliance plan
-  consult:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',       // £149 consultation (confirmed £149)
-  survey:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',        // £149 survey
-  // old £19.99 plan link (dormant): https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00
+  plan:'https://buy.stripe.com/8x200ja1KgISd071i3eEo01',          // £19.99 compliance plan
+  consult:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',       // £149 consultation
+  survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',        // £149 survey
 };
 
 function showStripeOverlay(){
