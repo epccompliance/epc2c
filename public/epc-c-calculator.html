@@ -617,6 +617,7 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     <div id="fr-gap"></div>
     <div id="fr-recs"></div>
     <div id="fr-boxes" style="margin-top:8px"></div>
+    <div id="fr-paid" style="display:none;margin-top:8px"></div>
     <div id="fr-exemptions" style="margin-top:20px"></div>
     <div id="fr-summary-box" style="margin-top:20px"></div>
     <div id="fr-penalty" style="margin-top:20px"></div>
@@ -1648,7 +1649,7 @@ function paidReport(r){
     total:r.route.cost,projectedSAP:r.route.finalSAP,projectedBand:sapToBand(r.route.finalSAP)};
   return {verdict:r.verdict,withinCapMeasures:r.within.measures.map(m=>({name:m.name,cost:costMid(m)})),
     withinCapSpend:r.within.cost,reaches:`${r.withinBand} (${r.within.finalSAP}) — short of C`,
-    next:'register cost-cap exemption',cheapestToCCost:r.cheapestToCCost};
+    next:'A site visit confirms your options.',cheapestToCCost:r.cheapestToCCost};
 }
 
 // Dev-build integrity canary — the GOVERNING RULE, checked on every render.
@@ -1724,10 +1725,15 @@ function buildFreeReport(p){
   renderFrGap(p.rating,currentSAP);
   renderFrRecs(apiMeasures,d);
   const r=evalReport(apiMeasures,currentSAP);
+  window._frResult=r;                        // frozen result — the paid reveal READS this, never recomputes
   window._frEstimate='EPC '+p.rating+' ('+currentSAP+'). '+(
     r.outcome===1?'Declared works may reach EPC C.':
-    r.R.kind==='exempt'?'Standard measures unlikely to reach EPC C within the £10k cap — exemption likely.':
+    r.R.kind==='exempt'?'Standard measures unlikely to reach EPC C within the £10k cap — a site visit is recommended.':
     ('EPC C verdict: '+r.free.verdict+'.'));
+
+  // Reset the paid reveal + upsell visibility (a previous unlock may have toggled them).
+  const _fp=document.getElementById('fr-paid'); if(_fp){_fp.style.display='none';_fp.innerHTML='';}
+  ['fr-penalty','fr-outcome'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
 
   renderFrBoxes(r);
   renderFrExemptions(r);
@@ -1811,10 +1817,10 @@ function renderFrBoxes(r){
     html+=row('Disruption',free.disruption);
     html+=row('Route flexibility',free.flexibility);
     html+=row('Exemption likely',free.exemption);
-  }else{ // exemption candidate
+  }else{ // no route to C within the £10k cap
     html+=row('Best reachable band',`${free.bestReachableBand} (${free.bestReachableSAP})`);
     html+=row('Within-cap outlook',`${money(free.outlookMin)} – ${money(free.outlookMax)}`);
-    html+=row('Cost-cap exemption',free.exemption);
+    html+=row('Reaches EPC C within £10k','Unlikely');
   }
   html+='</div>';
   html+=`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:4px">The specific measures and their costs are revealed in your compliance plan. ${COST_DISCLAIMER}</div>`;
@@ -1830,7 +1836,7 @@ function renderFrSummaryBox(r){
     'Achievable':'EPC C is estimated to be achievable for this property with some works involved.',
     'Challenging':'EPC C may be achievable but requires significant works and investment.',
     'Major Project':'Reaching EPC C is a major project for this property — significant works and cost are involved.',
-    'Exemption Candidate':'Standard measures are unlikely to reach EPC C within the £10,000 cap — a cost-cap exemption is the likely route.',
+    'Exemption Candidate':'This property looks unlikely to reach EPC C within the £10,000 cost cap — we recommend a site visit to confirm your options.',
   };
   let txt;
   if(r.alreadyC)txt='This property already meets EPC C. No further works are required for the standard — a new EPC confirms your position if the current one has expired.';
@@ -1847,24 +1853,158 @@ function renderFrPenalty(){
     </div>
     <div style="font-size:13px;color:var(--teal);margin-top:11px;font-weight:600">Your full compliance plan: £19.99</div></div>`;
 }
+// Two-CTA footer. Recommended button = filled teal + "Recommended" tag; the other
+// is an outline button but FULLY clickable (never disabled). already-C shows only
+// the £99 fresh-EPC button. Each button carries a one-line engine reason.
 function renderFrOutcome(r){
   const el=document.getElementById('fr-outcome');
   const wrap=(title,body,btns)=>`<div style="background:var(--navy2);border:0.5px solid rgba(78,203,168,.2);border-radius:11px;padding:18px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:8px">Your next step</div><div style="font-size:15px;font-weight:500;color:var(--white);margin-bottom:6px">${title}</div><div style="font-size:13px;color:rgba(255,255,255,.62);line-height:1.65;margin-bottom:14px">${body}</div>${btns}</div>`;
-  const btn=(label,onclick,primary)=>`<button onclick="${onclick}" style="display:block;width:100%;margin-top:8px;font-family:var(--sans);font-size:13px;font-weight:600;padding:12px;border-radius:8px;cursor:pointer;${primary?'background:var(--teal);color:var(--navy);border:none':'background:rgba(255,255,255,.08);color:var(--white);border:0.5px solid rgba(255,255,255,.15)'}">${label}</button>`;
+  const cta=(label,onclick,primary,reason)=>{
+    const tag=primary?`<div style="font-size:10.5px;font-weight:600;color:var(--teal);margin:12px 0 4px">★ Recommended for your property</div>`:`<div style="height:10px"></div>`;
+    const style=primary?'background:var(--teal);color:var(--navy);border:none':'background:transparent;color:var(--white);border:0.5px solid rgba(255,255,255,.22)';
+    return `${tag}<button onclick="${onclick}" style="display:block;width:100%;font-family:var(--sans);font-size:13px;font-weight:600;padding:12px;border-radius:8px;cursor:pointer;${style}">${label}</button>
+      <div style="font-size:11.5px;color:rgba(255,255,255,.5);line-height:1.5;margin-top:5px">${reason}</div>`;
+  };
+
+  // already-C / declared reaches C -> single fresh-EPC button only.
   if(r.outcome===1){
     const title=(r.alreadyC&&!r.declaredReachesC)?'This property already appears to meet EPC C':'Your declared improvements suggest this property may already meet EPC C';
-    el.innerHTML=wrap(title,'⚠ This is not confirmed compliance. Only a newly lodged EPC certificate confirms your legal position for MEES, lettings and mortgage purposes.',btn('Receive email assessment','openEmailAssessment()',false)+btn('Order new EPC — £99 →','orderNewEpc()',true));
-  }else if(r.outcome===2){
-    el.innerHTML=wrap('We believe you can achieve EPC C','Let us show you exactly which measures, what they cost and what to do next.',btn('Get my compliance plan — £19.99 →','goPlan()',true));
-  }else if(r.outcome===3){
-    el.innerHTML=wrap('Achieving EPC C requires significant works for this property','Expert guidance is recommended before committing to works.',btn('Book a compliance consultation — from £149 →','goConsult()',true));
-  }else{
-    el.innerHTML=wrap('Standard improvement measures are unlikely to achieve EPC C for this property','A specialist assessment is recommended to confirm exemption eligibility.',btn('Book a specialist consultation — from £149 →','goConsult()',true));
+    el.innerHTML=wrap(title,'⚠ This is not confirmed compliance. Only a newly lodged EPC certificate confirms your legal position for MEES, lettings and mortgage purposes.',
+      cta('Order a fresh EPC — £99 →','goEpc()',true,'You appear to already meet EPC C — a fresh EPC confirms and evidences your position.'));
+    return;
   }
+
+  // Everyone else -> BOTH plan (£19.99) and site visit (£149); recommended one is primary.
+  const planRec=r.recommendedCta==='plan';
+  const planReason=planRec
+    ? `EPC C looks ${String(r.free.verdict).toLowerCase()} — the plan names the exact measures, their costs and the order of works.`
+    : `See the cheapest measure route to EPC C, with costs — instantly.`;
+  const visitReason=!planRec
+    ? (r.R.kind==='exempt'
+        ? `Unlikely to reach EPC C within the £10,000 cap — a DEA site visit confirms your options.`
+        : `A significant project — a DEA site visit confirms the best route before you commit.`)
+    : `Prefer survey-backed certainty? A DEA visits and produces a High-confidence report.`;
+  const planBtn=cta('Get my compliance plan — £19.99 →','goPlan()',planRec,planReason);
+  const visitBtn=cta('Book a DEA site visit — £149 →','goVisit()',!planRec,visitReason);
+  const title=planRec?'We believe you can achieve EPC C':'Achieving EPC C needs a closer look for this property';
+  const body=planRec?'Unlock the exact measures, costs and order of works — or have a DEA survey it.':'Have a DEA survey it, or unlock the indicative plan now.';
+  el.innerHTML=wrap(title,body, planRec ? planBtn+visitBtn : visitBtn+planBtn);
 }
-function goPlan(){window.location.href=LINKS.plan;}
-function goConsult(){window.location.href=LINKS.consult;}
-function orderNewEpc(){window.location.href='mailto:hello@epc2c.co.uk?subject='+encodeURIComponent('New EPC Order')+'&body='+encodeURIComponent('Property address: '+((selProp&&selProp.addr)||''));}
+// Save the property so it can be restored after the Stripe round-trip, then redirect.
+function goPlan(){ try{localStorage.setItem('epc2c_prop',JSON.stringify(selProp));}catch(e){} window.location.href=LINKS.plan; }
+function goVisit(){ try{localStorage.setItem('epc2c_prop',JSON.stringify(selProp));}catch(e){} window.location.href=LINKS.visit; }
+function goEpc(){ window.location.href=LINKS.epc; }
+function goConsult(){ window.location.href=LINKS.visit; }   // legacy alias
+function orderNewEpc(){ window.location.href=LINKS.epc; }
+
+// ── PAID REPORT — in-page reveal of the FROZEN evaluate() result ─────────────────
+// Renders paidReport() detail beneath the (unchanged) free diagnosis. It READS the
+// stored result; it NEVER re-runs the engine. Verdict / cost RANGE / disruption are
+// the same strings as the free report — paid only adds detail.
+const DISRUPT_WORD=['','Minimal','Low','Moderate','High','Major'];
+function revealPaidReport(){
+  const r=window._frResult; if(!r){ return; }
+  const free=r.free, paid=r.paid;
+  // Integrity canary: the paid total must sit within the free cost range (reach case).
+  if(r.R.kind==='reach' && !(paid.total>=free.outlookMin && paid.total<=free.outlookMax)){
+    console.error('[integrity] paid total £'+paid.total+' outside free range £'+free.outlookMin+'–£'+free.outlookMax);
+  }
+  // The paid detail replaces the upsell — never recompute, just reveal.
+  ['fr-penalty','fr-outcome'].forEach(id=>{const e=document.getElementById(id); if(e)e.style.display='none';});
+  const el=document.getElementById('fr-paid'); if(!el)return;
+  el.innerHTML=(r.R.kind==='exempt')?paidExemptHtml(r):(r.R.kind==='already'?paidAlreadyHtml(r):paidReachHtml(r));
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+const _pcard=inner=>`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:14px 16px;margin-bottom:10px">${inner}</div>`;
+const _pmoney=n=>'£'+(n||0).toLocaleString();
+function _paidHead(){return `<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:4px 0 9px">✓ Your compliance plan — unlocked</div>`;}
+function _frozenHeader(free){
+  return _pcard(`<div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
+    <div><div style="font-size:11.5px;color:rgba(255,255,255,.55)">Verdict</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${free.verdict}</div></div>
+    <div><div style="font-size:11.5px;color:rgba(255,255,255,.55)">Cost outlook</div><div style="font-size:16px;font-weight:700;color:var(--white)">${_pmoney(free.outlookMin)} – ${_pmoney(free.outlookMax)}</div></div>
+    <div><div style="font-size:11.5px;color:rgba(255,255,255,.55)">Disruption</div><div style="font-size:16px;font-weight:700;color:var(--white)">${free.disruption||'—'}</div></div>
+  </div>`);
+}
+function _measureRows(measures){
+  return measures.map(m=>{
+    const dis=DISRUPT_WORD[disruptionScore(m.name)]||'—';
+    return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,.07)">
+      <div style="flex:1;min-width:0"><div style="font-size:14px;color:var(--white)">${m.name}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.5)">+${m.uplift} SAP point${m.uplift!==1?'s':''} · ${dis} disruption</div></div>
+      <div style="font-size:13.5px;font-family:var(--mono);color:var(--teald);white-space:nowrap">${_pmoney(costMid(m))}</div></div>`;
+  }).join('');
+}
+function paidReachHtml(r){
+  const free=r.free, paid=r.paid, route=r.R.route;
+  const measuresCard=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px">Your cheapest route to EPC C</div>${_measureRows(route.measures)}
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:700;color:var(--white)"><span>Total</span><span style="font-family:var(--mono)">${_pmoney(paid.total)}</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:4px">Projected EPC ${paid.projectedBand} (SAP ${paid.projectedSAP})</div>`);
+  const order=[...route.measures].sort((a,b)=>(a.difficulty-b.difficulty)||(costMid(a)-costMid(b)));
+  const roadmap=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px">Suggested order of works</div>`+
+    order.map((m,i)=>`<div style="font-size:13px;color:rgba(255,255,255,.8);padding:3px 0">${i+1}. ${m.name}</div>`).join(''));
+  const other=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px">Other routes</div>
+    <div style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.6">There ${r.R.routeCount===1?'is 1 route':'are '+r.R.routeCount+' routes'} to EPC C within the £10,000 cap; you can reach C with as few as ${r.R.minMeasures} measure${r.R.minMeasures!==1?'s':''}. The cheapest is shown above.</div>`);
+  return _paidHead()+_frozenHeader(free)+measuresCard+roadmap+other+whereYouAreNow()+`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:6px">${COST_DISCLAIMER}</div>`;
+}
+function paidExemptHtml(r){
+  const free=r.free, within=r.R.within;
+  const worksCard=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px">The most you can do within the £10,000 cap</div>${_measureRows(within.measures)}
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:700;color:var(--white)"><span>Spend</span><span style="font-family:var(--mono)">${_pmoney(within.cost)}</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:4px">Reaches EPC ${r.R.withinBand} (SAP ${within.finalSAP}) — short of C</div>`);
+  const note=_pcard(`<div style="font-size:13px;color:rgba(255,255,255,.82);line-height:1.6">This takes you as far as the cost cap allows. A site visit confirms your options.</div>`);
+  return _paidHead()+_frozenHeader(free)+worksCard+note+whereYouAreNow()+`<div style="font-size:10.5px;color:rgba(255,255,255,.4);margin-top:6px">${COST_DISCLAIMER}</div>`;
+}
+function paidAlreadyHtml(r){
+  return _paidHead()+_pcard(`<div style="font-size:13px;color:rgba(255,255,255,.82);line-height:1.6">This property already appears to meet EPC C. Lodge a fresh EPC to confirm and evidence your position.</div>`)+whereYouAreNow();
+}
+// "Where you are now" — per-element current-state read, using the same plain-English
+// interpreter as the free recommendations.
+function whereYouAreNow(){
+  const cert=(selProp&&selProp._detail)||{};
+  const TONE={bad:'var(--red)',mid:'var(--amber)',good:'var(--green)'};
+  const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let rows='';
+  ['roof','walls','floor','windows','heating','lighting'].forEach(f=>{
+    const raw=cert[fieldMap[f]]||''; if(!raw)return;
+    const {plain,tone,assumed}=interpret(f,raw); if(!plain)return;
+    rows+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0"><span style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:${TONE[tone]||'var(--amber)'};margin-top:5px"></span><span style="font-size:12.5px;color:rgba(255,255,255,.78);line-height:1.5">${esc(plain)}${assumed?' <span style="color:rgba(255,255,255,.4)">(assumed)</span>':''}</span></div>`;
+  });
+  return rows?_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:6px">Where you are now</div>${rows}`):'';
+}
+
+// ── Stripe return — SERVER-VERIFIED unlock (no URL param ever unlocks) ───────────
+function showPayNotice(msg){
+  let b=document.getElementById('pay-notice');
+  if(!b){ b=document.createElement('div'); b.id='pay-notice';
+    b.style.cssText='position:fixed;top:58px;left:0;right:0;z-index:400;background:#0f1e33;border-bottom:1px solid rgba(78,203,168,.3);color:#fff;font-family:var(--sans),sans-serif;font-size:13.5px;padding:12px 20px;text-align:center;line-height:1.5';
+    document.body.appendChild(b); }
+  b.innerHTML=msg+' <span onclick="this.parentElement.remove()" style="margin-left:14px;cursor:pointer;opacity:.6">×</span>';
+}
+async function handlePaidReturn(sessionId){
+  let prop=null;
+  try{ const raw=localStorage.getItem('epc2c_prop'); if(raw) prop=JSON.parse(raw); }catch(e){}
+  // The ONLY thing that may unlock the paid report: a server-confirmed PLAN payment.
+  let res=null;
+  try{
+    const r=await fetch('/api/verify-payment',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session_id:sessionId,expected:'plan'})});
+    res=await r.json();
+  }catch(e){ res={paid:false}; }
+  if(!(res&&res.paid&&res.product==='plan')){
+    showPayNotice('We could not confirm a completed plan payment for this link. If you have paid, please contact hello@epc2c.co.uk.');
+    return;
+  }
+  if(!prop){ showPayNotice('Payment confirmed — search your postcode to open your compliance plan.'); return; }
+  selProp=prop;
+  // Ensure the certificate measures/detail are present (they may not survive the round-trip).
+  if(prop.lmkKey && (!prop._apiMeasures || !prop._apiMeasures.length)){
+    try{ const recs=await fetchRecs(prop.lmkKey); if(recs){ prop._apiMeasures=recs.measures||[]; if(recs.detail) applyDetail(prop,recs.detail); } }catch(e){}
+  }
+  getFreeReport();        // builds the free report (stores window._frResult)
+  revealPaidReport();     // reveals the paid detail on that frozen result — no recompute
+  showPayNotice('✓ Payment confirmed — your compliance plan is unlocked below.');
+}
 function openEmailAssessment(){
   if(document.getElementById('ea-box'))return;
   document.getElementById('fr-outcome').insertAdjacentHTML('beforeend',
@@ -2699,14 +2839,17 @@ document.getElementById('pc').addEventListener('keyup',function(){
   if(!this.value){document.getElementById('prop-list').style.display='none';document.getElementById('about-box').style.display='none';}
 });
 
-// Auto-populate postcode from URL ?postcode= param
+// On load: a Stripe return is signalled ONLY by ?session_id=, which is verified
+// SERVER-SIDE (api/verify-payment) before anything unlocks. No URL param
+// (paid / redirect_status / referrer) ever unlocks the report on its own.
 (function(){
   const params = new URLSearchParams(window.location.search);
-  const fromStripe = document.referrer.includes('stripe.com') || document.referrer.includes('buy.stripe.com') || params.has('paid');
+  const sessionId = params.get('session_id');
+  if(sessionId){ handlePaidReturn(sessionId); return; }
   const pc = params.get('postcode');
-  if(pc && !fromStripe) {
+  if(pc){
     const input = document.getElementById('pc');
-    if(input) { input.value = pc.toUpperCase(); lookup(); }
+    if(input){ input.value = pc.toUpperCase(); lookup(); }
   }
 })();
 </script>
