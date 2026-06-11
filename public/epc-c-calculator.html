@@ -1851,7 +1851,7 @@ function renderFrPenalty(){
       Loss of rental income: <strong style="color:var(--white)">potentially £1,000s/month</strong><br>
       Difficulty re-letting: <strong style="color:var(--white)">non-compliant properties cannot be let on new tenancies</strong>
     </div>
-    <div style="font-size:13px;color:var(--teal);margin-top:11px;font-weight:600">Your full compliance plan: £19.99</div></div>`;
+    <div style="font-size:13px;color:var(--teal);margin-top:11px;font-weight:600">Your full compliance plan: ${FREE_WEEK?'free this week':'£19.99'}</div></div>`;
 }
 // Two-CTA footer. Recommended button = filled teal + "Recommended" tag; the other
 // is an outline button but FULLY clickable (never disabled). already-C shows only
@@ -1870,32 +1870,39 @@ function renderFrOutcome(r){
   if(r.outcome===1){
     const title=(r.alreadyC&&!r.declaredReachesC)?'This property already appears to meet EPC C':'Your declared improvements suggest this property may already meet EPC C';
     el.innerHTML=wrap(title,'⚠ This is not confirmed compliance. Only a newly lodged EPC certificate confirms your legal position for MEES, lettings and mortgage purposes.',
-      cta('Order a fresh EPC — £99 →','goEpc()',true,'You appear to already meet EPC C — a fresh EPC confirms and evidences your position.'));
+      cta(FREE_WEEK?'Enquire about a fresh EPC →':'Order a fresh EPC — £99 →','goEpc()',true,
+        FREE_WEEK?'You appear to already meet EPC C — enquire and we’ll arrange a fresh EPC (no charge to enquire this week).':'You appear to already meet EPC C — a fresh EPC confirms and evidences your position.'));
     return;
   }
 
-  // Everyone else -> BOTH plan (£19.99) and site visit (£149); recommended one is primary.
+  // Everyone else -> BOTH plan and site visit; recommended one is primary.
+  // FREE_WEEK: plan unlocks free, the site-visit CTA becomes an enquiry (no charge).
   const planRec=r.recommendedCta==='plan';
-  const planReason=planRec
+  const planReason=(FREE_WEEK?'Free this week. ':'')+(planRec
     ? `EPC C looks ${String(r.free.verdict).toLowerCase()} — the plan names the exact measures, their costs and the order of works.`
-    : `See the cheapest measure route to EPC C, with costs — instantly.`;
-  const visitReason=!planRec
-    ? (r.R.kind==='exempt'
-        ? `Unlikely to reach EPC C within the £10,000 cap — a DEA site visit confirms your options.`
-        : `A significant project — a DEA site visit confirms the best route before you commit.`)
-    : `Prefer survey-backed certainty? A DEA visits and produces a High-confidence report.`;
-  const planBtn=cta('Get my compliance plan — £19.99 →','goPlan()',planRec,planReason);
-  const visitBtn=cta('Book a DEA site visit — £149 →','goVisit()',!planRec,visitReason);
+    : `See the cheapest measure route to EPC C, with costs — instantly.`);
+  const visitReason=FREE_WEEK
+    ? `Tell us about the property and we’ll arrange a DEA site visit — no charge to enquire this week.`
+    : (!planRec
+        ? (r.R.kind==='exempt'
+            ? `Unlikely to reach EPC C within the £10,000 cap — a DEA site visit confirms your options.`
+            : `A significant project — a DEA site visit confirms the best route before you commit.`)
+        : `Prefer survey-backed certainty? A DEA visits and produces a High-confidence report.`);
+  const planBtn=cta(FREE_WEEK?'Get my compliance plan — free this week →':'Get my compliance plan — £19.99 →','goPlan()',planRec,planReason);
+  const visitBtn=cta(FREE_WEEK?'Enquire about a DEA site visit →':'Book a DEA site visit — £149 →','goVisit()',!planRec,visitReason);
   const title=planRec?'We believe you can achieve EPC C':'Achieving EPC C needs a closer look for this property';
-  const body=planRec?'Unlock the exact measures, costs and order of works — or have a DEA survey it.':'Have a DEA survey it, or unlock the indicative plan now.';
+  const body=FREE_WEEK
+    ? (planRec?'Unlock the exact measures, costs and order of works — free this week — or enquire about a DEA visit.':'Enquire about a DEA visit, or unlock the indicative plan — free this week.')
+    : (planRec?'Unlock the exact measures, costs and order of works — or have a DEA survey it.':'Have a DEA survey it, or unlock the indicative plan now.');
   el.innerHTML=wrap(title,body, planRec ? planBtn+visitBtn : visitBtn+planBtn);
 }
-// Save the property so it can be restored after the Stripe round-trip, then redirect.
-function goPlan(){ try{localStorage.setItem('epc2c_prop',JSON.stringify(selProp));}catch(e){} window.location.href=LINKS.plan; }
-function goVisit(){ try{localStorage.setItem('epc2c_prop',JSON.stringify(selProp));}catch(e){} window.location.href=LINKS.visit; }
-function goEpc(){ window.location.href=LINKS.epc; }
-function goConsult(){ window.location.href=LINKS.visit; }   // legacy alias
-function orderNewEpc(){ window.location.href=LINKS.epc; }
+// FREE_WEEK short-circuits every charge button (plan unlocks free; visit/epc enquire).
+// Otherwise: save the property so it survives the Stripe round-trip, then redirect.
+function goPlan(){ if(FREE_WEEK){ unlockFreePlan(); return; } try{localStorage.setItem('epc2c_prop',JSON.stringify(selProp));}catch(e){} window.location.href=LINKS.plan; }
+function goVisit(){ if(FREE_WEEK){ enquire('visit'); return; } try{localStorage.setItem('epc2c_prop',JSON.stringify(selProp));}catch(e){} window.location.href=LINKS.visit; }
+function goEpc(){ if(FREE_WEEK){ enquire('epc'); return; } window.location.href=LINKS.epc; }
+function goConsult(){ if(FREE_WEEK){ enquire('visit'); return; } window.location.href=LINKS.visit; }   // legacy alias
+function orderNewEpc(){ if(FREE_WEEK){ enquire('epc'); return; } window.location.href=LINKS.epc; }
 
 // ── PAID REPORT — in-page reveal of the FROZEN evaluate() result ─────────────────
 // Renders paidReport() detail beneath the (unchanged) free diagnosis. It READS the
@@ -2042,6 +2049,22 @@ const LINKS={
   survey:'https://buy.stripe.com/3cIeVd6Py8cme4b6CneEo00',        // £149 (alias of visit)
 };
 
+// ── FREE WEEK (launch week one) ─────────────────────────────────────────────────
+// While true, NO live Stripe charge button is shown anywhere: the £19.99 plan
+// unlocks for FREE in-page, and the £149 site-visit / £99 fresh-EPC CTAs become
+// email enquiries. Flip to false to restore the paid Stripe flow unchanged.
+const FREE_WEEK = true;
+function unlockFreePlan(){
+  // Free week: no charge, no Stripe, no server verification — just reveal in-page.
+  if(window._frResult) revealPaidReport();
+}
+function enquire(kind){
+  const svc = kind==='visit' ? 'DEA site visit' : 'fresh EPC';
+  const addr = (selProp&&selProp.addr) || '';
+  window.location.href='mailto:hello@epc2c.co.uk?subject='+encodeURIComponent(svc+' enquiry')
+    +'&body='+encodeURIComponent('Property: '+addr+'\n\nPlease get in touch about a '+svc+'.');
+}
+
 function showStripeOverlay(){
   const overlay=document.getElementById('stripe-overlay');
   if(overlay){overlay.style.display='flex';}
@@ -2107,6 +2130,7 @@ async function persistReport(tier,pdfUrl){
 // magic-link prompt and resume automatically when they return (see auth module).
 // BUG 4 — definitive payAndLoad: await save-property so client_reference_id is real, then redirect.
 async function payAndLoad(tier,price){
+  if(FREE_WEEK){ if(tier==='plan') unlockFreePlan(); else enquire(tier==='survey'?'visit':'epc'); return; }
   if(!selProp){alert('Please select a property first.');scrollTo({top:0,behavior:'smooth'});return;}
   showStripeOverlay();
   let sessionId='unknown';
@@ -2127,6 +2151,7 @@ async function payAndLoad(tier,price){
   window.location.href=stripeUrl;
 }
 async function orderSurvey(){
+  if(FREE_WEEK){ enquire('visit'); return; }
   if(!selProp){window.location.href=LINKS.survey;return;}
   const address=[selProp.address1,selProp.address2,selProp.address3,selProp.posttown,selProp.postcode].filter(Boolean).join(', ')||selProp.addr||'';
   localStorage.setItem('epc2c_prop',JSON.stringify(selProp));
