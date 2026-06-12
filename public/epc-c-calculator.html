@@ -1752,6 +1752,15 @@ function evalReport(apiMeasures,currentSAP){
   const listedOrCons=declState.listed||declState.conservation;
   const ms=buildMeasures(apiMeasures,currentSAP,listedOrCons);
   const R=evaluate({currentSAP,measures:ms});
+  // Single source: the displayed packages and the route-flexibility figures come from
+  // the SAME within-cap toC set. minMeasures must reflect a package the report actually
+  // SHOWS (picked = deduped + capped), so the line can't advertise a route not shown;
+  // routeCount is the number of within-cap routes.
+  if(R.kind==='reach'){
+    R.picked=pickPackages(R.routes);
+    R.minMeasures=Math.min(...R.picked.map(c=>c.size));
+    R.routeCount=R.routes.length;
+  }
   const free=freeReport(R);
   const paid=paidReport(R);
   if(ENGINE_DEV)assertIntegrity(R,free,paid);
@@ -2090,7 +2099,7 @@ function paidFeasibilityCaveat(measures){
 }
 function paidReachHtml(r){
   const free=r.free, route=r.R.route;
-  const picked=pickPackages(r.R.routes||[route]);
+  const picked=r.R.picked||pickPackages(r.R.routes||[route]);
   const recommended=picked[0]||route, others=picked.slice(1);
   const p=selProp||{}, curBand=p.rating||'?', curSAP=(p.currentSAP!=null?p.currentSAP:'');
   const projBand=sapToBand(recommended.finalSAP);
