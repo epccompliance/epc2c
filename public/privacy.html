@@ -50,13 +50,16 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 .foot-link:hover{color:rgba(255,255,255,.5)}
 .foot-copy{font-size:12px;color:rgba(255,255,255,.18)}
 @media(max-width:768px){.nav-links{display:none}.page-h{font-size:30px}.foot-inner{flex-direction:column;text-align:center}}
+
+/* Beta badge (site header) */
+.beta-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:#0f1e33;background:#4ecba8;border-radius:5px;padding:2px 7px;vertical-align:super;margin-left:6px}
 </style>
 </head>
 <body>
 
 <nav>
   <div class="nav-inner">
-    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
+    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span> <span class="beta-badge">Beta</span></a>
     <div class="nav-links">
       <a href="/" class="nav-link">Home</a>
       <a href="/epc-c-calculator" class="nav-cta">Check your property</a>
