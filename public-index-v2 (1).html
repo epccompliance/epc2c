@@ -130,11 +130,6 @@ section.band{padding:84px 0}
 .stat .sub{font-size:13.5px;color:var(--muted);line-height:1.5}
 .stat .tag{position:absolute;top:18px;right:18px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--hint);border:1px solid var(--rule);border-radius:20px;padding:3px 9px}
 .stat-foot{text-align:center;margin-top:24px;font-size:12.5px;color:var(--hint);font-family:var(--mono)}
-/* Accreditation logos (hero) — full colour, static */
-.hero-accred{margin-top:26px;text-align:center}
-.accred-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px}
-.accred-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:28px}
-.accred-logo{height:44px;width:auto;max-width:130px;object-fit:contain;image-rendering:-webkit-optimize-contrast}
 
 /* steps */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:46px}
@@ -189,16 +184,13 @@ footer a:hover{color:var(--teal)}
 
 .rv{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
 .rv.in{opacity:1;transform:none}
-
-/* Beta badge (site header) */
-.beta-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:#0f1e33;background:#4ecba8;border-radius:5px;padding:2px 7px;vertical-align:super;margin-left:6px}
 </style>
 </head>
 <body>
 
 <nav>
   <div class="wrap nav-in">
-    <a href="#" class="logo">EPC<span class="n">2</span><span class="c">C</span> <span class="beta-badge">Beta</span></a>
+    <a href="#" class="logo">EPC<span class="n">2</span><span class="c">C</span></a>
     <div class="nav-links">
       <a href="#discover">What you'll learn</a>
       <a href="#why">Why 2030 matters</a>
@@ -219,17 +211,6 @@ footer a:hover{color:var(--teal)}
     <div class="finder rv">
       <input type="text" id="hp-pc" placeholder="Enter a postcode" maxlength="8" autocomplete="off" onkeydown="if(event.key==='Enter')goCheck('hp-pc')">
       <button onclick="goCheck('hp-pc')">Check a property free</button>
-    </div>
-    <!-- Accreditations — full-colour static logos; verifiable ones link to their registers -->
-    <div class="hero-accred">
-      <div class="accred-label">Accredited &amp; certified</div>
-      <div class="accred-row">
-        <a href="https://www.trustmark.org.uk/homeowner/find-a-tradesperson?business-name=GoGreen%20Alliance%20Ltd&amp;search=true" target="_blank" rel="noopener"><img class="accred-logo" src="/images/trustmark.png" alt="TrustMark"/></a>
-        <img class="accred-logo" src="/images/Elmhurst.png" alt="Elmhurst Energy"/>
-        <img class="accred-logo" src="/images/PAS.png" alt="BBA"/>
-        <a href="https://www.gassaferegister.co.uk/checkbusinessresults?cp=8dbTCMJeQPJDla%252btm2cGo71Ps4f7leERBZL58Pwb7VUoiI43sOv%252f39a8u4l3%252f3rQ" target="_blank" rel="noopener"><img class="accred-logo" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register"/></a>
-        <a href="https://mcscertified.com/find-an-installer/gogreen-alliance-ltd/" target="_blank" rel="noopener"><img class="accred-logo" src="/images/MCS.png" alt="MCS Certified"/></a>
-      </div>
     </div>
     <div class="reassure rv"><span>Free instant verdict</span><span>No signup required</span><span>Official EPC Register data</span></div>
   </div>
@@ -269,7 +250,7 @@ footer a:hover{color:var(--teal)}
         </div>
         <div class="unlock">
           <span class="ubtn" onclick="location.href='#hero';var i=document.getElementById('hp-pc');if(i)i.focus();">Check your property to unlock</span>
-          <span class="uprice">One-off · £19.99 · instant access</span>
+          <span class="uprice">One-off · £24.99 · instant access</span>
         </div>
       </div>
     </div>
@@ -303,12 +284,13 @@ footer a:hover{color:var(--teal)}
     <p class="sec-intro rv">A proposed EPC C minimum would reshape what can legally be let. Landlords who assess early avoid rushed costs and the risk of a property they can't rent out.</p>
   </div>
   <div class="wrap">
+    <!-- TODO before publish: replace the three data-count figures with verified GOV.UK / PRS Exemptions Register numbers. Current values are indicative only. -->
     <div class="stat-grid">
-      <div class="stat rv" style="--accent:var(--epc-f)"><div class="big" data-count="2.5" data-suffix="m" data-decimals="1">0</div><div class="label">Private rented homes in England below EPC C</div></div>
-      <div class="stat rv" style="--accent:var(--epc-d)"><div class="big" data-count="52" data-suffix="%">0</div><div class="label">Of the private rented sector falls short of C</div></div>
-      <div class="stat rv" style="--accent:var(--teal)"><div class="big" data-count="10000" data-prefix="£">0</div><div class="label">Cost cap per property to reach C</div></div>
+      <div class="stat rv" style="--accent:var(--epc-f)"><div class="big" data-count="287000">0</div><div class="label">F &amp; G rated rentals</div><div class="sub">Privately let homes in England &amp; Wales still in the lowest two bands.</div></div>
+      <div class="stat rv" style="--accent:var(--epc-d)"><div class="big" data-count="2.6" data-suffix="m" data-decimals="1">0</div><div class="label">Rentals below EPC C</div><div class="sub">Homes that would fall short of the proposed minimum standard.</div></div>
+      <div class="stat rv" style="--accent:var(--teal)"><div class="big" data-count="8400">0</div><div class="label">MEES exemptions lodged</div><div class="sub">Recorded on the PRS Exemptions Register — many landlords never check eligibility.</div></div>
     </div>
-    <div class="stat-foot rv">Source: GOV.UK Warm Homes Plan, January 2026.</div>
+    <div class="stat-foot rv">Sector figures are indicative and being finalised against the latest GOV.UK EPC and PRS Exemptions Register data.</div>
   </div>
 </section>
 
@@ -377,7 +359,7 @@ footer a:hover{color:var(--teal)}
       <details class="q rv"><summary>Can my property get a MEES exemption?</summary><p>Possibly. Where the improvements needed to reach the required rating are impractical or disproportionately expensive, a registered exemption may permit continued letting. EPC2C indicates whether a property looks like an exemption candidate, though formal registration follows its own process.</p></details>
       <details class="q rv"><summary>Do listed buildings need to meet EPC C?</summary><p>Listed and conservation-area properties often can't accommodate standard energy upgrades, which can make them strong exemption candidates. EPC2C accounts for this when assessing the route to compliance.</p></details>
       <details class="q rv"><summary>How much does it cost to reach EPC C?</summary><p>It depends heavily on the property. Some reach C for a few hundred pounds; older or solid-wall homes can run well into five figures. Your free verdict includes a realistic cost outlook so you're not planning blind.</p></details>
-      <details class="q rv"><summary>Where does EPC2C get its data?</summary><p>Property certificates and their recommended improvements come from the official GOV.UK EPC Register. Cost outlooks reflect current installation rates.</p></details>
+      <details class="q rv"><summary>Where does EPC2C get its data?</summary><p>Property certificates and their recommended improvements come from the official GOV.UK EPC Register. Cost outlooks reflect current installation rates. <em>(Figures shown across this page are illustrative placeholders.)</em></p></details>
       <details class="q rv"><summary>Is the property check really free?</summary><p>Yes. The compliance verdict, cost outlook, disruption outlook and exemption indicator are free, with no signup needed to see your result. The detailed plan — exact measures, precise costs and your step-by-step roadmap — is the paid report.</p></details>
     </div>
   </div>
@@ -401,7 +383,7 @@ footer a:hover{color:var(--teal)}
     <div class="foot-grid">
       <div>
         <a href="/" class="logo">EPC<span style="color:var(--teal);font-style:italic">2</span><span style="color:var(--teald)">C</span></a>
-        <p style="max-width:250px">The MEES compliance platform for landlords across England &amp; Wales.</p>
+        <p style="max-width:250px">The MEES compliance platform for landlords across England &amp; Wales. Independent guidance — we don't sell works.</p>
       </div>
       <div><h4>Platform</h4><ul><li><a href="/epc-c-calculator">Free property check</a></li><li><a href="/epc-c-calculator">Full compliance plan</a></li><li><a href="/agents">For letting agents</a></li><li><a href="/dea">For DEAs</a></li></ul></div>
       <div><h4>Learn</h4><ul><li><a href="#why">EPC C by 2030</a></li><li><a href="#learn">MEES regulations</a></li><li><a href="#learn">MEES exemptions</a></li><li><a href="/methodology">Methodology</a></li></ul></div>
