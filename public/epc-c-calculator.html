@@ -1264,6 +1264,7 @@ async function lookup(){
   if(pc.length<3)return;
   const _terms=document.getElementById('terms-agree');   // enforce T&C on the Enter-key path too
   if(_terms&&!_terms.checked)return;
+  resetReportState();   // a new lookup starts clean — no prior property's data carries over
   const btn=document.getElementById('find-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Searching…';
   try{
@@ -1339,6 +1340,7 @@ function showProps(props){
   document.getElementById('about-box').style.display='none';
 }
 async function pickProp(i){
+  resetReportState();   // switching property drops the previous property's report/unlock state
   document.querySelectorAll('.prop-item').forEach(e=>e.classList.remove('sel'));
   document.getElementById('pi-'+i).classList.add('sel');
   selProp=window._props.find(p=>p._idx===i)||window._props[i];
@@ -1752,6 +1754,7 @@ function evalReport(apiMeasures,currentSAP){
   const listedOrCons=declState.listed||declState.conservation;
   const ms=buildMeasures(apiMeasures,currentSAP,listedOrCons);
   const R=evaluate({currentSAP,measures:ms});
+  R.currentSAP=currentSAP;   // needed by the paid exemption checklist (re-runs enumeration)
   // Single source: the displayed packages and the route-flexibility figures come from
   // the SAME within-cap toC set. minMeasures must reflect a package the report actually
   // SHOWS (picked = deduped + capped), so the line can't advertise a route not shown;
@@ -1794,6 +1797,13 @@ function evalReport(apiMeasures,currentSAP){
     verdict:free.verdict,noViable:R.kind==='exempt'};
 }
 
+// Full state reset so a fresh lookup/selection never inherits the previous
+// property's cached report, verdict or unlock state (unlock is per-property).
+function resetReportState(){
+  window._frResult=null; window._frEstimate='';
+  try{['epc2c_prop','epc2c_tier','epc2c_session','epc2c_pending_session','epc2c_paid_addr','epc2c_thankyou_sent','epc2c_pay_intent','epc2c_unlocked'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  const fp=document.getElementById('fr-paid'); if(fp){fp.style.display='none';fp.innerHTML='';}
+}
 function getFreeReport(){
   if(!selProp)return;
   document.getElementById('hero').style.display='none';
@@ -2011,6 +2021,7 @@ function revealPaidReport(){
   const el=document.getElementById('fr-paid'); if(!el)return;
   el.innerHTML=(r.R.kind==='exempt')?paidExemptHtml(r):(r.R.kind==='already'?paidAlreadyHtml(r):paidReachHtml(r));
   el.style.display='block';
+  try{ localStorage.setItem('epc2c_unlocked',(selProp&&selProp.lmkKey)||'1'); }catch(e){}   // unlock is per-property
   window.scrollTo({top:0,behavior:'smooth'});   // open the paid plan from the top of the page
 }
 const _pcard=inner=>`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:14px 16px;margin-bottom:10px">${inner}</div>`;
@@ -2082,20 +2093,38 @@ function pickPackages(routes){
   }
   return picked;
 }
-// Measure-specific feasibility caveat for the paid report, driven by the
-// feasibility-profiles ifInfeasible field. Never a flat "Exemption: No".
-function exemptName(code){return ({'all-relevant-improvements':'all-improvements-made','negative-impacts':'negative-impacts','consent':'third-party-consent','solid-wall-opt-out':'solid-wall','wall-insulation':'wall-insulation'})[code]||code;}
-function paidFeasibilityCaveat(measures){
-  const lines=[];
-  measures.forEach(m=>{
-    const fz=feasibilityFor(m.name);
-    if(fz&&fz.ifInfeasible){
-      const ex=fz.ifInfeasible.split('|').map(s=>exemptName(s.trim())).join(' / ');
-      lines.push(`If ${m.name.charAt(0).toLowerCase()+m.name.slice(1)} isn't feasible here, a ${ex} exemption may apply.`);
-    }
-  });
-  if(!lines.length)return '';
-  return _pcard(`<div style="font-size:13px;font-weight:600;color:var(--char);margin-bottom:6px">If a measure isn't feasible</div><div style="font-size:12.5px;color:var(--body);line-height:1.65">Your route to C assumes each measure can be installed on your property. ${lines.map(l=>'<div style="margin-top:5px">'+_pesc(l)+'</div>').join('')}</div>`);
+// Full MEES exemption checklist (PAID report only). Cost-cap-linked measure
+// exemptions are ticked ONLY when re-running enumeration WITHOUT the relevant
+// measure leaves no route to C within the £10k cap (not merely because a feature is
+// present). Circumstance-based routes are always shown unticked (the engine can't
+// see them). Never a definitive "Exemption: No".
+function paidExemptionChecklist(r){
+  const ms=r.ms||[], cs=r.R.currentSAP;
+  const reachesC=measures=>enumerateCombos(measures,cs).some(c=>c.finalSAP>=TARGET_SAP&&c.cost<=COST_CAP);
+  const has=re=>ms.some(m=>re.test((m.name||'').toLowerCase()));
+  const without=re=>ms.filter(m=>!re.test((m.name||'').toLowerCase()));
+  const SOLID=/internal wall|external wall|solid wall/, FABRIC=/internal wall|room.?in.?roof|flat roof|sloping|floor insulation/;
+  const walls=((selProp&&(selProp.walls||(selProp._detail&&selProp._detail['walls-description'])))||'').toLowerCase();
+  const solidWallsPresent=/solid|sandstone|limestone|granite|\bstone\b/.test(walls)||has(SOLID);
+  const highCost=!reachesC(ms);
+  const solidWall=solidWallsPresent&&has(SOLID)&&!reachesC(without(SOLID));
+  const negImpacts=has(FABRIC)&&!reachesC(without(FABRIC));
+  const item=(ticked,name,desc,cond)=>{
+    const mark=ticked
+      ?'<span style="flex-shrink:0;width:18px;height:18px;border-radius:5px;background:var(--teal);color:#0f1e33;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:1px">✓</span>'
+      :'<span style="flex-shrink:0;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--rule);display:inline-block;margin-top:1px"></span>';
+    return `<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--rule)">${mark}<div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:${ticked?'var(--char)':'var(--muted)'}">${_pesc(name)}</div><div style="font-size:12px;color:var(--muted);line-height:1.5">${cond?'Shown unticked — '+_pesc(desc):_pesc(desc)}</div></div></div>`;
+  };
+  const rows=[
+    item(highCost,'High cost (£10,000 cap)','No combination of measures reaches EPC C within the £10,000 cap.'),
+    item(solidWall,'Solid-wall insulation','Solid walls, and no within-cap route to C avoids wall insulation — so you may decline it.'),
+    item(negImpacts,'Negative impacts','The only within-cap route to C relies on a fabric-risk measure (e.g. internal wall insulation).'),
+    item(false,'Third-party consent','if freeholder, planning or tenant consent is refused.',true),
+    item(false,'New landlord','if you recently became a landlord.',true),
+    item(false,'Property value adjustment','if the property is worth under £100,000.',true)
+  ].join('');
+  const note='<div style="font-size:12px;color:var(--body);line-height:1.6;background:var(--cream);border-radius:8px;padding:10px 12px;margin:2px 0 10px">A tick means the property data suggests this route may apply — it is not confirmation. Eligibility must be verified (survey, consent or your circumstances). Our £149 specialist review confirms which apply.</div>';
+  return _pcard(`<div style="font-size:13px;font-weight:700;color:var(--char);margin-bottom:8px">MEES exemption routes</div>${note}${rows}`);
 }
 function paidReachHtml(r){
   const free=r.free, route=r.R.route;
@@ -2104,7 +2133,7 @@ function paidReachHtml(r){
   const p=selProp||{}, curBand=p.rating||'?', curSAP=(p.currentSAP!=null?p.currentSAP:'');
   const projBand=sapToBand(recommended.finalSAP);
   const totalMeasures=(r.ms?r.ms.length:recommended.measures.length);
-  const feasCaveat=paidFeasibilityCaveat(recommended.measures);
+  const exemptChecklist=paidExemptionChecklist(r);
 
   const cards=recommended.measures.map((m,i)=>{
     const dis=DISRUPT_WORD[disruptionScore(m.name)]||'—';
@@ -2154,7 +2183,7 @@ function paidReachHtml(r){
     ${cards}
     <div class="totals"><div><div class="k">Total estimated cost</div><div class="big">${_pmoney(recommended.cMin)} – ${_pmoney(recommended.cMax)}</div></div>
       <div style="text-align:right"><div class="k">Projected result</div><span class="badgeC">${projBand}</span></div></div>
-    ${feasCaveat}
+    ${exemptChecklist}
 
     <div class="kick">Your options</div>
     <h2 class="sh">Other ways to reach C</h2>
@@ -2241,7 +2270,7 @@ function paidExemptHtml(r){
     <div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:700;color:var(--white)"><span>Spend</span><span style="font-family:var(--mono)">${_pmoney(within.cost)}</span></div>
     <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:4px">Reaches EPC ${r.R.withinBand} (SAP ${within.finalSAP}) — short of C</div>`);
   const note=_pcard(`<div style="font-size:13px;color:rgba(255,255,255,.82);line-height:1.6">This takes you as far as the cost cap allows. A site visit confirms your options.</div>`);
-  return _paidHead()+_frozenHeader(free)+worksCard+note+whereYouAreNow()+`<div style="font-size:10.5px;color:rgba(255,255,255,.4);margin-top:6px">${COST_DISCLAIMER}</div>`;
+  return _paidHead()+_frozenHeader(free)+worksCard+note+paidExemptionChecklist(r)+whereYouAreNow()+`<div style="font-size:10.5px;color:rgba(255,255,255,.4);margin-top:6px">${COST_DISCLAIMER}</div>`;
 }
 function paidAlreadyHtml(r){
   return _paidHead()+_pcard(`<div style="font-size:13px;color:rgba(255,255,255,.82);line-height:1.6">This property already appears to meet EPC C. Lodge a fresh EPC to confirm and evidence your position.</div>`)+whereYouAreNow();
@@ -2352,7 +2381,7 @@ function showStripeOverlay(){
 }
 // BUG 1 — "Start again": clear app session state and return to the homepage.
 function startAgain(){
-  try{['epc2c_prop','epc2c_tier','epc2c_session','epc2c_pending_session','epc2c_session_saved','epc2c_owned6m','epc2c_pay_intent'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  try{['epc2c_prop','epc2c_tier','epc2c_session','epc2c_pending_session','epc2c_session_saved','epc2c_owned6m','epc2c_pay_intent','epc2c_unlocked'].forEach(k=>localStorage.removeItem(k));}catch(e){}
   window.location.href='/';
 }
 
