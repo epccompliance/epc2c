@@ -486,13 +486,16 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
   .price-grid { gap: 10px; }
 }
 
+
+/* Beta badge (site header) */
+.beta-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:#0f1e33;background:#4ecba8;border-radius:5px;padding:2px 7px;vertical-align:super;margin-left:6px}
 </style>
 </head>
 <body>
 
 <nav>
   <div class="nav-inner">
-    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span></a>
+    <a href="/" class="logo">EPC<span class="logo-num">2</span><span class="logo-c">C</span> <span class="beta-badge">Beta</span></a>
     <div class="nav-links">
       <a href="/" class="nav-link">&larr; Home</a>
       <button class="nav-cta" onclick="scrollTo({top:document.getElementById('hero').offsetTop,behavior:'smooth'})">Check your property</button>
@@ -1621,7 +1624,7 @@ function evaluate(property){
     const D=Math.max(...route.measures.map(m=>disruptionScore(m.name)));
     const X=Math.min(4,route.size);
     const index=difficultyIndex(C,D,X);
-    return {kind:'reach',route,C,D,X,index,verdict:verdictFromIndex(index,C,D,X),
+    return {kind:'reach',route,routes:toC,C,D,X,index,verdict:verdictFromIndex(index,C,D,X),
       minMeasures:Math.min(...toC.map(c=>c.size)),routeCount:toC.length};
   }
   const cheapestToC=all.filter(c=>c.finalSAP>=TARGET_SAP).sort((a,b)=>a.cost-b.cost)[0]||null;
@@ -1668,6 +1671,84 @@ const COST_DISCLAIMER='Cost estimates are indicative, based on the official EPC 
 
 // One run of the engine, wrapped with the app's funnel flags. The renderers READ
 // the returned free/paid reports — they do not re-run any scoring.
+// ── Feasibility profiles — inlined VERBATIM from reference/feasibility-profiles.js ──
+// One profile per measure TYPE: conditions to CHECK (never assertions), what an
+// "(assumed)" element implies, and the exemption a genuine infeasibility points to.
+// Annotates the PAID report only; never changes the engine verdict. Single source =
+// reference/feasibility-profiles.js — keep in sync with that file.
+const FEASIBILITY = {
+  loft: { label:'Loft / roof insulation', feasibilityClass:'usually-feasible',
+    conditions:['A usable loft hatch (ideally ~600×400mm) and enough headroom to work safely.','If the loft is boarded, boards may need lifting — or raising on battens — so insulation depth isn’t crushed.','Stored items cleared from the area to be treated.','Eaves ventilation kept clear to avoid condensation once insulated.','No active leaks or damp in the roof first.'],
+    assumedMeans:'Loft insulation can’t be seen without entering the loft, so "assumed" usually means it wasn’t accessed or confirmed. Two implications: it may already be insulated (a fresh EPC could show you’re closer to C), or access is the very thing that makes the job harder.',
+    clearingBlocker:'Fitting a larger hatch or raising boarding on battens — typically a few hundred pounds.', ifInfeasible:'all-relevant-improvements' },
+  'room-in-roof': { label:'Room-in-roof insulation', feasibilityClass:'site-dependent',
+    conditions:['Applies where the roof space is a converted habitable room.','Sloping ceilings, stud walls and small flat-ceiling sections all need treating — often from inside, losing a little room space, or by removing and reinstating plasterboard.','Dormers and party walls complicate the detailing.'],
+    assumedMeans:'These build-ups are rarely fully inspectable, so "(assumed)" is common and implies the construction was taken from the property’s age/type rather than confirmed.',
+    clearingBlocker:'Plasterboard removal/reinstatement and redecoration where insulating from inside.', ifInfeasible:'negative-impacts' },
+  cavity: { label:'Cavity wall insulation', feasibilityClass:'site-dependent',
+    conditions:['Walls must actually be cavity construction with an unfilled cavity of suitable width.','Walls in sound condition — no penetrating damp, good pointing/render.','Exposure suitable — very exposed, wind-driven-rain locations may be unsuitable for fill.','Not already filled (very commonly it is).'],
+    assumedMeans:'Wall insulation is almost never verifiable without intrusive inspection, so "(assumed)" is near-universal on walls — it implies nothing about access, only that the age/type default was used. The real question is whether the cavity is already filled; a borescope check or fresh EPC settles it.',
+    clearingBlocker:'Borescope survey to confirm cavity is open and unfilled before quoting fill.', ifInfeasible:'all-relevant-improvements' },
+  iwi: { label:'Solid wall insulation — internal (IWI)', feasibilityClass:'needs-survey',
+    conditions:['For solid (no-cavity) walls.','Reduces internal room dimensions slightly.','Skirting, sockets, radiators and coving need removing and refitting; rooms cleared and treated one at a time.','Condensation/damp risk if detailing is wrong — needs proper (PAS 2035) design.'],
+    assumedMeans:'Solid-wall construction is often taken from the property’s age, and the presence of any insulation can’t be seen — so "(assumed)" here reflects the default, not an access problem.',
+    clearingBlocker:'PAS 2035 retrofit design + making good (decoration, joinery) after install.', ifInfeasible:'negative-impacts | solid-wall-opt-out | consent' },
+  ewi: { label:'Solid wall insulation — external (EWI)', feasibilityClass:'needs-survey',
+    conditions:['For solid walls.','Changes external appearance — planning permission often needed, especially in conservation areas or on flats.','Sound substrate, adequate eaves/verge overhang (or new detailing), and pipework/services moved.','Scaffolding access to all treated elevations; not applied over existing damp.'],
+    assumedMeans:'As internal — construction taken from age, insulation not visible, so "(assumed)" is the default rather than evidence of anything.',
+    clearingBlocker:'Planning application + detailing at eaves, sills and boundaries; scaffolding.', ifInfeasible:'consent | negative-impacts | solid-wall-opt-out' },
+  floor: { label:'Floor insulation', feasibilityClass:'site-dependent',
+    conditions:['Suspended timber floor: needs underfloor (crawl-space) access or floorboards lifted; underfloor ventilation must be maintained.','Solid floor: insulating means raising the floor level — affecting door heights and thresholds — and is far more disruptive.','No untreated damp below the floor.'],
+    assumedMeans:'Floor build-up is rarely inspected and floor type (solid vs suspended) is often inferred from age, so "(assumed)" is common here.',
+    clearingBlocker:'Lifting/relaying floor finishes; door and threshold adjustments for solid floors.', ifInfeasible:'negative-impacts | all-relevant-improvements' },
+  solar: { label:'Solar PV', feasibilityClass:'site-dependent',
+    conditions:['A suitable roof: reasonable orientation (broadly south/east/west, not heavily shaded north), workable pitch, minimal overshadowing.','Roof structure sound and able to carry the load.','Enough clear, unobstructed roof area, plus a sensible position for the inverter.','DNO notification (and approval for larger systems); scaffolding access. Listed/conservation status may restrict visible panels.'],
+    assumedMeans:'Generation is recorded as present/absent rather than "assumed", so the question here is roof feasibility rather than an unverified baseline.',
+    clearingBlocker:'Structural check / DNO application; alternative roof slopes if the main aspect is poor.', ifInfeasible:'consent | all-relevant-improvements' },
+  heatpump: { label:'Air-source heat pump', feasibilityClass:'needs-survey',
+    conditions:['External space for the unit with clear airflow and acceptable noise distance to boundaries and neighbouring windows.','Emitters (radiators/underfloor) often need upsizing for lower flow temperatures.','Space for a hot-water cylinder; adequate electrical supply.','Works best in a reasonably insulated home; planning/permitted-development limits apply; MCS install needed for the grant.'],
+    assumedMeans:'The heating system is normally inspected, so it’s less likely to be "(assumed)" than fabric elements.',
+    clearingBlocker:'Emitter upgrades + cylinder; fabric-first measures if the home is leaky.', ifInfeasible:'consent | negative-impacts | all-relevant-improvements' },
+  glazing: { label:'Double / secondary glazing', feasibilityClass:'usually-feasible',
+    conditions:['Replacing single glazing with double is generally straightforward.','Listed buildings / conservation areas may require secondary glazing or specific approved units (consent).','Window openings and surrounds structurally sound.'],
+    assumedMeans:'Glazing is usually visible and recorded from inspection, so it’s less commonly "(assumed)".',
+    clearingBlocker:'Listed-building / conservation consent where applicable.', ifInfeasible:'consent' },
+  controls: { label:'Heating controls', feasibilityClass:'usually-feasible',
+    conditions:['A programmer, room thermostat and thermostatic radiator valves, compatible with the existing boiler/system.','Straightforward fit with minimal disruption.'],
+    assumedMeans:'Controls are normally observed during the assessment, so rarely "(assumed)".', clearingBlocker:null, ifInfeasible:null },
+  draught: { label:'Draught-proofing', feasibilityClass:'usually-feasible',
+    conditions:['Around doors, windows, loft hatches and floors.','Retain necessary background ventilation — don’t over-seal, or condensation risk rises.'],
+    assumedMeans:'Not typically an "(assumed)" element.', clearingBlocker:null, ifInfeasible:null },
+  cylinder: { label:'Hot-water cylinder insulation', feasibilityClass:'usually-feasible',
+    conditions:['Applies where there’s an accessible cylinder without adequate factory foam or a jacket.','Simple to fit.'],
+    assumedMeans:'Usually observed during the assessment.', clearingBlocker:null, ifInfeasible:null },
+  'flat-roof': { label:'Flat-roof insulation', feasibilityClass:'site-dependent',
+    conditions:['Best done when the roof covering is replaced (warm-deck build-up) — tie it to any re-roofing.','Cold-deck retrofits carry condensation risk and need careful detailing.','Structural and access check first.'],
+    assumedMeans:'Flat-roof build-up is rarely inspectable, so "(assumed)" is common.',
+    clearingBlocker:'Coordinate with re-roofing; warm-deck detailing.', ifInfeasible:'negative-impacts | all-relevant-improvements' }
+};
+function feasibilityFor(measureText){
+  if(!measureText)return null;
+  const t=String(measureText).toLowerCase();
+  const has=(...ks)=>ks.some(k=>t.includes(k));
+  if(has('room in roof','room-in-roof'))               return FEASIBILITY['room-in-roof'];
+  if(has('loft','roof insulation')&&!has('flat'))      return FEASIBILITY.loft;
+  if(has('flat roof'))                                 return FEASIBILITY['flat-roof'];
+  if(has('cavity'))                                    return FEASIBILITY.cavity;
+  if(has('internal wall','internal solid'))            return FEASIBILITY.iwi;
+  if(has('external wall','external solid'))            return FEASIBILITY.ewi;
+  if(has('solid wall'))                                return FEASIBILITY.iwi;
+  if(has('floor insulation','underfloor'))             return FEASIBILITY.floor;
+  if(has('solar','photovoltaic','pv'))                 return FEASIBILITY.solar;
+  if(has('heat pump','heat-pump'))                     return FEASIBILITY.heatpump;
+  if(has('glaz','window'))                             return FEASIBILITY.glazing;
+  if(has('control','thermostat','programmer','trv'))   return FEASIBILITY.controls;
+  if(has('draught','draft'))                           return FEASIBILITY.draught;
+  if(has('cylinder','hot water tank'))                 return FEASIBILITY.cylinder;
+  return null;
+}
+function isAssumed(elementDescription){ return !!elementDescription && /assumed/i.test(String(elementDescription)); }
+
 function evalReport(apiMeasures,currentSAP){
   const listedOrCons=declState.listed||declState.conservation;
   const ms=buildMeasures(apiMeasures,currentSAP,listedOrCons);
@@ -1942,18 +2023,192 @@ function _measureRows(measures){
       <div style="font-size:13.5px;font-family:var(--mono);color:var(--teald);white-space:nowrap">${_pmoney(costMid(m))}</div></div>`;
   }).join('');
 }
-function paidReachHtml(r){
-  const free=r.free, paid=r.paid, route=r.R.route;
-  const measuresCard=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px">Your cheapest route to EPC C</div>${_measureRows(route.measures)}
-    <div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:700;color:var(--white)"><span>Total</span><span style="font-family:var(--mono)">${_pmoney(paid.total)}</span></div>
-    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:4px">Projected EPC ${paid.projectedBand} (SAP ${paid.projectedSAP})</div>`);
-  const order=[...route.measures].sort((a,b)=>(a.difficulty-b.difficulty)||(costMid(a)-costMid(b)));
-  const roadmap=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px">Suggested order of works</div>`+
-    order.map((m,i)=>`<div style="font-size:13px;color:rgba(255,255,255,.8);padding:3px 0">${i+1}. ${m.name}</div>`).join(''));
-  const other=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px">Other routes</div>
-    <div style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.6">There ${r.R.routeCount===1?'is 1 route':'are '+r.R.routeCount+' routes'} to EPC C within the £10,000 cap; you can reach C with as few as ${r.R.minMeasures} measure${r.R.minMeasures!==1?'s':''}. The cheapest is shown above.</div>`);
-  return _paidHead()+_frozenHeader(free)+measuresCard+roadmap+other+whereYouAreNow()+`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:6px">${COST_DISCLAIMER}</div>`;
+// ── Paid 'reach' reveal — matches reference/paid-report-page.html ────────────────
+const _pesc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function shortName(name){
+  const t=(name||'').toLowerCase();
+  if(/room.?in.?roof/.test(t))return 'Room-in-roof';
+  if(/flat roof/.test(t))return 'Flat roof';
+  if(/loft|roof insulation/.test(t))return 'Loft';
+  if(/cavity/.test(t))return 'Cavity';
+  if(/internal wall/.test(t))return 'IWI';
+  if(/external wall/.test(t))return 'EWI';
+  if(/solid wall/.test(t))return 'Solid wall';
+  if(/floor/.test(t))return 'Floor';
+  if(/solar|photovolt|\bpv\b/.test(t))return 'Solar PV';
+  if(/heat pump|air source|ashp/.test(t))return 'Heat pump';
+  if(/glaz|window|double|secondary/.test(t))return 'Glazing';
+  if(/boiler|condensing/.test(t))return 'Boiler';
+  if(/control|thermostat|programmer|trv/.test(t))return 'Controls';
+  if(/draught/.test(t))return 'Draught-proofing';
+  if(/cylinder|hot water/.test(t))return 'Cylinder';
+  if(/light/.test(t))return 'Lighting';
+  return (name||'').split(/[ ,]/).filter(Boolean).slice(0,2).join(' ');
 }
+// Grants/funding for a measure (PAID report only). No ECO4 / LA Flex / GBIS.
+function grantsFor(name){
+  const t=(name||'').toLowerCase(); const g=[];
+  if(/heat pump|ashp|air source/.test(t)) g.push('Boiler Upgrade Scheme — £7,500 grant');
+  if(/loft|cavity|wall insulation|floor insulation|solar|photovolt|\bpv\b/.test(t)) g.push('Warm Homes Plan †');
+  g.push('0% finance available');
+  return g;
+}
+function grantsForPkg(c){
+  const seen=new Set(), out=[];
+  c.measures.forEach(m=>grantsFor(m.name).forEach(g=>{if(!seen.has(g)){seen.add(g);out.push(g);}}));
+  return out;
+}
+const _pkgRange=c=>`${_pmoney(c.cMin)}–${_pmoney(c.cMax)}`;
+const _pkgDisrupt=c=>DISRUPT_WORD[Math.max.apply(null,c.measures.map(m=>disruptionScore(m.name)))]||'—';
+const _pkgBand=c=>sapToBand(c.finalSAP);
+// Up to 5 DISTINCT packages from the cheapest-first routes-to-C, skipping any that
+// are just a cheaper picked package + extra measures.
+function pickPackages(routes){
+  const picked=[];
+  for(const c of (routes||[])){
+    const names=new Set(c.measures.map(m=>m.name));
+    const isSuperset=picked.some(p=>{const pn=p.measures.map(m=>m.name);return pn.every(n=>names.has(n))&&names.size>pn.length;});
+    if(!isSuperset)picked.push(c);
+    if(picked.length>=5)break;
+  }
+  return picked;
+}
+function paidReachHtml(r){
+  const free=r.free, route=r.R.route;
+  const picked=pickPackages(r.R.routes||[route]);
+  const recommended=picked[0]||route, others=picked.slice(1);
+  const p=selProp||{}, curBand=p.rating||'?', curSAP=(p.currentSAP!=null?p.currentSAP:'');
+  const projBand=sapToBand(recommended.finalSAP);
+  const totalMeasures=(r.ms?r.ms.length:recommended.measures.length);
+
+  const cards=recommended.measures.map((m,i)=>{
+    const dis=DISRUPT_WORD[disruptionScore(m.name)]||'—';
+    const grants=grantsFor(m.name).map(g=>`<span class="gchip">${_pesc(g)}</span>`).join('');
+    const fz=feasibilityFor(m.name);
+    let feas='';
+    if(fz){
+      const conds=(fz.conditions||[]).slice(0,3).map(c=>`<li>${_pesc(c)}</li>`).join('');
+      feas=`<details class="feas"><summary>Feasibility — worth checking first</summary><ul>${conds}</ul>`
+        +(fz.assumedMeans?`<div class="assumed"><b>If your EPC marked this “assumed”:</b> ${_pesc(fz.assumedMeans)}</div>`:'')+`</details>`;
+    }
+    return `<div class="mcard"><div class="mhead"><span class="mnum">${i+1}</span><div class="mname">${_pesc(m.name)}</div></div>
+      <div class="mstats"><div><span class="k">Indicative cost</span><span class="v">${_pmoney(m.cMin)}–${_pmoney(m.cMax)}</span></div>
+        <div><span class="k">Rating gain</span><span class="v">+${m.uplift} pts</span></div>
+        <div><span class="k">Disruption</span><span class="v">${dis}</span></div></div>
+      <div class="grants">${grants}</div>${feas}</div>`;
+  }).join('');
+
+  const tile=(c,isRec)=>{
+    const names=c.measures.map(m=>shortName(m.name)).join(' + ');
+    const rows=c.measures.map(m=>`<div class="trow"><span>${_pesc(m.name)}</span><span class="tc">${_pmoney(m.cMin)}–${_pmoney(m.cMax)} · +${m.uplift}</span></div>`).join('');
+    const funding=grantsForPkg(c).join(' · ');
+    const meta=`${_pkgRange(c)} · ${_pkgBand(c)} (${c.finalSAP}) · ${_pkgDisrupt(c)}`;
+    return `<div class="tile${isRec?' on':''}">
+      <label class="sel"><input type="checkbox"${isRec?' checked':''} onchange="this.closest('.tile').classList.toggle('on',this.checked)"><span>Add to download</span></label>
+      <details${isRec?' open':''}><summary>${isRec?'<span class="recbadge">Recommended</span>':''}<span class="tname">${_pesc(names)}</span><span class="tmeta">${meta}</span></summary>
+        <div class="tbody">${rows}<div class="tgrants">Funding: ${_pesc(funding)}</div></div></details></div>`;
+  };
+  const tiles=[tile(recommended,true)].concat(others.map(c=>tile(c,false))).join('');
+
+  return `${_prCSS()}<div class="pr">
+    <div class="paidbar">✓ Your full EPC C compliance plan</div>
+    <div class="bandrow"><div><div class="bl">Current</div><span class="badgeB" style="background:${EPC_COL[curBand]||'var(--epcD)'}">${curBand}</span> <span class="mono" style="color:var(--muted)">SAP ${curSAP}</span></div>
+      <span class="arrow">→</span>
+      <div><div class="bl">Target by Oct 2030</div><span class="badgeB" style="background:var(--epcC)">C</span> <span class="mono" style="color:var(--muted)">SAP 69+</span></div></div>
+    <div class="verdict"><span class="dot"></span><span class="w">${_pesc(free.verdict)}</span>
+      <div class="sub">EPC C is reachable for this property within the £10,000 cost cap. Your recommended plan is below, followed by up to five ways to get there so you can weigh cost against disruption.</div></div>
+    <div class="stats">
+      <div class="stat"><div class="k">Estimated cost</div><div class="v">${_pmoney(recommended.cMin)}<small>–${_pmoney(recommended.cMax)}</small></div></div>
+      <div class="stat"><div class="k">Projected rating</div><div class="v">${projBand} <small>(${recommended.finalSAP})</small></div></div>
+      <div class="stat"><div class="k">Packages</div><div class="v">${picked.length} <small>· of ${totalMeasures}</small></div></div>
+      <div class="stat"><div class="k">Disruption</div><div class="v">${_pkgDisrupt(recommended)}</div></div></div>
+
+    <div class="kick">Your recommended plan</div>
+    <h2 class="sh">The most cost-effective route to C</h2>
+    <p class="lead">The cheapest combination of measures that takes this property to band C. Costs are indicative ranges from the EPC register — always get installer quotes before committing.</p>
+    ${cards}
+    <div class="totals"><div><div class="k">Total estimated cost</div><div class="big">${_pmoney(recommended.cMin)} – ${_pmoney(recommended.cMax)}</div></div>
+      <div style="text-align:right"><div class="k">Projected result</div><span class="badgeC">${projBand}</span></div></div>
+
+    <div class="kick">Your options</div>
+    <h2 class="sh">Other ways to reach C</h2>
+    <p class="lead">Up to five packages that each get you to band C — the recommended one plus genuinely different trade-offs. Tap a tile to see its measures, and tick the ones you'd like included in your PDF.</p>
+    ${tiles}
+
+    <div class="kick">Next steps</div>
+    <h2 class="sh">What do I do now?</h2>
+    <ol class="nextsteps">
+      <li>Choose the package that best fits your budget and the disruption you're comfortable with.</li>
+      <li>Get quotes from local installers before committing — or let GoGreen Alliance arrange accredited installers for you.</li>
+      <li>Keep this plan so your chosen packages and costs are in one place.</li>
+      <li>Aim to complete the works well before the 1 October 2030 deadline — the cheapest properties to fix aren't always the quickest.</li>
+    </ol>
+    <div class="nextcta"><a href="mailto:info@gogreenalliance.co.uk?subject=Arrange%20my%20EPC%20C%20works">Ask GoGreen to arrange this for me →</a></div>
+
+    <div class="disc"><b>Grants &amp; funding.</b> † Warm Homes Plan funding is not yet targeted at the private rented sector, but is expected to extend to it — we'll update eligibility as the scheme develops. The Boiler Upgrade Scheme grant applies to qualifying heat-pump installations; 0% finance availability depends on the provider and your circumstances.<br><br><b>About these figures.</b> ${COST_DISCLAIMER} Rating gains are estimates for typical properties of this type and assume the measures can be installed on your property; a survey confirms feasibility. EPC2C — operated by GoGreen Alliance Ltd.</div>
+  </div>`;
+}
+function _prCSS(){return `<style>
+#fr-paid .pr{--navy:#0f1e33;--teal:#4ecba8;--teald:#2fa882;--cream:#f5f2ec;--char:#1a2332;--body:#3a4453;--muted:#6b7280;--rule:#e8e4dc;--amber:#d97706;--amberbg:#fffbeb;--green:#059669;--greenbg:#ecfdf5;--epcC:#3f9e4f;--epcD:#e8a33d;background:var(--cream);color:var(--body);font-family:'DM Sans',system-ui,sans-serif;line-height:1.55;border-radius:14px;padding:20px 18px;margin-top:6px}
+#fr-paid .pr h2{font-family:'Fraunces',Georgia,serif;font-weight:400;color:var(--char);letter-spacing:-.01em}
+#fr-paid .pr .mono{font-family:'DM Mono',monospace}
+#fr-paid .paidbar{background:var(--green);color:#fff;font-size:14px;font-weight:500;text-align:center;padding:11px;border-radius:9px;margin-bottom:18px}
+#fr-paid .bandrow{display:flex;align-items:center;gap:16px;margin:6px 0 18px}
+#fr-paid .badgeB{width:50px;height:58px;border-radius:9px;color:#fff;font-family:'Fraunces',serif;font-size:26px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+#fr-paid .bl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#fr-paid .arrow{font-size:22px;color:var(--muted)}
+#fr-paid .verdict{background:var(--amberbg);border:1px solid #f3e3c0;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+#fr-paid .verdict .w{font-family:'Fraunces',serif;font-size:24px;color:var(--char)}
+#fr-paid .verdict .dot{width:12px;height:12px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:9px;vertical-align:middle}
+#fr-paid .verdict .sub{font-size:14px;margin-top:6px;color:var(--body)}
+#fr-paid .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+#fr-paid .stat{background:#fff;border:1px solid var(--rule);border-radius:11px;padding:12px}
+#fr-paid .stat .k{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#fr-paid .stat .v{font-family:'Fraunces',serif;font-size:19px;color:var(--char);margin-top:4px;line-height:1.1}
+#fr-paid .stat .v small{font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif}
+#fr-paid .kick{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teald);margin-bottom:6px}
+#fr-paid .sh{font-size:22px;margin-bottom:4px}
+#fr-paid .lead{color:var(--muted);font-size:14px;margin-bottom:14px;max-width:60ch}
+#fr-paid .mcard{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:15px 17px;margin-bottom:12px}
+#fr-paid .mhead{display:flex;gap:12px;align-items:flex-start}
+#fr-paid .mnum{font-family:'Fraunces',serif;font-size:18px;color:var(--teald)}
+#fr-paid .mname{font-family:'Fraunces',serif;font-size:18px;color:var(--char)}
+#fr-paid .mstats{display:flex;gap:26px;margin-top:12px;flex-wrap:wrap}
+#fr-paid .mstats .k{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block}
+#fr-paid .mstats .v{font-family:'DM Mono',monospace;font-size:14px;color:var(--char);font-weight:500}
+#fr-paid .feas{margin-top:13px;border-top:1px dashed var(--rule);padding-top:11px}
+#fr-paid .feas summary{font-size:13px;font-weight:600;color:var(--teald);cursor:pointer}
+#fr-paid .feas ul{margin:9px 0 0 18px;font-size:13px;color:var(--body)}
+#fr-paid .feas li{margin-bottom:4px}
+#fr-paid .assumed{margin-top:9px;font-size:12.5px;color:var(--body);background:var(--cream);border-radius:8px;padding:10px 12px}
+#fr-paid .totals{display:flex;justify-content:space-between;align-items:center;background:var(--navy);color:var(--cream);border-radius:12px;padding:16px 20px;margin-bottom:26px}
+#fr-paid .totals .k{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,242,236,.55)}
+#fr-paid .totals .big{font-family:'Fraunces',serif;font-size:22px;color:#fff;margin-top:3px}
+#fr-paid .totals .badgeC{width:46px;height:52px;border-radius:8px;background:var(--epcC);color:#fff;font-family:'Fraunces',serif;font-size:22px;display:inline-flex;align-items:center;justify-content:center}
+#fr-paid .tile{background:#fff;border:1px solid var(--rule);border-radius:12px;margin-bottom:10px;position:relative;transition:border-color .15s}
+#fr-paid .tile.on{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
+#fr-paid .tile summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;flex-direction:column;gap:3px}
+#fr-paid .tile summary::-webkit-details-marker{display:none}
+#fr-paid .tile summary::after{content:'＋ view measures';position:absolute;right:16px;top:15px;font-family:'DM Mono',monospace;font-size:11px;color:var(--teald)}
+#fr-paid .tile details[open] summary::after{content:'－ hide'}
+#fr-paid .tname{font-family:'Fraunces',serif;font-size:17px;color:var(--char);max-width:70%}
+#fr-paid .tmeta{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
+#fr-paid .tbody{padding:4px 18px 16px;border-top:1px solid var(--rule);margin-top:4px}
+#fr-paid .trow{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px dashed var(--rule)}
+#fr-paid .trow:last-child{border:0}
+#fr-paid .tc{font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap}
+#fr-paid .grants{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+#fr-paid .gchip{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--teald);background:var(--greenbg);border:1px solid #cdeede;border-radius:6px;padding:3px 8px}
+#fr-paid .tgrants{font-family:'DM Mono',monospace;font-size:11px;color:var(--teald);margin-top:10px;padding-top:9px;border-top:1px dashed var(--rule)}
+#fr-paid .sel{position:absolute;right:14px;bottom:13px;display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;z-index:2}
+#fr-paid .sel input{accent-color:var(--teal);width:15px;height:15px}
+#fr-paid .recbadge{display:inline-block;background:var(--teal);color:var(--navy);font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-bottom:8px}
+#fr-paid .nextsteps{margin:4px 0 14px;padding-left:22px;color:var(--body);font-size:14.5px}
+#fr-paid .nextsteps li{margin-bottom:9px;padding-left:4px}
+#fr-paid .nextcta a{display:inline-block;font-family:'DM Sans',sans-serif;font-weight:600;font-size:14px;color:var(--teald);text-decoration:none}
+#fr-paid .disc{font-size:11.5px;color:var(--muted);line-height:1.55;border-top:1px solid var(--rule);padding-top:14px;margin-top:8px}
+@media(max-width:600px){#fr-paid .stats{grid-template-columns:repeat(2,1fr)}#fr-paid .tname{max-width:60%}}
+</style>`;}
 function paidExemptHtml(r){
   const free=r.free, within=r.R.within;
   const worksCard=_pcard(`<div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px">The most you can do within the £10,000 cap</div>${_measureRows(within.measures)}

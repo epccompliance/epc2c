@@ -3,3 +3,5 @@ node_modules
 .claude
 *.jsonl
 recovery-codes.txt
+
+.vercel

@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en-GB"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your EPC C Compliance Plan — EPC2C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0f1e33;--teal:#4ecba8;--teald:#2fa882;--cream:#f5f2ec;--char:#1a2332;--body:#3a4453;--muted:#6b7280;--rule:#e8e4dc;--amber:#d97706;--amberbg:#fffbeb;--green:#059669;--greenbg:#ecfdf5;--epcC:#3f9e4f;--epcD:#e8a33d;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;color:var(--body);background:var(--cream);line-height:1.55;padding:0 16px 60px}
+.wrap{max-width:840px;margin:0 auto}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:400;color:var(--char);letter-spacing:-.01em}
+.mono{font-family:'DM Mono',monospace}
+.paidbar{background:var(--green);color:#fff;font-size:14px;font-weight:500;text-align:center;padding:12px;border-radius:0 0 10px 10px;margin:0 -16px 22px}
+.hero{background:var(--navy);color:var(--cream);border-radius:14px;padding:22px 24px;margin-bottom:18px}
+.hero .tag{font-family:'DM Mono';font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);float:right}
+.brand{font-family:'Fraunces';font-size:22px;color:#fff}.brand b{color:var(--teal);font-weight:500}
+.addr{font-family:'Fraunces';font-size:24px;color:#fff;margin-top:18px;line-height:1.2}
+.meta{font-family:'DM Mono';font-size:12px;color:rgba(245,242,236,.62);margin-top:6px}
+.bandrow{display:flex;align-items:center;gap:16px;margin:18px 0}
+.badgeB{width:50px;height:58px;border-radius:9px;color:#fff;font-family:'Fraunces';font-size:26px;display:flex;align-items:center;justify-content:center}
+.bl{font-family:'DM Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.arrow{font-size:22px;color:var(--muted)}
+.verdict{background:var(--amberbg);border:1px solid #f3e3c0;border-radius:12px;padding:18px 20px;margin-bottom:18px}
+.verdict .w{font-family:'Fraunces';font-size:26px;color:var(--char)}.verdict .dot{width:12px;height:12px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:9px;vertical-align:middle}.verdict .sub{font-size:14px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px}
+.stat{background:#fff;border:1px solid var(--rule);border-radius:11px;padding:13px}
+.stat .k{font-family:'DM Mono';font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:'Fraunces';font-size:19px;color:var(--char);margin-top:4px;line-height:1.1}.stat .v small{font-size:12px;color:var(--muted);font-family:'DM Sans'}
+.kick{font-family:'DM Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teald);margin-bottom:6px}
+.sh{font-size:22px;margin-bottom:4px}.lead{color:var(--muted);font-size:14px;margin-bottom:16px;max-width:60ch}
+.mcard{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.mhead{display:flex;gap:12px;align-items:flex-start}.mnum{font-family:'Fraunces';font-size:18px;color:var(--teald)}.mname{font-family:'Fraunces';font-size:18px;color:var(--char)}
+.mstats{display:flex;gap:26px;margin-top:12px;flex-wrap:wrap}.mstats .k{font-family:'DM Mono';font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block}.mstats .v{font-family:'DM Mono';font-size:14px;color:var(--char);font-weight:500}
+.feas{margin-top:13px;border-top:1px dashed var(--rule);padding-top:11px}.feas summary{font-size:13px;font-weight:600;color:var(--teald);cursor:pointer}.feas ul{margin:9px 0 0 18px;font-size:13px;color:var(--body)}.feas li{margin-bottom:4px}
+.assumed{margin-top:9px;font-size:12.5px;color:var(--body);background:var(--cream);border-radius:8px;padding:10px 12px}
+.road{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:14px 18px;margin:6px 0 16px}.step{display:flex;gap:12px;padding:5px 0;font-size:14px}.step .sn{font-family:'DM Mono';color:var(--teald);font-weight:500}
+.totals{display:flex;justify-content:space-between;align-items:center;background:var(--navy);color:var(--cream);border-radius:12px;padding:18px 22px;margin-bottom:30px}.totals .k{font-family:'DM Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,242,236,.55)}.totals .big{font-family:'Fraunces';font-size:24px;color:#fff;margin-top:3px}.totals .badgeC{width:46px;height:52px;border-radius:8px;background:var(--epcC);color:#fff;font-family:'Fraunces';font-size:22px;display:flex;align-items:center;justify-content:center}
+/* tiles */
+.tile{background:#fff;border:1px solid var(--rule);border-radius:12px;margin-bottom:10px;position:relative;transition:border-color .15s}
+.tile.on{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
+.tile details{padding:0}
+.tile summary{list-style:none;cursor:pointer;padding:15px 18px 15px 18px;display:flex;flex-direction:column;gap:3px}
+.tile summary::-webkit-details-marker{display:none}
+.tile summary::after{content:'＋ view measures';position:absolute;right:16px;top:15px;font-family:'DM Mono';font-size:11px;color:var(--teald)}
+.tile details[open] summary::after{content:'－ hide'}
+.tname{font-family:'Fraunces';font-size:17px;color:var(--char);max-width:70%}
+.tmeta{font-family:'DM Mono';font-size:12px;color:var(--muted)}
+.tbody{padding:4px 18px 16px;border-top:1px solid var(--rule);margin-top:4px}
+.trow{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px dashed var(--rule)}.trow:last-child{border:0}.tc{font-family:'DM Mono';color:var(--muted);white-space:nowrap}
+.grants{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.gchip{font-family:'DM Mono';font-size:10.5px;color:var(--teald);background:var(--greenbg);border:1px solid #cdeede;border-radius:6px;padding:3px 8px}
+.tgrants{font-family:'DM Mono';font-size:11px;color:var(--teald);margin-top:10px;padding-top:9px;border-top:1px dashed var(--rule)}
+.sel{position:absolute;right:14px;bottom:13px;display:flex;align-items:center;gap:6px;font-family:'DM Mono';font-size:11px;color:var(--muted);cursor:pointer;z-index:2}
+.sel input{accent-color:var(--teal);width:15px;height:15px}
+.recbadge{display:inline-block;background:var(--teal);color:var(--navy);font-family:'DM Mono';font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-bottom:8px}
+.dlbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fff;border:1.5px solid var(--teal);border-radius:12px;padding:16px 18px;margin:22px 0}
+.dlbtn{background:var(--navy);color:#fff;font-family:'DM Sans';font-weight:600;font-size:14px;border:none;border-radius:9px;padding:12px 20px;cursor:pointer}.dlbar .t{font-size:13px;color:var(--muted)}
+.nextsteps{margin:4px 0 14px 0;padding-left:22px;color:var(--body);font-size:14.5px}.nextsteps li{margin-bottom:9px;padding-left:4px}
+.nextcta a{display:inline-block;font-family:'DM Sans';font-weight:600;font-size:14px;color:var(--teald);text-decoration:none}.nextcta a:hover{text-decoration:underline}
+.disc{font-size:11.5px;color:var(--muted);line-height:1.55;border-top:1px solid var(--rule);padding-top:14px;margin-top:8px}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.addr{font-size:20px}.tname{max-width:60%}}
+</style></head><body><div class="wrap">
+
+<div class="paidbar">✓ Payment confirmed — here is your full EPC C compliance plan</div>
+
+<div class="hero"><span class="tag">EPC C Compliance Plan</span><div class="brand">EPC<b>2C</b></div>
+  <div class="addr">12 Marsh Lane<br>Wolverhampton, WV10 6QJ</div>
+  <div class="meta">Semi-detached house · Plan generated 12 June 2026 · Ref EPC2C-IFXC</div></div>
+
+<div class="bandrow"><div><div class="bl">Current</div><span class="badgeB" style="background:var(--epcD)">D</span> <span class="mono" style="color:var(--muted)">SAP 58</span></div>
+  <span class="arrow">→</span>
+  <div><div class="bl">Target by Oct 2030</div><span class="badgeB" style="background:var(--epcC)">C</span> <span class="mono" style="color:var(--muted)">SAP 69+</span></div></div>
+
+<div class="verdict"><span class="dot"></span><span class="w">Achievable</span>
+  <div class="sub">EPC C is reachable for this property, comfortably within the £10,000 cost cap. Your recommended plan is below, followed by up to five ways to get there so you can weigh cost against disruption.</div></div>
+
+<div class="stats">
+  <div class="stat"><div class="k">Estimated cost</div><div class="v">£3,950<small>–£6,300</small></div></div>
+  <div class="stat"><div class="k">Projected rating</div><div class="v">C <small>(69)</small></div></div>
+  <div class="stat"><div class="k">Packages</div><div class="v">5 <small>· of 14</small></div></div>
+  <div class="stat"><div class="k">Disruption</div><div class="v">Moderate</div></div></div>
+
+<div class="kick">Your recommended plan</div>
+<h2 class="sh">The most cost-effective route to C</h2>
+<p class="lead">The cheapest combination of measures that takes this property to band C. Costs are indicative ranges from the EPC register — always get installer quotes before committing.</p>
+<div class="mcard"><div class="mhead"><span class="mnum">1</span><div class="mname">Top up loft insulation to 270mm</div></div>
+    <div class="mstats"><div><span class="k">Indicative cost</span><span class="v">£100–£350</span></div>
+      <div><span class="k">Rating gain</span><span class="v">+3 pts</span></div>
+      <div><span class="k">Disruption</span><span class="v">Low</span></div></div>
+    <div class="grants"><span class="gchip">Warm Homes Plan †</span><span class="gchip">0% finance available</span></div>
+    <details class="feas"><summary>Feasibility — worth checking first</summary><ul><li>A usable loft hatch (ideally ~600×400mm) and enough headroom to work safely.</li><li>If the loft is boarded, boards may need lifting — or raising on battens — so insulation depth isn’t crushed.</li><li>Stored items cleared from the area to be treated.</li></ul><div class="assumed"><b>If your EPC marked this “assumed”:</b> Loft insulation can’t be seen without entering the loft, so "assumed" usually means it wasn’t accessed or confirmed. Two implications: it may already be insulated (a fresh EPC could show you’re closer to C), or access is the very thing that makes the job harder.</div></details></div><div class="mcard"><div class="mhead"><span class="mnum">2</span><div class="mname">Upgrade heating controls</div></div>
+    <div class="mstats"><div><span class="k">Indicative cost</span><span class="v">£350–£450</span></div>
+      <div><span class="k">Rating gain</span><span class="v">+2 pts</span></div>
+      <div><span class="k">Disruption</span><span class="v">Minimal</span></div></div>
+    <div class="grants"><span class="gchip">0% finance available</span></div>
+    <details class="feas"><summary>Feasibility — worth checking first</summary><ul><li>A programmer, room thermostat and thermostatic radiator valves, compatible with the existing boiler/system.</li><li>Straightforward fit with minimal disruption.</li></ul><div class="assumed"><b>If your EPC marked this “assumed”:</b> Controls are normally observed during the assessment, so rarely "(assumed)".</div></details></div><div class="mcard"><div class="mhead"><span class="mnum">3</span><div class="mname">Install solar PV (2.5 kWp)</div></div>
+    <div class="mstats"><div><span class="k">Indicative cost</span><span class="v">£3,500–£5,500</span></div>
+      <div><span class="k">Rating gain</span><span class="v">+6 pts</span></div>
+      <div><span class="k">Disruption</span><span class="v">Moderate</span></div></div>
+    <div class="grants"><span class="gchip">Warm Homes Plan †</span><span class="gchip">0% finance available</span></div>
+    <details class="feas"><summary>Feasibility — worth checking first</summary><ul><li>A suitable roof: reasonable orientation (broadly south/east/west, not heavily shaded north), workable pitch, minimal overshadowing.</li><li>Roof structure sound and able to carry the load.</li><li>Enough clear, unobstructed roof area, plus a sensible position for the inverter.</li></ul><div class="assumed"><b>If your EPC marked this “assumed”:</b> Generation is recorded as present/absent rather than "assumed", so the question here is roof feasibility rather than an unverified baseline.</div></details></div>
+<div class="totals"><div><div class="k">Total estimated cost</div><div class="big">£3,950 – £6,300</div></div>
+  <div style="text-align:right"><div class="k">Projected result</div><span class="badgeC">C</span></div></div>
+
+<div class="kick">Your options</div>
+<h2 class="sh">Other ways to reach C</h2>
+<p class="lead">Up to five packages that each get you to band C — the recommended one plus genuinely different trade-offs. Tap a tile to see its measures, and tick the ones you'd like included in your PDF.</p>
+
+<div class="tile on" style="border-color:var(--teal)">
+  <label class="sel"><input type="checkbox" checked onchange="this.closest('.tile').classList.toggle('on',this.checked)"><span>Add to download</span></label>
+  <details open><summary><span class="recbadge">Recommended</span><span class="tname">Loft + Controls + Solar PV</span>
+    <span class="tmeta">£3,950–£6,300 · C (69) · Moderate</span></summary>
+    <div class="tbody"><div class="trow"><span>Top up loft insulation to 270mm</span><span class="tc">£100–£350 · +3</span></div><div class="trow"><span>Upgrade heating controls</span><span class="tc">£350–£450 · +2</span></div><div class="trow"><span>Install solar PV (2.5 kWp)</span><span class="tc">£3,500–£5,500 · +6</span></div></div></details></div>
+<div class="tile">
+    <label class="sel"><input type="checkbox" onchange="this.closest('.tile').classList.toggle('on',this.checked)"><span>Add to download</span></label>
+    <details><summary>
+      <span class="tname">Loft + Cavity + Glazing</span>
+      <span class="tmeta">£3,600–£6,850 · C (70) · Moderate</span>
+    </summary><div class="tbody"><div class="trow"><span>Top up loft insulation to 270mm</span><span class="tc">£100–£350 · +3</span></div><div class="trow"><span>Cavity wall insulation</span><span class="tc">£500–£1,500 · +5</span></div><div class="trow"><span>Replace single glazing with double glazing</span><span class="tc">£3,000–£5,000 · +4</span></div><div class="tgrants">Funding: Warm Homes Plan † · 0% finance available</div></div></details></div><div class="tile">
+    <label class="sel"><input type="checkbox" onchange="this.closest('.tile').classList.toggle('on',this.checked)"><span>Add to download</span></label>
+    <details><summary>
+      <span class="tname">Controls + Cavity + Glazing</span>
+      <span class="tmeta">£3,850–£6,950 · C (69) · Moderate</span>
+    </summary><div class="tbody"><div class="trow"><span>Upgrade heating controls</span><span class="tc">£350–£450 · +2</span></div><div class="trow"><span>Cavity wall insulation</span><span class="tc">£500–£1,500 · +5</span></div><div class="trow"><span>Replace single glazing with double glazing</span><span class="tc">£3,000–£5,000 · +4</span></div><div class="tgrants">Funding: 0% finance available · Warm Homes Plan †</div></div></details></div><div class="tile">
+    <label class="sel"><input type="checkbox" onchange="this.closest('.tile').classList.toggle('on',this.checked)"><span>Add to download</span></label>
+    <details><summary>
+      <span class="tname">Cavity + Solar PV</span>
+      <span class="tmeta">£4,000–£7,000 · C (69) · Moderate</span>
+    </summary><div class="tbody"><div class="trow"><span>Cavity wall insulation</span><span class="tc">£500–£1,500 · +5</span></div><div class="trow"><span>Install solar PV (2.5 kWp)</span><span class="tc">£3,500–£5,500 · +6</span></div><div class="tgrants">Funding: Warm Homes Plan † · 0% finance available</div></div></details></div><div class="tile">
+    <label class="sel"><input type="checkbox" onchange="this.closest('.tile').classList.toggle('on',this.checked)"><span>Add to download</span></label>
+    <details><summary>
+      <span class="tname">Loft + Solar PV + Glazing</span>
+      <span class="tmeta">£6,600–£10,850 · C (71) · Moderate</span>
+    </summary><div class="tbody"><div class="trow"><span>Top up loft insulation to 270mm</span><span class="tc">£100–£350 · +3</span></div><div class="trow"><span>Install solar PV (2.5 kWp)</span><span class="tc">£3,500–£5,500 · +6</span></div><div class="trow"><span>Replace single glazing with double glazing</span><span class="tc">£3,000–£5,000 · +4</span></div><div class="tgrants">Funding: Warm Homes Plan † · 0% finance available</div></div></details></div>
+
+<div class="kick">Next steps</div>
+<h2 class="sh">What do I do now?</h2>
+<ol class="nextsteps">
+  <li>Choose the package that best fits your budget and the disruption you're comfortable with.</li>
+  <li>Get quotes from local installers before committing — or let GoGreen Alliance arrange accredited installers for you.</li>
+  <li>Download and keep this plan below, so your chosen packages and costs are in one place.</li>
+  <li>Aim to complete the works well before the 1 October 2030 deadline — the cheapest properties to fix aren't always the quickest.</li>
+</ol>
+<div class="nextcta"><a href="mailto:info@gogreenalliance.co.uk?subject=Arrange%20my%20EPC%20C%20works">Ask GoGreen to arrange this for me →</a></div>
+
+<div class="dlbar"><button class="dlbtn" onclick="window.print()">Download selected (PDF)</button>
+  <span class="t">Your ticked packages are included in the downloadable plan — identical figures to what you see here.</span></div>
+
+<div class="disc"><b>Grants &amp; funding.</b> † Warm Homes Plan funding is not yet targeted at the private rented sector, but is expected to extend to it — we'll update eligibility as the scheme develops. The Boiler Upgrade Scheme grant applies to qualifying heat-pump installations; 0% finance availability depends on the provider and your circumstances. <br><br><b>About these figures.</b> Cost estimates are indicative, based on the official EPC register's published figures, and are a guide only — actual installer quotes may differ and are often higher. Rating gains are estimates for typical properties of this type, and assume the measures can be installed on your property; a survey confirms feasibility. This plan is guidance to help you plan, and is not legal, financial or professional retrofit advice. EPC2C — operated by GoGreen Alliance Ltd.</div>
+
+</div></body></html>
