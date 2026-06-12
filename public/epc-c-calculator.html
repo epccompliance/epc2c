@@ -361,12 +361,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96
 /* footer */
 footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:30px 2rem}
 .foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
-.foot-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:rgba(255,255,255,.32)}
+.foot-logo{font-family:var(--serif);font-size:16px;font-weight:300;color:rgba(255,255,255,.95)}
 .foot-logo span{color:var(--teal)}
 .foot-links{display:flex;gap:16px}
-.foot-link{font-size:12px;color:rgba(255,255,255,.2);text-decoration:none}
-.foot-link:hover{color:rgba(255,255,255,.42)}
-.foot-copy{font-size:12px;color:rgba(255,255,255,.18)}
+.foot-link{font-size:12px;color:rgba(255,255,255,.8);text-decoration:none}
+.foot-link:hover{color:#fff}
+.foot-copy{font-size:12px;color:rgba(255,255,255,.88)}
 
 /* utils */
 .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.12);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:5px}
@@ -615,14 +615,13 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
     </div>
     <div style="text-align:right;font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.42);margin-bottom:24px">Low–Medium · Source: EPC Register</div>
 
-    <h2 style="font-family:var(--serif);font-size:26px;font-weight:300;color:var(--white);letter-spacing:-.02em;line-height:1.2;margin-bottom:16px">What your property needs to reach EPC&nbsp;C</h2>
+    <h2 style="font-family:var(--serif);font-size:26px;font-weight:300;color:var(--white);letter-spacing:-.02em;line-height:1.2;margin-bottom:16px;text-align:center">What your property needs to reach EPC&nbsp;C</h2>
 
     <div id="fr-gap"></div>
     <div id="fr-recs"></div>
     <div id="fr-boxes" style="margin-top:8px"></div>
     <div id="fr-paid" style="display:none;margin-top:8px"></div>
     <div id="fr-exemptions" style="margin-top:20px"></div>
-    <div id="fr-summary-box" style="margin-top:20px"></div>
     <div id="fr-penalty" style="margin-top:20px"></div>
     <div id="fr-outcome" style="margin-top:20px"></div>
   </div>
@@ -1814,11 +1813,10 @@ function buildFreeReport(p){
 
   // Reset the paid reveal + upsell visibility (a previous unlock may have toggled them).
   const _fp=document.getElementById('fr-paid'); if(_fp){_fp.style.display='none';_fp.innerHTML='';}
-  ['fr-penalty','fr-outcome'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
+  ['fr-penalty','fr-outcome','fr-exemptions'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
 
   renderFrBoxes(r);
   renderFrExemptions(r);
-  renderFrSummaryBox(r);
   renderFrPenalty();
   renderFrOutcome(r);
 }
@@ -1896,19 +1894,21 @@ function renderFrBoxes(r){
   if(r.R.kind==='reach'){
     html+=row('Cost outlook',`${money(free.outlookMin)} – ${money(free.outlookMax)}`);
     html+=row('Disruption',free.disruption);
-    html+=row('Route flexibility',free.flexibility);
-    html+=row('Exemption likely',free.exemption);
+    html+='</div>';
+    html+=`<div style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.6;margin-top:8px">Your simplest route needs just ${r.R.minMeasures} measure${r.R.minMeasures!==1?'s':''} — and there ${r.R.routeCount===1?'is 1 combination':'are '+r.R.routeCount+' combinations'} that reach C, so you can choose the one that suits.</div>`;
   }else{ // no route to C within the £10k cap
     html+=row('Best reachable band',`${free.bestReachableBand} (${free.bestReachableSAP})`);
     html+=row('Within-cap outlook',`${money(free.outlookMin)} – ${money(free.outlookMax)}`);
-    html+=row('Reaches EPC C within £10k','Unlikely');
+    html+='</div>';
   }
-  html+='</div>';
-  html+=`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:4px">The specific measures and their costs are revealed in your compliance plan. ${COST_DISCLAIMER}</div>`;
+  html+=`<div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-top:6px">The specific measures and their costs are revealed in your compliance plan. ${COST_DISCLAIMER}</div>`;
   el.innerHTML=html;
 }
 function renderFrExemptions(r){
-  document.getElementById('fr-exemptions').innerHTML=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:13px 14px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">MEES exemptions</div><div style="font-size:13px;color:var(--white);line-height:1.6">Based on your property details, up to <strong>${r.exShown}</strong> exemption${r.exShown!==1?'s':''} may potentially apply.</div></div>`;
+  const txt=r.R.kind==='exempt'
+    ? 'No standard combination reaches EPC C within the £10,000 cost cap, so the cost-cap exemption is the likely route. A site visit confirms your options.'
+    : 'Reaching C assumes the recommended measures can be installed on your property. If a survey finds any aren\'t feasible, an exemption route may apply.';
+  document.getElementById('fr-exemptions').innerHTML=`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:13px 14px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:6px">Exemptions</div><div style="font-size:13px;color:var(--white);line-height:1.6">${txt}</div></div>`;
 }
 function renderFrSummaryBox(r){
   // Plain-English line, keyed off the FROZEN verdict (no recomputation).
@@ -1997,12 +1997,12 @@ function revealPaidReport(){
   if(r.R.kind==='reach' && !(paid.total>=free.outlookMin && paid.total<=free.outlookMax)){
     console.error('[integrity] paid total £'+paid.total+' outside free range £'+free.outlookMin+'–£'+free.outlookMax);
   }
-  // The paid detail replaces the upsell — never recompute, just reveal.
-  ['fr-penalty','fr-outcome'].forEach(id=>{const e=document.getElementById(id); if(e)e.style.display='none';});
+  // The paid detail replaces the upsell + the free exemptions line — never recompute.
+  ['fr-penalty','fr-outcome','fr-exemptions'].forEach(id=>{const e=document.getElementById(id); if(e)e.style.display='none';});
   const el=document.getElementById('fr-paid'); if(!el)return;
   el.innerHTML=(r.R.kind==='exempt')?paidExemptHtml(r):(r.R.kind==='already'?paidAlreadyHtml(r):paidReachHtml(r));
   el.style.display='block';
-  el.scrollIntoView({behavior:'smooth',block:'start'});
+  window.scrollTo({top:0,behavior:'smooth'});   // open the paid plan from the top of the page
 }
 const _pcard=inner=>`<div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.08);border-radius:9px;padding:14px 16px;margin-bottom:10px">${inner}</div>`;
 const _pmoney=n=>'£'+(n||0).toLocaleString();
@@ -2073,6 +2073,21 @@ function pickPackages(routes){
   }
   return picked;
 }
+// Measure-specific feasibility caveat for the paid report, driven by the
+// feasibility-profiles ifInfeasible field. Never a flat "Exemption: No".
+function exemptName(code){return ({'all-relevant-improvements':'all-improvements-made','negative-impacts':'negative-impacts','consent':'third-party-consent','solid-wall-opt-out':'solid-wall','wall-insulation':'wall-insulation'})[code]||code;}
+function paidFeasibilityCaveat(measures){
+  const lines=[];
+  measures.forEach(m=>{
+    const fz=feasibilityFor(m.name);
+    if(fz&&fz.ifInfeasible){
+      const ex=fz.ifInfeasible.split('|').map(s=>exemptName(s.trim())).join(' / ');
+      lines.push(`If ${m.name.charAt(0).toLowerCase()+m.name.slice(1)} isn't feasible here, a ${ex} exemption may apply.`);
+    }
+  });
+  if(!lines.length)return '';
+  return _pcard(`<div style="font-size:13px;font-weight:600;color:var(--char);margin-bottom:6px">If a measure isn't feasible</div><div style="font-size:12.5px;color:var(--body);line-height:1.65">Your route to C assumes each measure can be installed on your property. ${lines.map(l=>'<div style="margin-top:5px">'+_pesc(l)+'</div>').join('')}</div>`);
+}
 function paidReachHtml(r){
   const free=r.free, route=r.R.route;
   const picked=pickPackages(r.R.routes||[route]);
@@ -2080,6 +2095,7 @@ function paidReachHtml(r){
   const p=selProp||{}, curBand=p.rating||'?', curSAP=(p.currentSAP!=null?p.currentSAP:'');
   const projBand=sapToBand(recommended.finalSAP);
   const totalMeasures=(r.ms?r.ms.length:recommended.measures.length);
+  const feasCaveat=paidFeasibilityCaveat(recommended.measures);
 
   const cards=recommended.measures.map((m,i)=>{
     const dis=DISRUPT_WORD[disruptionScore(m.name)]||'—';
@@ -2129,6 +2145,7 @@ function paidReachHtml(r){
     ${cards}
     <div class="totals"><div><div class="k">Total estimated cost</div><div class="big">${_pmoney(recommended.cMin)} – ${_pmoney(recommended.cMax)}</div></div>
       <div style="text-align:right"><div class="k">Projected result</div><span class="badgeC">${projBand}</span></div></div>
+    ${feasCaveat}
 
     <div class="kick">Your options</div>
     <h2 class="sh">Other ways to reach C</h2>
@@ -2153,7 +2170,7 @@ function _prCSS(){return `<style>
 #fr-paid .pr h2{font-family:'Fraunces',Georgia,serif;font-weight:400;color:var(--char);letter-spacing:-.01em}
 #fr-paid .pr .mono{font-family:'DM Mono',monospace}
 #fr-paid .paidbar{background:var(--green);color:#fff;font-size:14px;font-weight:500;text-align:center;padding:11px;border-radius:9px;margin-bottom:18px}
-#fr-paid .bandrow{display:flex;align-items:center;gap:16px;margin:6px 0 18px}
+#fr-paid .bandrow{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 18px}
 #fr-paid .badgeB{width:50px;height:58px;border-radius:9px;color:#fff;font-family:'Fraunces',serif;font-size:26px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
 #fr-paid .bl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 #fr-paid .arrow{font-size:22px;color:var(--muted)}

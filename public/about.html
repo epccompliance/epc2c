@@ -42,6 +42,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,30,51,.96
 .detail-val{font-size:14px;font-weight:500;color:var(--char);font-family:var(--mono)}
 .accred-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .accred-chip{font-size:12px;font-weight:500;font-family:var(--mono);padding:5px 12px;border-radius:6px;background:var(--tealp);color:var(--teald);border:0.5px solid var(--tealbdr)}
+.accred-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:26px}
+.accred-logo{height:42px;width:auto;max-width:130px;object-fit:contain;image-rendering:-webkit-optimize-contrast}
 
 footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padding:28px 2rem;margin-top:64px}
 .foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
@@ -84,9 +86,9 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 <div class="content">
   <div class="prose">
     <p>As qualified DEAs and retrofit coordinators, we recognised that landlords were receiving EPCs that told them what improvements existed &mdash; but not the most practical or economical route to compliance.</p>
-    <p><strong>EPC2C was built to fill that gap.</strong> Developed by practitioners who carry out real assessments on real properties, it is the only MEES compliance planning tool built from the inside out &mdash; by the people who do the work.</p>
+    <p><strong>EPC2C was built to fill that gap.</strong> Developed by practitioners who carry out real assessments on real properties and install improvements, it is the only MEES compliance planning tool built from the inside out &mdash; by the people who do the work.</p>
     <p>We are the West Midlands&rsquo; leading MEES compliance specialists. Our team holds qualifications in domestic energy assessment, retrofit coordination, and has direct experience registering MEES exemptions on behalf of landlords across the region.</p>
-    <p>EPC2C uses official EPC register data combined with GoGreen Alliance&rsquo;s real-world cost experience to give landlords the information they need to plan confidently &mdash; not just a list of what might be possible.</p>
+    <p>Report estimates use the official EPC register&rsquo;s figures &mdash; national indicative banding, not West Midlands-specific. GoGreen Alliance&rsquo;s own m&sup2; rates apply only to the quotations we provide. The aim is to give landlords the information they need to plan confidently &mdash; not just a list of what might be possible.</p>
   </div>
 
   <div class="sec-label">Company details</div>
@@ -131,12 +133,11 @@ footer{background:var(--navy2);border-top:0.5px solid rgba(255,255,255,.06);padd
 
   <div class="sec-label">Accreditations</div>
   <div class="accred-row">
-    <span class="accred-chip">TrustMark</span>
-    <span class="accred-chip">Elmhurst Energy</span>
-    <span class="accred-chip">MCS</span>
-    <span class="accred-chip">Gas Safe 629994</span>
-    <span class="accred-chip">NICEIC</span>
-    <span class="accred-chip">PAS 2030</span>
+    <a href="https://www.trustmark.org.uk/homeowner/find-a-tradesperson?business-name=GoGreen%20Alliance%20Ltd&amp;search=true" target="_blank" rel="noopener"><img class="accred-logo" src="/images/trustmark.png" alt="TrustMark"/></a>
+    <img class="accred-logo" src="/images/Elmhurst.png" alt="Elmhurst Energy"/>
+    <img class="accred-logo" src="/images/PAS.png" alt="BBA"/>
+    <a href="https://www.gassaferegister.co.uk/checkbusinessresults?cp=8dbTCMJeQPJDla%252btm2cGo71Ps4f7leERBZL58Pwb7VUoiI43sOv%252f39a8u4l3%252f3rQ" target="_blank" rel="noopener"><img class="accred-logo" src="/images/gas-safe-logo-png.png" alt="Gas Safe Register"/></a>
+    <a href="https://mcscertified.com/find-an-installer/gogreen-alliance-ltd/" target="_blank" rel="noopener"><img class="accred-logo" src="/images/MCS.png" alt="MCS Certified"/></a>
   </div>
 
   <div style="margin-top:48px;background:var(--greenp);border:0.5px solid var(--greenbdr, rgba(5,150,105,.25));border-radius:12px;padding:22px 24px">
